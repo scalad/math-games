@@ -12,13 +12,15 @@
   --font:"Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent;display:flex;flex-wrap:wrap}
 
 /* ===== Right Sidebar ===== */
 .right-sidebar{
-  position:fixed;top:0;right:0;width:260px;height:100vh;
+  width:260px;flex-shrink:0;
   background:#fff;box-shadow:-2px 0 20px rgba(0,0,0,0.06);
   z-index:100;display:flex;flex-direction:column;
+  position:sticky;top:0;align-self:flex-start;
+  max-height:100vh;
 }
 .rs-header{
   padding:16px 18px 12px;background:linear-gradient(135deg,#4F46E5,#7C3AED);
@@ -63,13 +65,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .rs-body .skill-root-name:hover{background:#EEF0FF}
 .rs-body .skill-root-name .toggle{align-self:center}
 
-/* Main content with right margin */
-.main-content{margin-right:260px;padding:0 20px}
+/* Main content */
+.main-content{flex:1;min-width:0;padding:0 20px}
 
 /* Mobile */
 @media(max-width:900px){
   .right-sidebar{display:none}
-  .main-content{margin-right:0}
+  .main-content{min-width:100%}
 }
 
 /* Tree */
@@ -104,12 +106,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .tree .skill-root-name .toggle{align-self:center}
 
 /* ===== Main Content ===== */
-.main-content{max-width:1060px;margin:0 auto;padding:0 20px}
+.main-content{max-width:1060px;padding:0 20px}
 
 /* ===== Hero ===== */
 .hero{
   background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 50%,#A21CAF 100%);
   color:#fff;text-align:center;padding:48px 20px 40px;position:relative;overflow:hidden;
+  flex-basis:100%;
 }
 .hero::before{content:'';position:absolute;top:-100px;right:-80px;width:300px;height:300px;background:rgba(255,255,255,0.05);border-radius:50%}
 .hero::after{content:'';position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;background:rgba(255,255,255,0.04);border-radius:50%}
@@ -279,19 +282,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <h1>小学数学互动游戏中心</h1>
   <p class="sub">玩中学数学 · 5 大玩法族系 · 自适应练习系统 · 每个知识点 5 款游戏</p>
 </div>
-
-<!-- ===== Right Sidebar ===== -->
-<aside class="right-sidebar" id="rightSidebar">
-  <div class="rs-header">
-    <div class="rs-icon">🧰</div>
-    <div class="rs-title">Skill 工具包</div>
-    <div class="rs-sub">点击文件名查看内容</div>
-  </div>
-  <div class="rs-body">
-    <div class="tree" id="skillTree1"></div>
-    <div class="tree" id="skillTree2" style="margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0"></div>
-  </div>
-</aside>
 
 <!-- ===== Main Content ===== -->
 <div class="main-content">
@@ -469,6 +459,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 </div><!-- /.main-content -->
+
+<!-- ===== Right Sidebar ===== -->
+<aside class="right-sidebar" id="rightSidebar">
+  <div class="rs-header">
+    <div class="rs-icon">🧰</div>
+    <div class="rs-title">Skill 工具包</div>
+    <div class="rs-sub">点击文件名查看内容</div>
+  </div>
+  <div class="rs-body">
+    <div class="tree" id="skillTree1"></div>
+    <div class="tree" id="skillTree2" style="margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0"></div>
+  </div>
+</aside>
 
 <!-- ===== Game Modal ===== -->
 <div class="modal-overlay" id="gameModal" style="display:none" onclick="closeGameOverlay(event)">
