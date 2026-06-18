@@ -77,12 +77,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   font-size:11px;color:#888;text-decoration:none;
   padding:4px 10px;border-radius:10px;
   background:#F5F5FF;border:1px solid #eee;
-  transition:all .15s;white-space:nowrap;
+  transition:all .15s;white-space:nowrap;cursor:pointer;
 }
 .kp-doc-link:hover{color:#4F46E5;border-color:#A5B4FC;background:#EEF0FF}
 .kp-doc-sep{font-size:10px;color:#ccc;align-self:center}
 
-/* ===== Modal ===== */
+/* ===== Modal (Game) ===== */
 .modal-overlay{
   position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;
   background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;
@@ -108,6 +108,60 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .modal-close:hover{background:#e74c3c;color:#fff}
 .modal-iframe{flex:1;border:none;width:100%}
 
+/* ===== Doc Modal ===== */
+.doc-modal-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:1000;
+  background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;
+  animation:fadeIn .25s ease;
+}
+.doc-modal-box{
+  width:100%;height:100%;max-width:900px;max-height:94vh;
+  background:#fff;border-radius:16px;overflow:hidden;
+  display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  animation:scaleUp .3s ease;
+}
+.doc-modal-content{
+  flex:1;overflow-y:auto;padding:28px 32px;
+  font-size:14px;line-height:1.85;color:#444;
+  -webkit-overflow-scrolling:touch;
+}
+/* Markdown rendered styles */
+.doc-modal-content h1{font-size:24px;font-weight:800;color:#2D3436;margin:8px 0 16px;padding-bottom:10px;border-bottom:2px solid #eee}
+.doc-modal-content h2{font-size:20px;font-weight:700;color:#4F46E5;margin:28px 0 10px}
+.doc-modal-content h3{font-size:16px;font-weight:700;color:#555;margin:20px 0 8px}
+.doc-modal-content h4{font-size:14px;font-weight:700;color:#666;margin:14px 0 6px}
+.doc-modal-content p{margin:6px 0 12px}
+.doc-modal-content ul,.doc-modal-content ol{margin:8px 0 12px 20px}
+.doc-modal-content li{margin:3px 0}
+.doc-modal-content code{
+  background:#F0F0F5;color:#C7254E;padding:1px 5px;
+  border-radius:4px;font-family:"Consolas","Courier New",monospace;font-size:13px;
+}
+.doc-modal-content pre{
+  background:#2D3436;color:#DFE6E9;padding:14px 18px;border-radius:10px;
+  overflow-x:auto;margin:10px 0 16px;font-size:13px;line-height:1.6;
+}
+.doc-modal-content pre code{background:transparent;color:inherit;padding:0}
+.doc-modal-content blockquote{
+  border-left:4px solid #A5B4FC;background:#F5F6FF;
+  padding:10px 16px;margin:10px 0 16px;border-radius:0 8px 8px 0;
+  color:#555;font-size:13px;
+}
+.doc-modal-content table{
+  width:100%;border-collapse:collapse;margin:12px 0 16px;font-size:13px;
+}
+.doc-modal-content th{
+  background:#4F46E5;color:#fff;padding:8px 12px;text-align:left;font-weight:600;
+}
+.doc-modal-content td{
+  padding:7px 12px;border-bottom:1px solid #eee;
+}
+.doc-modal-content tr:nth-child(even) td{background:#FAFAFD}
+.doc-modal-content hr{border:none;border-top:1px solid #eee;margin:20px 0}
+.doc-modal-content strong{color:#2D3436}
+.doc-modal-content a{color:#4F46E5}
+.doc-modal-content .md-loading{text-align:center;color:#999;padding:60px 0;font-size:16px}
+
 /* ===== Instructions ===== */
 .instructions{
   background:var(--card);border-radius:var(--radius);padding:18px 22px;
@@ -126,6 +180,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ===== Responsive ===== */
 @media(max-width:900px){
   .game-row{grid-template-columns:repeat(3,1fr)}
+  .doc-modal-content{padding:20px 18px}
 }
 @media(max-width:600px){
   .hero{padding:32px 16px 26px}
@@ -138,6 +193,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .game-card .icon{font-size:26px}
   .game-card .name{font-size:13px}
   .modal-box{max-height:100vh;border-radius:0}
+  .doc-modal-box{max-height:100vh;border-radius:0}
 }
 </style>
 </head>
@@ -169,45 +225,34 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
     <div class="game-row">
       <div class="game-card" onclick="openGame('游戏原型/游戏01_开心农场打地鼠.html','🐹 开心农场打地鼠')">
-        <span class="tag tag-0">🏁 竞速</span>
-        <span class="icon">🐹</span>
-        <div class="name">开心农场打地鼠</div>
-        <div class="desc">听/看图快速点击数字地鼠，3关挑战</div>
+        <span class="tag tag-0">🏁 竞速</span><span class="icon">🐹</span>
+        <div class="name">开心农场打地鼠</div><div class="desc">听/看图快速点击数字地鼠，3关挑战</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏02_数字记忆翻翻乐.html','🃏 数字记忆翻翻乐')">
-        <span class="tag tag-1">🃏 卡牌</span>
-        <span class="icon">🃏</span>
-        <div class="name">数字记忆翻翻乐</div>
-        <div class="desc">翻牌配对数量与数字，3关记忆挑战</div>
+        <span class="tag tag-1">🃏 卡牌</span><span class="icon">🃏</span>
+        <div class="name">数字记忆翻翻乐</div><div class="desc">翻牌配对数量与数字，3关记忆挑战</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏03_砸金蛋识数字.html','🥚 砸金蛋识数字')">
-        <span class="tag tag-2">🎯 运气</span>
-        <span class="icon">🥚</span>
-        <div class="name">砸金蛋识数字</div>
-        <div class="desc">敲开金蛋答题赢星星，丰收小达人</div>
+        <span class="tag tag-2">🎯 运气</span><span class="icon">🥚</span>
+        <div class="name">砸金蛋识数字</div><div class="desc">敲开金蛋答题赢星星，丰收小达人</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏04_数物连连看.html','🔗 数物连连看')">
-        <span class="tag tag-3">📝 笔纸</span>
-        <span class="icon">🔗</span>
-        <div class="name">数物连连看</div>
-        <div class="desc">连线匹配物品与数字，彩虹视觉</div>
+        <span class="tag tag-3">📝 笔纸</span><span class="icon">🔗</span>
+        <div class="name">数物连连看</div><div class="desc">连线匹配物品与数字，彩虹视觉</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏05_神秘数字猜猜猜.html','🔍 神秘数字猜猜猜')">
-        <span class="tag tag-4">🕵️ 推理</span>
-        <span class="icon">🔍</span>
-        <div class="name">神秘数字猜猜猜</div>
-        <div class="desc">侦探破案！根据线索推理猜数字</div>
+        <span class="tag tag-4">🕵️ 推理</span><span class="icon">🔍</span>
+        <div class="name">神秘数字猜猜猜</div><div class="desc">侦探破案！根据线索推理猜数字</div>
       </div>
     </div>
 
     <div class="kp-docs">
-      <a class="kp-doc-link" href="教学方案/一年级_1-5数字的认识_教学方案.md">📖 教学方案</a>
-      <a class="kp-doc-link" href="游戏设计文档/游戏01_开心农场打地鼠.md">🐹</a>
-      <a class="kp-doc-link" href="游戏设计文档/游戏02_数字记忆翻翻乐.md">🃏</a>
-      <a class="kp-doc-link" href="游戏设计文档/游戏03_砸金蛋识数字.md">🥚</a>
-      <a class="kp-doc-link" href="游戏设计文档/游戏04_数物连连看.md">🔗</a>
-      <a class="kp-doc-link" href="游戏设计文档/游戏05_神秘数字猜猜猜.md">🔍</a>
-      <span class="kp-doc-sep">— 5份设计文档</span>
+      <span class="kp-doc-link" onclick="openDoc('教学方案/一年级_1-5数字的认识_教学方案.md','📖 教学方案 · 1~5数字的认识')">📖 教学方案</span>
+      <span class="kp-doc-link" onclick="openDoc('游戏设计文档/游戏01_开心农场打地鼠.md','🐹 开心农场打地鼠')">🐹 设计</span>
+      <span class="kp-doc-link" onclick="openDoc('游戏设计文档/游戏02_数字记忆翻翻乐.md','🃏 数字记忆翻翻乐')">🃏 设计</span>
+      <span class="kp-doc-link" onclick="openDoc('游戏设计文档/游戏03_砸金蛋识数字.md','🥚 砸金蛋识数字')">🥚 设计</span>
+      <span class="kp-doc-link" onclick="openDoc('游戏设计文档/游戏04_数物连连看.md','🔗 数物连连看')">🔗 设计</span>
+      <span class="kp-doc-link" onclick="openDoc('游戏设计文档/游戏05_神秘数字猜猜猜.md','🔍 神秘数字猜猜猜')">🔍 设计</span>
     </div>
   </div>
 
@@ -221,45 +266,34 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
     <div class="game-row">
       <div class="game-card" onclick="openGame('游戏原型/游戏06_时间旅行社.html','🧳 时间旅行社')">
-        <span class="tag tag-5">🎭 角色</span>
-        <span class="icon">🧳</span>
-        <div class="name">时间旅行社</div>
-        <div class="desc">扮演导游在月历上帮顾客预订行程</div>
+        <span class="tag tag-5">🎭 角色</span><span class="icon">🧳</span>
+        <div class="name">时间旅行社</div><div class="desc">扮演导游在月历上帮顾客预订行程</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏07_月份记忆王.html','🃏 月份记忆王')">
-        <span class="tag tag-1">🃏 卡牌</span>
-        <span class="icon">🃏</span>
-        <div class="name">月份记忆王</div>
-        <div class="desc">翻牌配对月份↔天数/分类，星级评定</div>
+        <span class="tag tag-1">🃏 卡牌</span><span class="icon">🃏</span>
+        <div class="name">月份记忆王</div><div class="desc">翻牌配对月份↔天数/分类，星级评定</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏08_日历谜题大挑战.html','🔐 日历谜题大挑战')">
-        <span class="tag tag-4">🕵️ 推理</span>
-        <span class="icon">🔐</span>
-        <div class="name">日历谜题大挑战</div>
-        <div class="desc">4道密码锁密室逃脱，3级提示推理</div>
+        <span class="tag tag-4">🕵️ 推理</span><span class="icon">🔐</span>
+        <div class="name">日历谜题大挑战</div><div class="desc">4道密码锁密室逃脱，3级提示推理</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏09_月历补全大师.html','📅 月历补全大师')">
-        <span class="tag tag-3">📝 笔纸</span>
-        <span class="icon">📅</span>
-        <div class="name">月历补全大师</div>
-        <div class="desc">填补被风暴吹乱的日历空格，4关</div>
+        <span class="tag tag-3">📝 笔纸</span><span class="icon">📅</span>
+        <div class="name">月历补全大师</div><div class="desc">填补被风暴吹乱的日历空格，4关</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏10_闪电时间赛.html','⚡ 闪电时间赛')">
-        <span class="tag tag-0">🏁 竞速</span>
-        <span class="icon">⚡</span>
-        <div class="name">闪电时间赛</div>
-        <div class="desc">30秒限时快问快答，连击翻倍得分</div>
+        <span class="tag tag-0">🏁 竞速</span><span class="icon">⚡</span>
+        <div class="name">闪电时间赛</div><div class="desc">30秒限时快问快答，连击翻倍得分</div>
       </div>
     </div>
 
     <div class="kp-docs">
-      <a class="kp-doc-link" href="教学方案/三年级_年日月认识_教学方案.md">📖 教学方案（7模块）</a>
-      <a class="kp-doc-link" href="游戏设计文档/游戏06_时间旅行社.md">🧳</a>
-      <a class="kp-doc-link" href="游戏设计文档/游戏07_月份记忆王.md">🃏</a>
-      <a class="kp-doc-link" href="游戏设计文档/游戏08_日历谜题大挑战.md">🔐</a>
-      <a class="kp-doc-link" href="游戏设计文档/游戏09_月历补全大师.md">📅</a>
-      <a class="kp-doc-link" href="游戏设计文档/游戏10_闪电时间赛.md">⚡</a>
-      <span class="kp-doc-sep">— 5份设计文档 + 练习题池</span>
+      <span class="kp-doc-link" onclick="openDoc('教学方案/三年级_年日月认识_教学方案.md','📖 教学方案 · 年、月、日的认识')">📖 教学方案（7模块）</span>
+      <span class="kp-doc-link" onclick="openDoc('游戏设计文档/游戏06_时间旅行社.md','🧳 时间旅行社')">🧳 设计</span>
+      <span class="kp-doc-link" onclick="openDoc('游戏设计文档/游戏07_月份记忆王.md','🃏 月份记忆王')">🃏 设计</span>
+      <span class="kp-doc-link" onclick="openDoc('游戏设计文档/游戏08_日历谜题大挑战.md','🔐 日历谜题大挑战')">🔐 设计</span>
+      <span class="kp-doc-link" onclick="openDoc('游戏设计文档/游戏09_月历补全大师.md','📅 月历补全大师')">📅 设计</span>
+      <span class="kp-doc-link" onclick="openDoc('游戏设计文档/游戏10_闪电时间赛.md','⚡ 闪电时间赛')">⚡ 设计</span>
     </div>
   </div>
 
@@ -267,8 +301,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="instructions">
     <p>🎯 <strong>点卡片即玩</strong> — 点击任意游戏卡片，在弹窗中全屏体验，按 <strong>ESC</strong> 或点 ✕ 关闭</p>
     <p>📊 <strong>自适应练习</strong> — 通关后自动匹配难度：&lt;40% 基础巩固 → 40-60% 查漏补缺 → 60-80% 能力提升 → 80-95% 思维拓展 → ≥95% 挑战冲刺</p>
+    <p>📖 <strong>点文档浮窗看</strong> — 教学方案和游戏设计文档点击后浮窗渲染阅读，无需跳转</p>
     <p>📱 <strong>全设备支持</strong> — 电脑、平板均可流畅运行，触屏友好，无需安装任何软件</p>
-    <p>📂 <a href="总览.md">查看全部游戏总览文档 →</a></p>
   </div>
 </div>
 
@@ -277,41 +311,190 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <p style="margin-top:4px">📂 <a href="https://github.com/scalad/math-games">GitHub</a> &nbsp;·&nbsp; Made with ❤️ for kids who love math</p>
 </div>
 
-<!-- ===== Modal ===== -->
-<div class="modal-overlay" id="modal" style="display:none" onclick="closeModal(event)">
+<!-- ===== Game Modal ===== -->
+<div class="modal-overlay" id="gameModal" style="display:none" onclick="closeGameOverlay(event)">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-bar">
-      <span class="title" id="modalTitle">游戏</span>
+      <span class="title" id="gameModalTitle">游戏</span>
       <button class="modal-close" onclick="closeGame()" title="关闭 (ESC)">✕</button>
     </div>
-    <iframe class="modal-iframe" id="modalIframe" src="" allow="autoplay"></iframe>
+    <iframe class="modal-iframe" id="gameIframe" src="" allow="autoplay"></iframe>
+  </div>
+</div>
+
+<!-- ===== Doc Modal ===== -->
+<div class="doc-modal-overlay" id="docModal" style="display:none" onclick="closeDocOverlay(event)">
+  <div class="doc-modal-box" onclick="event.stopPropagation()">
+    <div class="modal-bar">
+      <span class="title" id="docModalTitle">📄 文档</span>
+      <button class="modal-close" onclick="closeDoc()" title="关闭 (ESC)">✕</button>
+    </div>
+    <div class="doc-modal-content" id="docContent">
+      <div class="md-loading">⏳ 加载中...</div>
+    </div>
   </div>
 </div>
 
 <script>
-const modal = document.getElementById('modal');
-const modalIframe = document.getElementById('modalIframe');
-const modalTitle = document.getElementById('modalTitle');
+// ========================================
+// Game Modal
+// ========================================
+const gameModal = document.getElementById('gameModal');
+const gameIframe = document.getElementById('gameIframe');
+const gameModalTitle = document.getElementById('gameModalTitle');
 
 function openGame(url, name) {
-  modalTitle.textContent = name;
-  modalIframe.src = url;
-  modal.style.display = 'flex';
+  gameModalTitle.textContent = name;
+  gameIframe.src = url;
+  gameModal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
 function closeGame() {
-  modalIframe.src = '';
-  modal.style.display = 'none';
+  gameIframe.src = '';
+  gameModal.style.display = 'none';
   document.body.style.overflow = '';
 }
-function closeModal(e) {
-  if (e.target === modal) closeGame();
+function closeGameOverlay(e) { if (e.target === gameModal) closeGame(); }
+
+// ========================================
+// Doc Modal with Markdown Rendering
+// ========================================
+const docModal = document.getElementById('docModal');
+const docModalTitle = document.getElementById('docModalTitle');
+const docContent = document.getElementById('docContent');
+
+function openDoc(url, title) {
+  docModalTitle.textContent = title || '📄 文档';
+  docContent.innerHTML = '<div class="md-loading">⏳ 加载中...</div>';
+  docModal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  fetch(url)
+    .then(r => { if (!r.ok) throw new Error('404'); return r.text(); })
+    .then(md => { docContent.innerHTML = mdToHtml(md); })
+    .catch(() => { docContent.innerHTML = '<div class="md-loading">❌ 文档加载失败，请检查文件路径</div>'; });
 }
+function closeDoc() {
+  docContent.innerHTML = '<div class="md-loading">⏳ 加载中...</div>';
+  docModal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+function closeDocOverlay(e) { if (e.target === docModal) closeDoc(); }
+
+// ESC handler — close whichever modal is open
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && modal.style.display === 'flex') closeGame();
+  if (e.key !== 'Escape') return;
+  if (docModal.style.display === 'flex') closeDoc();
+  else if (gameModal.style.display === 'flex') closeGame();
 });
 
+// ========================================
+// Minimal Markdown → HTML Renderer
+// ========================================
+function mdToHtml(md) {
+  // Escape HTML first
+  let html = md
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // Code blocks (``` ... ```)
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
+    return '<pre><code>' + code.replace(/\n$/, '') + '</code></pre>';
+  });
+
+  // Inline code (`...`)
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Headers
+  html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+  // Horizontal rules
+  html = html.replace(/^---+/gm, '<hr>');
+
+  // Bold & Italic
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Links [text](url)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+  // Images ![alt](url) — skip in doc view
+
+  // Tables — detect lines with | ... |
+  html = html.replace(/^(\|.+\|)$/gm, function(line) {
+    return line.replace(/^\|(.+)\|$/, function(_, cells) {
+      var isHeader = /^[\s:\-|]+$/.test(line.replace(/\|/g,'').replace(/[\s\-:]/g,''));
+      if (isHeader) return '<!-- table-sep -->';
+      var tag = 'td';
+      // Look ahead heuristic: if next non-sep line is a separator, this is header
+      return '<tr>' + cells.split('|').map(function(c) {
+        return '<' + tag + '>' + c.trim() + '</' + tag + '>';
+      }).join('') + '</tr>';
+    });
+  });
+
+  // Post-process tables
+  html = html.replace(/<!-- table-sep -->\s*<tr>/g, '<thead>');
+  // Close thead before first non-header tr after a thead
+  var hasThead = html.indexOf('<thead>');
+  if (hasThead >= 0) {
+    html = html.replace(/<\/tr>\s*(<tr>)/, '</tr></thead><tbody>$1');
+    html += '</tbody>';
+    // Wrap in table
+    html = html.replace(/(<thead>[\s\S]*?<\/tbody>)/, '<table>$1</table>');
+  }
+
+  // Blockquotes
+  html = html.replace(/^&gt; (.*)$/gm, '<blockquote>$1</blockquote>');
+  // Merge consecutive blockquotes
+  html = html.replace(/<\/blockquote>\n<blockquote>/g, '<br>');
+
+  // Unordered lists
+  html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+
+  // Ordered lists
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+  // Re-wrap remaining <li> that aren't already in <ul>
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, function(m) {
+    if (m.indexOf('<ul>') >= 0) return m; // already wrapped
+    return '<ol>' + m + '</ol>';
+  });
+
+  // Paragraphs — wrap lines that aren't block elements
+  var lines = html.split('\n');
+  var out = [];
+  var inPre = false;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
+    if (!line) { out.push(''); continue; }
+    if (/^<(pre|h[1-4]|hr|table|ul|ol|blockquote|thead|tbody|tr|th|td|li|head|body|\/)/.test(line)) {
+      out.push(line);
+      continue;
+    }
+    if (/^<!--/.test(line)) { out.push(line); continue; }
+    // Wrap in paragraph
+    if (out.length > 0 && out[out.length-1] !== '' && !/^</.test(out[out.length-1])) {
+      out[out.length-1] += '<br>' + line;
+    } else {
+      out.push('<p>' + line + '</p>');
+    }
+  }
+  html = out.join('\n');
+
+  // Clean up empty paragraphs
+  html = html.replace(/<p>\s*<\/p>/g, '');
+  html = html.replace(/<p><br><\/p>/g, '');
+
+  return html;
+}
+
+// ========================================
 // Auto stats
+// ========================================
 (function(){
   const sections = document.querySelectorAll('.kp-section');
   let totalGames = 0;
