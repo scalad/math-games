@@ -14,14 +14,63 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent}
 
-/* ===== Skill Tree Section ===== */
-.skill-section{
-  background:var(--card);border-radius:var(--radius);padding:16px 20px;
-  box-shadow:var(--shadow);margin-bottom:32px;
+/* ===== Right Sidebar ===== */
+.right-sidebar{
+  position:fixed;top:0;right:0;width:260px;height:100vh;
+  background:#fff;box-shadow:-2px 0 20px rgba(0,0,0,0.06);
+  z-index:100;display:flex;flex-direction:column;
 }
-.skill-section-title{font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px;color:#4F46E5}
-.skill-grid{display:flex;gap:24px;flex-wrap:wrap}
-.skill-col{flex:1;min-width:280px}
+.rs-header{
+  padding:16px 18px 12px;background:linear-gradient(135deg,#4F46E5,#7C3AED);
+  color:#fff;flex-shrink:0;
+}
+.rs-header .rs-icon{font-size:20px;margin-bottom:2px}
+.rs-header .rs-title{font-size:14px;font-weight:700}
+.rs-header .rs-sub{font-size:10px;opacity:.8;margin-top:2px}
+.rs-body{flex:1;overflow-y:auto;padding:10px 12px;-webkit-overflow-scrolling:touch}
+.rs-body::-webkit-scrollbar{width:4px}
+.rs-body::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px}
+
+/* Tree in right sidebar */
+.rs-body .tree{font-size:12px;color:#444}
+.rs-body .tree ul{list-style:none;padding-left:0;margin:0}
+.rs-body .tree ul ul{padding-left:14px}
+.rs-body .tree .tree-item{position:relative}
+.rs-body .tree .tree-row{
+  display:flex;align-items:center;gap:4px;padding:4px 6px;
+  cursor:pointer;border-radius:5px;transition:background .15s;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.rs-body .tree .tree-row:hover{background:#EEF0FF}
+.rs-body .tree .tree-row.active{background:#E0E0FF;color:#4F46E5;font-weight:600}
+.rs-body .tree .toggle{
+  width:12px;height:12px;display:inline-flex;align-items:center;
+  justify-content:center;font-size:9px;color:#999;flex-shrink:0;
+  transition:transform .2s;
+}
+.rs-body .tree .toggle.open{transform:rotate(90deg)}
+.rs-body .tree .toggle.leaf{visibility:hidden}
+.rs-body .tree .tree-icon{font-size:12px;flex-shrink:0}
+.rs-body .tree .tree-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rs-body .tree .tree-children{display:none}
+.rs-body .tree .tree-children.open{display:block}
+.rs-body .tree .file-row .tree-label{font-weight:400;color:#555}
+.rs-body .tree .file-row:hover .tree-label{color:#4F46E5}
+.rs-body .skill-root-name{
+  font-weight:700;font-size:12px;color:#4F46E5;display:flex;align-items:center;gap:4px;
+  padding:5px 6px;cursor:pointer;border-radius:5px;transition:background .15s;
+}
+.rs-body .skill-root-name:hover{background:#EEF0FF}
+.rs-body .skill-root-name .toggle{align-self:center}
+
+/* Main content with right margin */
+.main-content{margin-right:260px;padding:0 20px}
+
+/* Mobile */
+@media(max-width:900px){
+  .right-sidebar{display:none}
+  .main-content{margin-right:0}
+}
 
 /* Tree */
 .tree{font-size:13px;color:#444}
@@ -231,6 +280,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <p class="sub">玩中学数学 · 5 大玩法族系 · 自适应练习系统 · 每个知识点 5 款游戏</p>
 </div>
 
+<!-- ===== Right Sidebar ===== -->
+<aside class="right-sidebar" id="rightSidebar">
+  <div class="rs-header">
+    <div class="rs-icon">🧰</div>
+    <div class="rs-title">Skill 工具包</div>
+    <div class="rs-sub">点击文件名查看内容</div>
+  </div>
+  <div class="rs-body">
+    <div class="tree" id="skillTree1"></div>
+    <div class="tree" id="skillTree2" style="margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0"></div>
+  </div>
+</aside>
+
 <!-- ===== Main Content ===== -->
 <div class="main-content">
 
@@ -240,14 +302,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="stat-card"><div class="num" id="totalGames">10</div><div class="lbl">互动游戏</div></div>
   <div class="stat-card"><div class="num">5</div><div class="lbl">玩法族系</div></div>
   <div class="stat-card"><div class="num">5 档</div><div class="lbl">自适应练习</div></div>
-</div>
-
-<!-- ===== Skill Trees ===== -->
-<div class="skill-section">
-  <div class="skill-section-title">🧰 Skill 工具包 <span style="font-weight:400;font-size:12px;color:#999;margin-left:8px">点击文件名查看内容</span></div>  <div class="skill-grid">
-    <div class="skill-col"><div class="tree" id="skillTree1"></div></div>
-    <div class="skill-col"><div class="tree" id="skillTree2"></div></div>
-  </div>
 </div>
 
 <div class="container" style="margin-top:0">
@@ -404,7 +458,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <p>📊 <strong>自适应练习</strong> — 通关后自动匹配难度：&lt;40% 基础巩固 → 40-60% 查漏补缺 → 60-80% 能力提升 → 80-95% 思维拓展 → ≥95% 挑战冲刺</p>
     <p>📖 <strong>教学方案</strong> — 知识点标题旁的「📖 教学方案」按钮查看完整教案</p>
     <p>📄 <strong>设计文档</strong> — 每个游戏卡片底部的「📄 设计」按钮查看该游戏的设计文档</p>
-    <p>🧰 <strong>Skill 工具包</strong> — 顶部区域可展开查看两个 Skill 的完整文件，点击文件名即可阅读</p>
+    <p>🧰 <strong>Skill 工具包</strong> — 右侧边栏可展开查看两个 Skill 的完整文件树，点击文件名即可阅读</p>
     <p>📱 <strong>全设备支持</strong> — 电脑、平板均可流畅运行，触屏友好，无需安装任何软件</p>
   </div>
 </div>
