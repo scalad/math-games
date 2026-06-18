@@ -144,8 +144,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <!-- ===== Stats ===== -->
 <div class="container">
   <div class="stats-bar">
-    <div class="stat-card"><div class="num" id="totalKps">1</div><div class="lbl">知识模块</div></div>
-    <div class="stat-card"><div class="num" id="totalGames">5</div><div class="lbl">互动游戏</div></div>
+    <div class="stat-card"><div class="num" id="totalKps">2</div><div class="lbl">知识模块</div></div>
+    <div class="stat-card"><div class="num" id="totalGames">10</div><div class="lbl">互动游戏</div></div>
     <div class="stat-card"><div class="num">5</div><div class="lbl">玩法族系</div></div>
     <div class="stat-card"><div class="num">5 档</div><div class="lbl">自适应练习</div></div>
   </div>
@@ -191,38 +191,56 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
   </div>
 
-  <!--
-  ★★★★★ 新增知识点模板 ★★★★★
-  复制下面的 block，填入新数据即可：
-  ================================
+  <!-- ===== Knowledge Point: 年、月、日的认识 ===== -->
   <div class="kp-section">
     <div class="kp-header">
-      <span class="kp-grade">📘 一年级上册</span>
-      <span class="kp-title">6~10 数字的认识</span>
+      <span class="kp-grade">📙 三年级下册</span>
+      <span class="kp-title">年、月、日的认识</span>
     </div>
-    <p class="kp-desc">描述信息</p>
+    <p class="kp-desc">大月小月 · 平年闰年 · 24时计时法 · 日历阅读 — 5款创意游戏 + 5档自适应练习</p>
     <div class="game-grid">
-      <div class="game-card" onclick="openGame('路径/游戏.html','游戏名称')">
-        <span class="tag tag-0">类型标签</span>
-        <span class="icon">🎯</span>
-        <div class="name">游戏名称</div>
-        <div class="desc">简短描述</div>
+      <div class="game-card" onclick="openGame('游戏原型/游戏06_时间旅行社.html','🧳 时间旅行社')">
+        <span class="tag tag-5">🎭 角色族</span>
+        <span class="icon">🧳</span>
+        <div class="name">时间旅行社</div>
+        <div class="desc">扮演小导游，帮顾客在月历上预订行程！选大月/找闰年/转24时，3关角色扮演。</div>
       </div>
-      ... 共5个游戏卡片
+      <div class="game-card" onclick="openGame('游戏原型/游戏07_月份记忆王.html','🃏 月份记忆王')">
+        <span class="tag tag-1">🃏 卡牌族</span>
+        <span class="icon">🃏</span>
+        <div class="name">月份记忆王</div>
+        <div class="desc">翻牌配对：月份↔天数/分类！3关记忆挑战，配对效率决定星级评定。</div>
+      </div>
+      <div class="game-card" onclick="openGame('游戏原型/游戏08_日历谜题大挑战.html','🔐 日历谜题大挑战')">
+        <span class="tag tag-4">🕵️ 推理族</span>
+        <span class="icon">🔐</span>
+        <div class="name">日历谜题大挑战</div>
+        <div class="desc">被困时间密室！破解4道年月日密码锁，3级提示系统助你推理逃脱。</div>
+      </div>
+      <div class="game-card" onclick="openGame('游戏原型/游戏09_月历补全大师.html','📅 月历补全大师')">
+        <span class="tag tag-3">📝 笔纸族</span>
+        <span class="icon">📅</span>
+        <div class="name">月历补全大师</div>
+        <div class="desc">时间风暴吹乱了日历！根据星期规律填补空白日期，4关渐进挑战。</div>
+      </div>
+      <div class="game-card" onclick="openGame('游戏原型/游戏10_闪电时间赛.html','⚡ 闪电时间赛')">
+        <span class="tag tag-0">🏁 竞速族</span>
+        <span class="icon">⚡</span>
+        <div class="name">闪电时间赛</div>
+        <div class="desc">30秒限时快问快答！大小月/平闰年/24时，连击×2.0得分翻倍！</div>
+      </div>
     </div>
   </div>
-  ================================
-  -->
 
   <!-- ===== Coming Soon ===== -->
   <div class="kp-section">
     <div class="kp-header">
-      <span class="kp-grade">📘 一年级上册</span>
-      <span class="kp-title">更多知识点即将上线</span>
+      <span class="kp-grade">📘 更多知识点</span>
+      <span class="kp-title">持续更新中</span>
     </div>
     <div class="kp-placeholder">
       <div class="ph-icon">🚧</div>
-      <div class="ph-title">6~10 的认识、1~5 的加减法、认识图形……</div>
+      <div class="ph-title">分数初步认识、面积与周长、小数的认识……</div>
       <div class="ph-desc">每个知识点将配套 5 款创意游戏 + 自适应练习系统，敬请期待！</div>
     </div>
   </div>
@@ -231,12 +249,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="doc-section">
     <div class="doc-title">📄 教学文档</div>
     <div class="doc-row">
-      <a class="doc-link" href="总览.md">📋 总览 — 5款游戏速览 + 自适应练习系统</a>
-      <a class="doc-link" href="教学方案/一年级_1-5数字的认识_教学方案.md">📖 教学方案 — 完整7模块教案（CPA）</a>
+      <a class="doc-link" href="总览.md">📋 总览 — 全部游戏速览 + 自适应练习系统</a>
+      <a class="doc-link" href="教学方案/一年级_1-5数字的认识_教学方案.md">📖 一年级 — 1~5数字认识 (CPA)</a>
+      <a class="doc-link" href="教学方案/三年级_年日月认识_教学方案.md">📖 三年级 — 年月日认识 (7模块)</a>
     </div>
   </div>
   <div class="doc-section">
-    <div class="doc-title">🎨 游戏设计文档</div>
+    <div class="doc-title">🎨 游戏设计文档 — 三年级 年、月、日</div>
+    <div class="doc-row">
+      <a class="doc-link" href="游戏设计文档/游戏06_时间旅行社.md">🧳 时间旅行社</a>
+      <a class="doc-link" href="游戏设计文档/游戏07_月份记忆王.md">🃏 月份记忆王</a>
+      <a class="doc-link" href="游戏设计文档/游戏08_日历谜题大挑战.md">🔐 日历谜题大挑战</a>
+      <a class="doc-link" href="游戏设计文档/游戏09_月历补全大师.md">📅 月历补全大师</a>
+      <a class="doc-link" href="游戏设计文档/游戏10_闪电时间赛.md">⚡ 闪电时间赛</a>
+    </div>
+  </div>
+  <div class="doc-section">
+    <div class="doc-title">🎨 游戏设计文档 — 一年级 1~5的认识</div>
     <div class="doc-row">
       <a class="doc-link" href="游戏设计文档/游戏01_开心农场打地鼠.md">🐹 打地鼠设计</a>
       <a class="doc-link" href="游戏设计文档/游戏02_数字记忆翻翻乐.md">🃏 翻翻乐设计</a>

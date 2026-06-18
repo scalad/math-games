@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📅 月历补全大师</title>
+<style>
+/* ============================================
+   月历补全大师 — 基础样式 (继承模板体系)
+   ============================================ */
+:root {
+  --color-primary: #8B7355;
+  --color-primary-light: #C4A882;
+  --color-primary-dark: #6B5740;
+  --color-success: #4CAF50;
+  --color-success-light: #E8F5E9;
+  --color-error: #FF5252;
+  --color-error-light: #FFEBEE;
+  --color-warning: #FAAD14;
+  --color-warning-light: #FFFBE6;
+  --color-bg: #FDF8F0;
+  --color-card: #FFFFFF;
+  --color-text: #3E2723;
+  --color-text-light: #8D6E63;
+  --color-border: #D7CCC8;
+  --color-cal-empty: #FFF3E0;
+  --color-cal-filled: #EFEBE9;
+  --color-gold: #FFB300;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-button: 0 4px 12px rgba(0,0,0,0.15);
+  --font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-number: "Consolas", "Courier New", monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font-family);
+  background: var(--color-bg);
+  background-image: radial-gradient(circle at 20% 30%, rgba(139,115,85,0.06) 0%, transparent 50%);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.game-container {
+  width: 100%;
+  max-width: 520px;
+  background: var(--color-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card), 0 8px 32px rgba(139,115,85,0.12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 640px;
+  position: relative;
+}
+.game-header {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: white;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.game-title { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+.game-stats { display: flex; gap: 14px; font-size: 13px; }
+.stat-item { display: flex; align-items: center; gap: 4px; }
+.stat-icon { font-size: 15px; }
+.stat-value { font-weight: 700; font-family: var(--font-number); }
+.stat-item.coins .stat-icon { color: var(--color-gold); }
+
+.level-indicator {
+  padding: 6px 20px;
+  background: var(--color-primary-light);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.question-area { padding: 16px 20px 8px; text-align: center; flex-shrink: 0; }
+.question-text { font-size: 17px; font-weight: 600; color: var(--color-text); margin-bottom: 4px; line-height: 1.5; }
+.question-hint { font-size: 12px; color: var(--color-text-light); }
+.month-title { font-size: 22px; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 2px; }
+
+.game-area {
+  flex: 1; padding: 8px 12px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-start;
+}
+
+/* --- 月历表格 --- */
+.calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.calendar-table th {
+  padding: 8px 2px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-light);
+  text-align: center;
+  border-bottom: 2px solid var(--color-border);
+}
+.calendar-table th.weekend { color: #E57373; }
+.calendar-table td {
+  padding: 4px 2px;
+  text-align: center;
+  vertical-align: middle;
+}
+.cal-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-number);
+  cursor: default;
+  transition: all 0.2s ease;
+  min-width: 36px;
+  min-height: 36px;
+}
+.cal-cell.filled {
+  background: var(--color-cal-filled);
+  color: var(--color-text);
+}
+.cal-cell.blank {
+  background: var(--color-cal-empty);
+  border: 2px dashed var(--color-primary-light);
+  color: var(--color-primary-light);
+  cursor: pointer;
+  position: relative;
+}
+.cal-cell.blank::after {
+  content: '?';
+  font-size: 18px;
+  font-weight: 700;
+}
+.cal-cell.blank:hover {
+  background: #FFE0B2;
+  border-color: var(--color-warning);
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.cal-cell.blank:active { transform: scale(1.02); }
+.cal-cell.correct {
+  background: var(--color-success-light);
+  border: 2px solid var(--color-success);
+  color: var(--color-success);
+  animation: popIn 0.4s ease;
+}
+.cal-cell.incorrect {
+  background: var(--color-error-light);
+  border: 2px solid var(--color-error);
+  color: var(--color-error);
+  animation: shake 0.4s ease;
+}
+.cal-cell.blank:disabled { pointer-events: none; }
+
+/* --- 输入弹层 --- */
+.input-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 200;
+  animation: fadeIn 0.2s ease;
+}
+.input-modal {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 28px 24px 20px;
+  text-align: center;
+  max-width: 300px; width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  animation: scaleIn 0.3s ease;
+}
+.input-modal-title {
+  font-size: 16px; font-weight: 700;
+  color: var(--color-text); margin-bottom: 4px;
+}
+.input-modal-sub {
+  font-size: 13px; color: var(--color-text-light); margin-bottom: 16px;
+}
+.input-modal input {
+  width: 100%; padding: 14px;
+  font-size: 28px; font-weight: 700;
+  font-family: var(--font-number);
+  text-align: center;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none; margin-bottom: 14px;
+}
+.input-modal input:focus { border-color: var(--color-primary); }
+.input-modal-btns { display: flex; gap: 8px; }
+.input-modal-btns button {
+  flex: 1; padding: 12px;
+  font-size: 15px; font-weight: 700;
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-confirm { background: var(--color-primary); color: white; }
+.btn-confirm:hover { background: var(--color-primary-dark); }
+.btn-cancel { background: var(--color-border); color: var(--color-text); }
+.btn-cancel:hover { background: #BCAAA4; }
+
+/* --- 提示按钮 --- */
+.hint-bar {
+  display: flex; gap: 8px; align-items: center;
+  padding: 4px 20px 8px;
+  justify-content: center;
+}
+.hint-btn {
+  padding: 6px 16px; font-size: 12px; font-weight: 700;
+  background: var(--color-warning-light); color: #E65100;
+  border: 1px solid var(--color-warning); border-radius: 20px;
+  cursor: pointer; transition: all 0.2s;
+}
+.hint-btn:hover { background: var(--color-warning); color: white; }
+.hint-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* --- Progress Bar --- */
+.progress-bar-container {
+  width: 100%; height: 6px; background: var(--color-border);
+  border-radius: 3px; overflow: hidden; margin: 0 0;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success), #8BC34A);
+  border-radius: 3px; transition: width 0.5s ease;
+}
+
+/* --- Feedback Snackbar --- */
+.snackbar {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  padding: 10px 24px; border-radius: 24px; font-size: 14px; font-weight: 700;
+  z-index: 150; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+}
+.snackbar.show { opacity: 1; transform: translateX(-50%) translateY(-8px); }
+.snackbar.s-correct { background: var(--color-success); color: white; }
+.snackbar.s-error { background: var(--color-error); color: white; }
+.snackbar.s-hint { background: #5C6BC0; color: white; }
+
+/* --- Footer --- */
+.game-footer {
+  padding: 10px 20px; display: flex; justify-content: center;
+  border-top: 1px solid var(--color-border);
+}
+.restart-btn {
+  padding: 8px 20px; font-size: 13px; color: var(--color-text-light);
+  background: transparent; border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+}
+.restart-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+/* ============================================
+   Practice Mode (from template, color-adjusted)
+   ============================================ */
+.practice-container {
+  display: none; flex-direction: column; height: 100%;
+}
+.practice-badge-bar {
+  padding: 12px 20px; background: var(--color-bg);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+}
+.practice-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700;
+}
+.badge-tier-1 { background: #E8F5E9; color: #2E7D32; }
+.badge-tier-2 { background: #E3F2FD; color: #1565C0; }
+.badge-tier-3 { background: #FFF3E0; color: #E65100; }
+.badge-tier-4 { background: #F3E5F5; color: #7B1FA2; }
+.badge-tier-5 { background: #FFEBEE; color: #C62828; }
+.practice-progress-text { font-size: 13px; color: var(--color-text-light); }
+
+.practice-question-card {
+  margin: 20px; padding: 24px 20px; background: var(--color-card);
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg); flex: 1;
+}
+.practice-q-num { font-size: 12px; font-weight: 700; color: var(--color-primary); text-transform: uppercase; margin-bottom: 8px; }
+.practice-q-title { font-size: 17px; font-weight: 600; color: var(--color-text); margin-bottom: 16px; line-height: 1.6; }
+.practice-options { display: flex; flex-direction: column; gap: 10px; }
+.practice-option {
+  padding: 14px 16px; font-size: 15px; text-align: left;
+  background: var(--color-bg); border: 2px solid var(--color-border);
+  border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s; line-height: 1.4;
+}
+.practice-option:hover { border-color: var(--color-primary); background: white; }
+.practice-option.selected-correct { border-color: var(--color-success); background: var(--color-success-light); }
+.practice-option.selected-wrong { border-color: var(--color-error); background: var(--color-error-light); }
+.practice-option.show-correct { border-color: var(--color-success); }
+.practice-option:disabled { pointer-events: none; }
+
+.practice-input-area { display: flex; gap: 10px; }
+.practice-input {
+  flex: 1; padding: 12px 16px; font-size: 18px; font-weight: 700;
+  font-family: var(--font-number); text-align: center;
+  border: 2px solid var(--color-border); border-radius: var(--radius-md); outline: none;
+}
+.practice-input:focus { border-color: var(--color-primary); }
+.submit-btn {
+  padding: 14px 24px; font-size: 16px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md); cursor: pointer; transition: background 0.2s; min-width: 72px;
+}
+.submit-btn:hover { background: var(--color-primary-dark); }
+
+.practice-feedback {
+  margin: 0 20px 12px; padding: 12px 16px;
+  border-radius: var(--radius-md); font-size: 14px; line-height: 1.5; display: none;
+}
+.practice-feedback.show { display: block; animation: fadeIn 0.3s ease; }
+.practice-feedback.correct { background: var(--color-success-light); color: #2E7D32; }
+.practice-feedback.wrong { background: var(--color-error-light); color: #C62828; }
+
+.practice-nav {
+  padding: 12px 20px; display: flex; gap: 10px;
+  justify-content: center; border-top: 1px solid var(--color-border);
+}
+.practice-nav-btn {
+  padding: 10px 24px; font-size: 15px; font-weight: 700;
+  border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s;
+}
+.practice-nav-btn.primary { background: var(--color-primary); color: white; }
+.practice-nav-btn.primary:hover { background: var(--color-primary-dark); }
+.practice-nav-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.practice-nav-btn.secondary { background: transparent; color: var(--color-text-light); border: 1px solid var(--color-border); }
+.practice-nav-btn.secondary:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+.practice-summary { text-align: center; padding: 30px 20px; }
+.practice-summary-icon { font-size: 64px; margin-bottom: 12px; }
+.practice-summary-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.practice-summary-score { font-size: 36px; font-weight: 700; font-family: var(--font-number); margin-bottom: 12px; }
+.practice-summary-detail { font-size: 14px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.8; }
+
+/* --- Victory --- */
+.victory-container { text-align: center; padding: 20px; }
+.victory-icon { font-size: 72px; margin-bottom: 12px; animation: bounce 0.6s ease infinite alternate; }
+.victory-title { font-size: 26px; font-weight: 700; color: var(--color-success); margin-bottom: 8px; }
+.victory-stats { font-size: 15px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.8; }
+.victory-btn {
+  padding: 12px 32px; font-size: 16px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md); cursor: pointer; margin: 0 6px; transition: background 0.2s;
+}
+.victory-btn:hover { background: var(--color-primary-dark); }
+
+/* --- Animations --- */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes shake { 0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)} }
+@keyframes pulse-success { 0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)} }
+@keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-12px)} }
+@keyframes popIn { 0%{transform:scale(0.6);opacity:0}80%{transform:scale(1.08)}100%{transform:scale(1);opacity:1} }
+.hidden { display: none !important; }
+
+/* --- Responsive --- */
+@media (max-width: 360px) {
+  .game-container { min-height: 560px; }
+  .game-header { padding: 10px 14px; }
+  .game-title { font-size: 16px; }
+  .cal-cell { font-size: 13px; min-width: 30px; min-height: 30px; }
+  .calendar-table th { font-size: 10px; padding: 6px 1px; }
+}
+@media (min-width: 768px) {
+  .game-container { max-width: 560px; min-height: 720px; }
+  .cal-cell { font-size: 17px; min-width: 44px; min-height: 44px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==============================
+     GAME CONTAINER
+     ============================== -->
+<div class="game-container" id="gameContainer">
+
+  <div class="game-header">
+    <div class="game-title">📅 月历补全大师</div>
+    <div class="game-stats">
+      <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-value" id="scoreDisplay">0</span></div>
+      <div class="stat-item coins"><span class="stat-icon">🪙</span><span class="stat-value" id="coinsDisplay">50</span></div>
+      <div class="stat-item"><span class="stat-icon">🎯</span><span class="stat-value" id="levelDisplay">1/4</span></div>
+    </div>
+  </div>
+
+  <div class="level-indicator" id="levelLabel">🌬️ 第 1 关 · 微风</div>
+
+  <div class="question-area" id="questionArea">
+    <div class="month-title" id="monthTitle">2025年1月</div>
+    <div class="question-text" id="questionText">时间风暴吹走了几个日期，把它们补回来吧！</div>
+    <div class="question-hint" id="questionHint">💡 点击带"?"的格子填入数字</div>
+  </div>
+
+  <div class="game-area" id="gameArea"><!-- Calendar injected by JS --></div>
+
+  <div class="hint-bar">
+    <button class="hint-btn" id="hintBtn" title="消耗5金币获得提示">💡 提示 (-5🪙)</button>
+    <span style="font-size:11px;color:var(--color-text-light)" id="hintText"></span>
+  </div>
+
+  <div style="padding: 0 20px;">
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <div class="game-footer">
+    <button class="restart-btn" id="restartBtn">🔄 重新开始</button>
+  </div>
+</div>
+
+<!-- Input Overlay -->
+<div class="input-overlay hidden" id="inputOverlay">
+  <div class="input-modal">
+    <div class="input-modal-title" id="inputTitle">填入日期</div>
+    <div class="input-modal-sub" id="inputSub"></div>
+    <input type="number" id="numberInput" placeholder="?" min="1" max="31" inputmode="numeric">
+    <div class="input-modal-btns">
+      <button class="btn-cancel" id="btnCancel">取消</button>
+      <button class="btn-confirm" id="btnConfirm">确认 ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Snackbar -->
+<div class="snackbar" id="snackbar"></div>
+
+<!-- ==============================
+     PRACTICE CONTAINER
+     ============================== -->
+<div class="practice-container hidden" id="practiceContainer">
+  <div class="practice-badge-bar">
+    <span class="practice-badge" id="practiceBadge">📝 巩固练习</span>
+    <span class="practice-progress-text" id="practiceProgress">第 1/5 题</span>
+  </div>
+  <div class="practice-question-card">
+    <div class="practice-q-num" id="practiceQNum">第 1 题</div>
+    <div class="practice-q-title" id="practiceQTitle">题目内容</div>
+    <div id="practiceQContent"></div>
+  </div>
+  <div class="practice-feedback" id="practiceFeedback"></div>
+  <div class="practice-nav">
+    <button class="practice-nav-btn secondary hidden" id="practiceSkipBtn">跳过</button>
+    <button class="practice-nav-btn primary" id="practiceNextBtn">下一题 →</button>
+  </div>
+</div>
+
+<script>
+// ============================================
+// DOM Refs
+// ============================================
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+const gameContainer = $('#gameContainer');
+const scoreDisplay = $('#scoreDisplay');
+const coinsDisplay = $('#coinsDisplay');
+const levelDisplay = $('#levelDisplay');
+const levelLabel = $('#levelLabel');
+const monthTitle = $('#monthTitle');
+const questionText = $('#questionText');
+const questionHint = $('#questionHint');
+const gameArea = $('#gameArea');
+const progressBar = $('#progressBar');
+const hintBtn = $('#hintBtn');
+const hintText = $('#hintText');
+const inputOverlay = $('#inputOverlay');
+const inputTitle = $('#inputTitle');
+const inputSub = $('#inputSub');
+const numberInput = $('#numberInput');
+const btnCancel = $('#btnCancel');
+const btnConfirm = $('#btnConfirm');
+const snackbar = $('#snackbar');
+const restartBtn = $('#restartBtn');
+
+const practiceContainer = $('#practiceContainer');
+const practiceBadge = $('#practiceBadge');
+const practiceProgress = $('#practiceProgress');
+const practiceQNum = $('#practiceQNum');
+const practiceQTitle = $('#practiceQTitle');
+const practiceQContent = $('#practiceQContent');
+const practiceFeedback = $('#practiceFeedback');
+const practiceNextBtn = $('#practiceNextBtn');
+const practiceSkipBtn = $('#practiceSkipBtn');
+
+// ============================================
+// STATE
+// ============================================
+const state = {
+  score: 0,
+  coins: 50,
+  level: 1,
+  totalLevels: 4,
+  filledThisLevel: 0,  // how many blanks correctly filled in current level
+  totalBlanksThisLevel: 0,
+  correctCount: 0,      // total correct fills across all levels
+  totalAttempts: 0,     // total fill attempts
+  activeCell: null,      // currently selected blank cell (row, col)
+  currentInputExpected: null,
+  isInputOpen: false,
+  // practice
+  mode: 'game',
+  practiceTier: 1,
+  practiceIndex: 0,
+  practiceCorrect: 0,
+};
+
+// ============================================
+// CALENDAR DATA FOR 2025
+// ============================================
+// startDay: 0=Sun, 1=Mon, ..., 6=Sat
+const levelData = {
+  1: {
+    name: '微风',
+    icon: '🌬️',
+    year: 2025, month: 1, monthName: '2025年1月', days: 31, startDay: 3,
+    blanks: [7, 15, 29],
+    description: '时间风暴轻轻吹过，只带走了几个日期~'
+  },
+  2: {
+    name: '大风',
+    icon: '💨',
+    year: 2025, month: 6, monthName: '2025年6月', days: 30, startDay: 0,
+    blanks: [3, 9, 14, 20, 27, 30],
+    description: '风变大了！更多日期被吹走了，仔细推理哦！'
+  },
+  3: {
+    name: '暴风',
+    icon: '🌪️',
+    year: 2025, month: 2, monthName: '2025年2月', days: 28, startDay: 6,
+    blanks: [4, 7, 10, 13, 16, 19, 22, 25, 27, 28],
+    description: '暴风来袭！注意：2025年是平年，2月只有28天！'
+  },
+  4: {
+    name: '飓风',
+    icon: '🌀',
+    year: 2025, month: 9, monthName: '2025年9月', days: 30, startDay: 1,
+    blanks: [2, 5, 8, 11, 14, 17, 20, 23, 24, 26, 27, 28, 29, 30],
+    description: '飓风摧毁了大半个月历！只剩少数日期坚守阵地……'
+  }
+};
+
+// 4关名字
+const levelNames = ['微风','大风','暴风','飓风'];
+const levelIcons = ['🌬️','💨','🌪️','🌀'];
+
+// ============================================
+// CALENDAR RENDERER
+// ============================================
+function getCalendarGrid(year, month, days, startDay, blanks) {
+  // Build flat grid: array of {val: number|null, isBlank: bool, filled: bool}
+  // null = out-of-range cell (before 1st or after last day)
+  const grid = [];
+  let day = 1;
+  const totalCells = startDay + days;
+  const rows = Math.ceil(totalCells / 7);
+
+  for (let r = 0; r < rows; r++) {
+    const row = [];
+    for (let c = 0; c < 7; c++) {
+      const idx = r * 7 + c;
+      if (idx < startDay || day > days) {
+        row.push({ val: null, isBlank: false, filled: false });
+      } else {
+        const isBlank = blanks.includes(day);
+        row.push({ val: day, isBlank, filled: !isBlank });
+        day++;
+      }
+    }
+    grid.push(row);
+  }
+  return grid;
+}
+
+function renderCalendar() {
+  const lv = levelData[state.level];
+  const grid = getCalendarGrid(lv.year, lv.month, lv.days, lv.startDay, lv.blanks);
+
+  state.filledThisLevel = 0;
+  state.totalBlanksThisLevel = lv.blanks.length;
+
+  const DAYS = ['日','一','二','三','四','五','六'];
+
+  let html = '<table class="calendar-table"><thead><tr>';
+  DAYS.forEach((d, i) => {
+    html += `<th class="${i===0||i===6?'weekend':''}">${d}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  grid.forEach((row, ri) => {
+    html += '<tr>';
+    row.forEach((cell, ci) => {
+      if (cell.val === null) {
+        html += '<td></td>';
+      } else if (cell.isBlank && !cell.filled) {
+        html += `<td><div class="cal-cell blank" data-row="${ri}" data-col="${ci}" data-val="${cell.val}"></div></td>`;
+      } else {
+        html += `<td><div class="cal-cell filled">${cell.val}</div></td>`;
+      }
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  gameArea.innerHTML = html;
+
+  // Attach click handlers to blank cells
+  const blankCells = gameArea.querySelectorAll('.cal-cell.blank');
+  blankCells.forEach(cell => {
+    cell.addEventListener('click', () => {
+      const r = parseInt(cell.dataset.row);
+      const c = parseInt(cell.dataset.col);
+      const expected = parseInt(cell.dataset.val);
+      openInputDialog(r, c, expected, cell);
+    });
+  });
+
+  // Update calc
+  const totalBlanksAllLevels = Object.values(levelData).reduce((s, lv) => s + lv.blanks.length, 0);
+  const filledSoFar = getFilledSoFar();
+  updateProgress(filledSoFar, totalBlanksAllLevels);
+}
+
+function getFilledSoFar() {
+  // Count blanks filled in levels before current, plus blanks filled in current
+  let filled = 0;
+  for (let i = 1; i < state.level; i++) {
+    filled += levelData[i].blanks.length;
+  }
+  filled += state.filledThisLevel;
+  return filled;
+}
+
+// ============================================
+// INPUT DIALOG
+// ============================================
+function openInputDialog(row, col, expected, cellEl) {
+  state.activeCell = { row, col, el: cellEl, expected };
+  state.currentInputExpected = expected;
+  state.isInputOpen = true;
+
+  const lv = levelData[state.level];
+  inputTitle.textContent = `这个格子该填几号？`;
+  inputSub.textContent = `${lv.monthName} · 第${row+1}行第${col+1}列`;
+  numberInput.value = '';
+  numberInput.max = lv.days;
+  numberInput.min = 1;
+  inputOverlay.classList.remove('hidden');
+  setTimeout(() => numberInput.focus(), 150);
+}
+
+function closeInputDialog() {
+  inputOverlay.classList.add('hidden');
+  state.isInputOpen = false;
+  state.activeCell = null;
+}
+
+function submitAnswer() {
+  if (!state.isInputOpen || !state.activeCell) return;
+  const val = parseInt(numberInput.value);
+  const expected = state.currentInputExpected;
+  const lv = levelData[state.level];
+
+  if (isNaN(val) || val < 1 || val > lv.days) {
+    showSnackbar(`请输入 1~${lv.days} 之间的数字哦！`, 's-error');
+    return;
+  }
+
+  state.totalAttempts++;
+  closeInputDialog();
+
+  const cellEl = state.activeCell.el;
+  if (val === expected) {
+    // Correct!
+    state.correctCount++;
+    state.filledThisLevel++;
+    state.score += 10;
+    scoreDisplay.textContent = state.score;
+    cellEl.classList.remove('blank');
+    cellEl.classList.add('correct');
+    cellEl.textContent = val;
+    cellEl.style.cursor = 'default';
+    cellEl.onclick = null;
+    showSnackbar(`✅ 正确！+10分`, 's-correct');
+
+    const totalBlanksAllLevels = Object.values(levelData).reduce((s, lv) => s + lv.blanks.length, 0);
+    updateProgress(getFilledSoFar(), totalBlanksAllLevels);
+
+    // Check level complete
+    if (state.filledThisLevel >= state.totalBlanksThisLevel) {
+      setTimeout(() => advanceLevel(), 800);
+    }
+  } else {
+    // Wrong
+    state.score = Math.max(0, state.score - 2);
+    scoreDisplay.textContent = state.score;
+    cellEl.classList.add('incorrect');
+    showSnackbar(`❌ 不对哦！正确答案是 ${expected}，-2分`, 's-error');
+    // After animation, fill the correct answer
+    setTimeout(() => {
+      cellEl.classList.remove('blank', 'incorrect');
+      cellEl.classList.add('correct');
+      cellEl.textContent = expected;
+      cellEl.style.cursor = 'default';
+      cellEl.onclick = null;
+      state.filledThisLevel++;
+      const totalBlanksAllLevels = Object.values(levelData).reduce((s, lv) => s + lv.blanks.length, 0);
+      updateProgress(getFilledSoFar(), totalBlanksAllLevels);
+      if (state.filledThisLevel >= state.totalBlanksThisLevel) {
+        setTimeout(() => advanceLevel(), 500);
+      }
+    }, 600);
+  }
+}
+
+function advanceLevel() {
+  if (state.level >= state.totalLevels) {
+    showVictory();
+  } else {
+    state.level++;
+    state.filledThisLevel = 0;
+    levelDisplay.textContent = `${state.level}/${state.totalLevels}`;
+    levelLabel.textContent = `${levelIcons[state.level-1]} 第 ${state.level} 关 · ${levelNames[state.level-1]}`;
+    const lv = levelData[state.level];
+    monthTitle.textContent = lv.monthName;
+    questionText.textContent = lv.description;
+    updateProgress(getFilledSoFar(), Object.values(levelData).reduce((s,l)=>s+l.blanks.length,0));
+    renderCalendar();
+  }
+}
+
+// ============================================
+// SNACKBAR
+// ============================================
+let snackTimeout;
+function showSnackbar(msg, cls) {
+  clearTimeout(snackTimeout);
+  snackbar.textContent = msg;
+  snackbar.className = `snackbar ${cls} show`;
+  snackTimeout = setTimeout(() => {
+    snackbar.className = 'snackbar';
+  }, 1800);
+}
+
+// ============================================
+// HINT SYSTEM
+// ============================================
+hintBtn.addEventListener('click', () => {
+  if (state.coins < 5) {
+    showSnackbar('🪙 金币不够啦！需要5金币才能使用提示', 's-error');
+    return;
+  }
+  state.coins -= 5;
+  coinsDisplay.textContent = state.coins;
+  if (state.coins < 5) hintBtn.disabled = true;
+
+  // If a cell is currently selected, give specific hint
+  if (state.isInputOpen && state.activeCell) {
+    const expected = state.currentInputExpected;
+    hintText.textContent = `💡 提示：这个数字是 ${expected}（可以用上方+7或左边+1推导）`;
+    hintText.style.color = '#5C6BC0';
+  } else {
+    hintText.textContent = '💡 提示：上下行相差7天，左右相邻差1天';
+    hintText.style.color = '#5C6BC0';
+  }
+  showSnackbar('💡 提示已使用（-5🪙）', 's-hint');
+  setTimeout(() => { hintText.textContent = ''; }, 3000);
+});
+
+// ============================================
+// PROGRESS
+// ============================================
+function updateProgress(current, total) {
+  progressBar.style.width = total > 0 ? `${Math.round((current/total)*100)}%` : '0%';
+}
+
+// ============================================
+// VICTORY → PRACTICE TRANSITION
+// ============================================
+function showVictory() {
+  const totalBlanksAllLevels = Object.values(levelData).reduce((s, lv) => s + lv.blanks.length, 0);
+  const accuracy = state.totalAttempts > 0 ? Math.round((state.correctCount / state.totalAttempts) * 100) : 0;
+  const tier = determinePracticeTier();
+  const tierLabel = difficultyLabels[tier];
+
+  gameArea.innerHTML = `
+    <div class="victory-container">
+      <div class="victory-icon">🏆</div>
+      <div class="victory-title">月历修复完成！</div>
+      <div class="victory-stats">
+        <div>📅 完成关卡：${state.totalLevels} 关</div>
+        <div>⭐ 最终得分：${state.score} 分</div>
+        <div>🪙 剩余金币：${state.coins} 个</div>
+        <div>📊 正确率：${accuracy}%</div>
+      </div>
+      <button class="victory-btn" onclick="enterPracticeMode()">
+        📝 进入练习 <small>(${tierLabel.icon} ${tierLabel.name})</small>
+      </button>
+      <div style="margin-top:8px;">
+        <button class="restart-btn" onclick="restartGame()">🔄 直接重玩</button>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================
+// ADAPTIVE PRACTICE SYSTEM
+// ============================================
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '一年有多少个月？', options: ['10个月', '11个月', '12个月', '13个月'], answer: 2, hint: '一年有12个月，从1月到12月。' },
+    { type: 'choice', q: '下面哪个月份有31天（大月）？', options: ['4月', '6月', '7月', '9月'], answer: 2, hint: '用拳头记忆法：7月对应关节凸起处，是大月31天。' },
+    { type: 'fill', q: '平年全年有____天。', answer: '365', hint: '平年2月有28天，全年365天。' },
+    { type: 'choice', q: '下午3时用24时计时法表示为？', options: ['3:00', '13:00', '15:00', '17:00'], answer: 2, hint: '下午的时间 = 时刻 + 12，3 + 12 = 15。' },
+    { type: 'choice', q: '一个月最多有多少天？', options: ['28天', '30天', '31天', '32天'], answer: 2, hint: '大月有31天，是所有月份中天数最多的。' },
+  ],
+  2: [
+    { type: 'choice', q: '下面哪几个月是小月（30天）？', options: ['1月、3月、5月', '4月、6月、9月、11月', '7月、8月、10月、12月', '2月、4月、6月、8月'], answer: 1, hint: '歌诀：四六九冬(11月)三十天。' },
+    { type: 'fill', q: '闰年2月有____天。', answer: '29', hint: '闰年比平年多一天，这多出的一天就加在2月。' },
+    { type: 'choice', q: '2025 ÷ 4 = 506……1，所以2025年是？', options: ['闰年', '平年', '大年', '小年'], answer: 1, hint: '年份÷4有余数就是平年，整除才是闰年（整百年还要÷400）。' },
+    { type: 'choice', q: '晚上9:30用24时计时法表示为？', options: ['9:30', '19:30', '21:30', '23:30'], answer: 2, hint: '晚上就是下午之后：9 + 12 = 21，所以是21:30。' },
+  ],
+  3: [
+    { type: 'choice', q: '2025年5月1日是星期四，5月31日是星期几？', options: ['星期四', '星期五', '星期六', '星期日'], answer: 2, hint: '5月1日到31日经过30天，30÷7=4周余2天，星期四+2天=星期六。' },
+    { type: 'fill', q: '小明的生日是2月29日，他每____年才能过一次生日。', answer: '4', hint: '2月29日只在闰年出现，闰年通常每4年一次。' },
+    { type: 'choice', q: '2100年是平年还是闰年？', options: ['平年', '闰年', '无法判断', '有时平有时闰'], answer: 0, hint: '2100是整百年 → 2100÷400=5……100（有余数）→ 平年！"百年不闰"。' },
+    { type: 'choice', q: '一场展览从3月28日到4月5日，共展出多少天？', options: ['7天', '8天', '9天', '10天'], answer: 2, hint: '3月28-31日：4天；4月1-5日：5天。总共4+5=9天。' },
+  ],
+  4: [
+    { type: 'choice', q: '某年的2月有5个星期日。这一年可能是平年吗？', options: ['可能', '不可能', '取决于年份', '以上都不对'], answer: 1, hint: '平年2月28天÷7=正好4周，每个星期出现4次。只有闰年29天÷7=4周余1天，才可能某天出现5次。' },
+    { type: 'fill', q: '如果今天是4月30日（星期三），那么5月1日是星期____。', answer: '四', hint: '4月30日是星期三，下一天5月1日就是星期四。注意4月只有30天！' },
+    { type: 'choice', q: '1896年是闰年，下一个闰年是哪一年？', options: ['1898年', '1900年', '1904年', '1908年'], answer: 2, hint: '1896+4=1900，但1900是整百年且不能被400整除→平年！再+4=1904才是下一个闰年。' },
+    { type: 'choice', q: '钟面上显示的时间是22:45，用普通计时法怎么表示？', options: ['上午10:45', '中午12:45', '下午10:45', '晚上10:45'], answer: 3, hint: '22-12=10，所以是晚上10时45分。22:45属于"晚上"范围。' },
+  ],
+  5: [
+    { type: 'choice', q: '以下哪个说法一定正确？', options: ['每年都有365天', '大月都有31天', '2月都是28天', '每4年一定有一个闰年'], answer: 1, hint: '大月的定义就是31天。其他选项都有反例：闰年366天、闰年2月29天、整百年不闰。' },
+    { type: 'fill', q: '一个小朋友说："我今年10岁，只过了2次生日。"他的生日是____月____日。', answer: '2月29日', hint: '10年只过2次生日→生日每4年才有一次→2月29日。' },
+    { type: 'choice', q: '你能用几种方法判断2028年是不是闰年？选出所有正确的方法：', options: ['2028÷4看余数', '查看2028年日历2月天数', '2028不是整百年，只需÷4', '以上方法都正确'], answer: 3, hint: '三种方法都能判断！2028不是整百年，÷4整除即可确定是闰年。' },
+    { type: 'fill', q: '如果一个月的第1天是星期日，最后一天也是星期日，这个月可能是____月（写出月份名称）。', answer: '2月', hint: '第1天和最后一天都是星期日，说明这个月天数÷7余数为0。28÷7=4→2月（平年）。' },
+  ],
+};
+
+function determinePracticeTier() {
+  const accuracy = state.totalAttempts > 0 ? state.correctCount / state.totalAttempts : 0;
+  if (accuracy < 0.4) return 1;
+  if (accuracy < 0.6) return 2;
+  if (accuracy < 0.8) return 3;
+  if (accuracy < 0.95) return 4;
+  return 5;
+}
+
+function enterPracticeMode() {
+  state.practiceTier = determinePracticeTier();
+  state.mode = 'practice';
+  state.practiceIndex = 0;
+  state.practiceCorrect = 0;
+  gameContainer.classList.add('hidden');
+  practiceContainer.classList.remove('hidden');
+  practiceContainer.style.display = 'flex';
+  const tier = difficultyLabels[state.practiceTier];
+  practiceBadge.innerHTML = `${tier.icon} ${tier.name}`;
+  practiceBadge.className = `practice-badge ${tier.badgeClass}`;
+  practiceNextBtn.textContent = '开始答题 →';
+  practiceNextBtn.classList.remove('hidden');
+  practiceNextBtn.disabled = false;
+  renderPracticeQuestion();
+}
+
+function renderPracticeQuestion() {
+  const problems = practiceProblems[state.practiceTier];
+  if (!problems || state.practiceIndex >= problems.length) { showPracticeSummary(); return; }
+  const p = problems[state.practiceIndex];
+  const total = problems.length;
+  practiceProgress.textContent = `第 ${state.practiceIndex+1}/${total} 题`;
+  practiceQNum.textContent = `第 ${state.practiceIndex+1} 题`;
+  practiceQTitle.textContent = p.q;
+  practiceFeedback.classList.remove('show','correct','wrong');
+  practiceFeedback.textContent = '';
+
+  if (p.type === 'fill') {
+    practiceQContent.innerHTML = `
+      <div class="practice-input-area">
+        <input type="text" class="practice-input" id="practiceInput" placeholder="输入答案" inputmode="text">
+        <button class="submit-btn" id="practiceSubmitBtn">确认</button>
+      </div>`;
+    $('#practiceSubmitBtn').addEventListener('click', handlePracticeSubmit);
+    $('#practiceInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') handlePracticeSubmit(); });
+    setTimeout(() => { const inp = $('#practiceInput'); if (inp) inp.focus(); }, 100);
+  } else {
+    practiceQContent.innerHTML = '<div class="practice-options"></div>';
+    const opts = practiceQContent.querySelector('.practice-options');
+    p.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'practice-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => handlePracticeChoice(idx, p.answer, p.options[p.answer]));
+      opts.appendChild(btn);
+    });
+  }
+  practiceNextBtn.textContent = state.practiceIndex < problems.length-1 ? '下一题 →' : '查看结果 📊';
+  practiceNextBtn.disabled = true;
+}
+
+function handlePracticeChoice(selected, correctIdx, correctText) {
+  const options = practiceQContent.querySelectorAll('.practice-option');
+  options.forEach(o => o.disabled = true);
+  if (selected === correctIdx) {
+    options[selected].classList.add('selected-correct');
+    state.practiceCorrect++;
+    practiceFeedback.textContent = `✅ 正确！${correctText}`;
+    practiceFeedback.className = 'practice-feedback show correct';
+  } else {
+    options[selected].classList.add('selected-wrong');
+    options[correctIdx].classList.add('show-correct');
+    practiceFeedback.textContent = `❌ 正确答案是 ${correctText}。加油！`;
+    practiceFeedback.className = 'practice-feedback show wrong';
+  }
+  practiceNextBtn.disabled = false;
+}
+
+function handlePracticeSubmit() {
+  const input = $('#practiceInput');
+  const btn = $('#practiceSubmitBtn');
+  if (!input || btn.disabled) return;
+  const problems = practiceProblems[state.practiceTier];
+  const p = problems[state.practiceIndex];
+  const userAnswer = input.value.trim();
+  btn.disabled = true;
+  input.disabled = true;
+  if (userAnswer === p.answer) {
+    state.practiceCorrect++;
+    practiceFeedback.textContent = `✅ 正确！答案就是 ${p.answer}`;
+    practiceFeedback.className = 'practice-feedback show correct';
+  } else {
+    practiceFeedback.textContent = `❌ 正确答案是 ${p.answer}。${p.hint||''}`;
+    practiceFeedback.className = 'practice-feedback show wrong';
+  }
+  practiceNextBtn.disabled = false;
+}
+
+practiceNextBtn.addEventListener('click', () => {
+  const problems = practiceProblems[state.practiceTier];
+  if (state.practiceIndex >= problems.length-1) { showPracticeSummary(); return; }
+  state.practiceIndex++;
+  renderPracticeQuestion();
+});
+
+function showPracticeSummary() {
+  const problems = practiceProblems[state.practiceTier];
+  const total = problems ? problems.length : 0;
+  const pct = total > 0 ? Math.round((state.practiceCorrect/total)*100) : 0;
+  let emoji, color;
+  if (pct >= 80) { emoji='🌟'; color='var(--color-success)'; }
+  else if (pct >= 60) { emoji='👍'; color='var(--color-primary)'; }
+  else { emoji='💪'; color='var(--color-warning)'; }
+
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden');
+  practiceContainer.style.display = 'none';
+
+  gameArea.innerHTML = `
+    <div class="practice-summary">
+      <div class="practice-summary-icon">${emoji}</div>
+      <div class="practice-summary-title">练习完成！</div>
+      <div class="practice-summary-score" style="color:${color}">${state.practiceCorrect}/${total}</div>
+      <div class="practice-summary-detail">
+        <div>📊 正确率：${pct}%</div>
+        <div>🎮 游戏得分：${state.score} 分</div>
+        ${pct>=80 ? '<div>🏆 太棒了，你对年月日知识掌握得很好！</div>' :
+          pct>=60 ? '<div>📚 还不错，继续加油会更好！</div>' :
+          '<div>🌱 没关系，多练习几次就能进步！</div>'}
+      </div>
+      <button class="victory-btn" onclick="restartGame()">🔄 再玩一次</button>
+    </div>`;
+}
+
+// ============================================
+// RESTART
+// ============================================
+function restartGame() {
+  state.mode = 'game';
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden');
+  practiceContainer.style.display = 'none';
+  state.score = 0;
+  state.coins = 50;
+  state.level = 1;
+  state.filledThisLevel = 0;
+  state.correctCount = 0;
+  state.totalAttempts = 0;
+  state.isInputOpen = false;
+  state.activeCell = null;
+  scoreDisplay.textContent = '0';
+  coinsDisplay.textContent = '50';
+  hintBtn.disabled = false;
+  hintText.textContent = '';
+  levelDisplay.textContent = '1/4';
+  levelLabel.textContent = `🌬️ 第 1 关 · 微风`;
+  const lv = levelData[1];
+  monthTitle.textContent = lv.monthName;
+  questionText.textContent = lv.description;
+  const totalBlanksAllLevels = Object.values(levelData).reduce((s,l)=>s+l.blanks.length,0);
+  updateProgress(0, totalBlanksAllLevels);
+  inputOverlay.classList.add('hidden');
+  renderCalendar();
+}
+
+// ============================================
+// EVENT LISTENERS
+// ============================================
+btnConfirm.addEventListener('click', submitAnswer);
+btnCancel.addEventListener('click', closeInputDialog);
+numberInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') submitAnswer();
+  if (e.key === 'Escape') closeInputDialog();
+});
+inputOverlay.addEventListener('click', (e) => {
+  if (e.target === inputOverlay) closeInputDialog();
+});
+restartBtn.addEventListener('click', restartGame);
+
+// ============================================
+// INIT
+// ============================================
+restartGame();
+</script>
+</body>
+</html>

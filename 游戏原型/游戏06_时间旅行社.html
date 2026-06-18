@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧳 时间旅行社</title>
+<style>
+/* ============================================
+   时间旅行社 — 角色扮演游戏样式
+   ============================================ */
+:root {
+  --color-primary: #4A90D9;
+  --color-primary-light: #7AB3E8;
+  --color-primary-dark: #2E6AB0;
+  --color-accent: #FFB347;
+  --color-success: #52C41A;
+  --color-success-light: #D9F7BE;
+  --color-error: #FF4D4F;
+  --color-error-light: #FFF1F0;
+  --color-warning: #FAAD14;
+  --color-warning-light: #FFFBE6;
+  --color-bg: #E8F4FD;
+  --color-card: #FFFFFF;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-border: #E0E0E0;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-button: 0 4px 12px rgba(0,0,0,0.15);
+  --font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-number: "Consolas", "Courier New", monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-family);
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.game-container {
+  width: 100%;
+  max-width: 500px;
+  background: var(--color-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 640px;
+  position: relative;
+}
+
+/* Header */
+.game-header {
+  background: linear-gradient(135deg, #4A90D9, #2E6AB0);
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.game-title { font-size: 20px; font-weight: 700; }
+.game-stats { display: flex; gap: 16px; font-size: 14px; }
+.stat-item { display: flex; align-items: center; gap: 4px; }
+.stat-icon { font-size: 16px; }
+.stat-value { font-weight: 700; font-family: var(--font-number); }
+
+/* Level indicator */
+.level-indicator {
+  padding: 8px 20px;
+  background: var(--color-primary-light);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Customer dialog */
+.customer-area {
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #FFFDF5;
+  border-bottom: 2px dashed var(--color-accent);
+  flex-shrink: 0;
+}
+.customer-avatar {
+  font-size: 40px;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent);
+  border-radius: 50%;
+}
+.customer-bubble {
+  flex: 1;
+  background: white;
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-lg);
+  padding: 10px 14px;
+  font-size: 15px;
+  line-height: 1.5;
+  position: relative;
+}
+.customer-name {
+  font-weight: 700;
+  color: var(--color-accent);
+  margin-bottom: 2px;
+  font-size: 13px;
+}
+.customer-request {
+  color: var(--color-text);
+}
+
+/* Game area */
+.game-area {
+  flex: 1;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+}
+
+/* Month buttons for Level 1 */
+.months-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+.month-btn {
+  padding: 14px 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  background: white;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.month-btn:hover {
+  border-color: var(--color-primary);
+  background: #F0F7FF;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-button);
+}
+.month-btn.correct {
+  border-color: var(--color-success);
+  background: var(--color-success-light);
+  color: var(--color-success);
+  animation: pulse 0.5s ease;
+}
+.month-btn.incorrect {
+  border-color: var(--color-error);
+  background: var(--color-error-light);
+  color: var(--color-error);
+  animation: shake 0.4s ease;
+}
+.month-btn:disabled { pointer-events: none; opacity: 0.65; }
+.month-btn.highlight-correct { border-color: var(--color-success); background: var(--color-success-light); }
+
+/* Calendar styles for Level 2-3 */
+.calendar-wrapper {
+  width: 100%;
+  max-width: 400px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: white;
+}
+.calendar-title {
+  text-align: center;
+  padding: 10px;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-primary-dark);
+  background: #F0F7FF;
+}
+.calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.calendar-table th {
+  padding: 8px 4px;
+  font-size: 13px;
+  color: var(--color-text-light);
+  background: #FAFAFA;
+  border-bottom: 1px solid var(--color-border);
+}
+.calendar-table th.weekend { color: var(--color-error); }
+.calendar-table td {
+  text-align: center;
+  padding: 0;
+  height: 44px;
+}
+.cal-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+  min-height: 44px;
+}
+.cal-day:hover {
+  background: #E3F0FF;
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(74,144,217,0.3);
+}
+.cal-day.correct {
+  background: var(--color-success-light);
+  color: var(--color-success);
+  animation: pulse 0.5s ease;
+}
+.cal-day.incorrect {
+  background: var(--color-error-light);
+  color: var(--color-error);
+  animation: shake 0.4s ease;
+}
+.cal-day.disabled { pointer-events: none; opacity: 0.4; }
+.cal-day.highlight-correct { background: var(--color-success-light); color: var(--color-success); }
+
+/* Time input for Level 3 */
+.time-input-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.time-input {
+  padding: 14px 16px;
+  font-size: 24px;
+  font-weight: 700;
+  font-family: var(--font-number);
+  text-align: center;
+  border: 3px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  width: 160px;
+  transition: border-color 0.2s;
+}
+.time-input:focus { border-color: var(--color-primary); }
+.time-hint {
+  font-size: 13px;
+  color: var(--color-text-light);
+}
+
+/* Submit button */
+.submit-btn {
+  padding: 14px 32px;
+  font-size: 17px;
+  font-weight: 700;
+  color: white;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.2s;
+  min-width: 120px;
+}
+.submit-btn:hover { background: var(--color-primary-dark); }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Combo indicator */
+.combo-indicator {
+  padding: 4px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-accent);
+  min-height: 24px;
+}
+.combo-fire { animation: bounce 0.3s ease infinite alternate; }
+
+/* Progress bar */
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0 16px;
+  max-width: calc(100% - 32px);
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success), var(--color-primary));
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* Footer */
+.game-footer {
+  padding: 10px 20px;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--color-border);
+}
+.restart-btn {
+  padding: 8px 20px;
+  font-size: 14px;
+  color: var(--color-text-light);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.restart-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+/* Feedback modal */
+.feedback-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center; align-items: center;
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+.feedback-modal {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  animation: scaleIn 0.3s ease;
+}
+.feedback-icon { font-size: 56px; margin-bottom: 12px; }
+.feedback-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.feedback-message { font-size: 15px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.5; }
+.feedback-btn {
+  padding: 12px 32px;
+  font-size: 16px; font-weight: 700;
+  color: white;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.feedback-btn:hover { background: var(--color-primary-dark); }
+
+/* Victory screen */
+.victory-container { text-align: center; padding: 20px; }
+.victory-icon { font-size: 72px; margin-bottom: 12px; animation: bounce 0.6s ease infinite alternate; }
+.victory-title { font-size: 26px; font-weight: 700; color: var(--color-success); margin-bottom: 8px; }
+.victory-stats { font-size: 15px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.8; }
+.victory-btn {
+  padding: 12px 32px;
+  font-size: 16px; font-weight: 700;
+  color: white;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  margin: 0 6px;
+  transition: background 0.2s;
+}
+.victory-btn:hover { background: var(--color-primary-dark); }
+
+/* Practice mode styles */
+.practice-container {
+  display: none; flex-direction: column;
+  height: 100%;
+}
+.practice-badge-bar {
+  padding: 12px 20px;
+  background: var(--color-bg);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+}
+.practice-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 13px; font-weight: 700;
+}
+.badge-tier-1 { background: #E8F5E9; color: #2E7D32; }
+.badge-tier-2 { background: #E3F2FD; color: #1565C0; }
+.badge-tier-3 { background: #FFF3E0; color: #E65100; }
+.badge-tier-4 { background: #F3E5F5; color: #7B1FA2; }
+.badge-tier-5 { background: #FFEBEE; color: #C62828; }
+.practice-progress-text { font-size: 13px; color: var(--color-text-light); }
+.practice-question-card {
+  margin: 20px; padding: 24px 20px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  flex: 1;
+}
+.practice-q-num { font-size: 12px; font-weight: 700; color: var(--color-primary); margin-bottom: 8px; }
+.practice-q-title { font-size: 17px; font-weight: 600; color: var(--color-text); margin-bottom: 16px; line-height: 1.6; }
+.practice-options { display: flex; flex-direction: column; gap: 10px; }
+.practice-option {
+  padding: 14px 16px; font-size: 15px; text-align: left;
+  background: var(--color-bg); border: 2px solid var(--color-border);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: all 0.2s; line-height: 1.4;
+}
+.practice-option:hover { border-color: var(--color-primary); background: white; }
+.practice-option.selected-correct { border-color: var(--color-success); background: var(--color-success-light); }
+.practice-option.selected-wrong { border-color: var(--color-error); background: var(--color-error-light); }
+.practice-option.show-correct { border-color: var(--color-success); }
+.practice-option:disabled { pointer-events: none; }
+.practice-input-area { display: flex; gap: 10px; }
+.practice-input {
+  flex: 1; padding: 12px 16px; font-size: 18px; font-weight: 700;
+  font-family: var(--font-number); text-align: center;
+  border: 2px solid var(--color-border); border-radius: var(--radius-md);
+  outline: none;
+}
+.practice-input:focus { border-color: var(--color-primary); }
+.practice-feedback {
+  margin: 0 20px 12px; padding: 12px 16px;
+  border-radius: var(--radius-md); font-size: 14px;
+  line-height: 1.5; display: none;
+}
+.practice-feedback.show { display: block; animation: fadeIn 0.3s ease; }
+.practice-feedback.correct { background: var(--color-success-light); color: #2E7D32; }
+.practice-feedback.wrong { background: var(--color-error-light); color: #C62828; }
+.practice-nav {
+  padding: 12px 20px; display: flex; gap: 10px;
+  justify-content: center; border-top: 1px solid var(--color-border);
+}
+.practice-nav-btn {
+  padding: 10px 24px; font-size: 15px; font-weight: 700;
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: all 0.2s;
+}
+.practice-nav-btn.primary { background: var(--color-primary); color: white; }
+.practice-nav-btn.primary:hover { background: var(--color-primary-dark); }
+.practice-nav-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.practice-nav-btn.secondary { background: transparent; color: var(--color-text-light); border: 1px solid var(--color-border); }
+.practice-nav-btn.secondary:hover { color: var(--color-primary); border-color: var(--color-primary); }
+.practice-summary { text-align: center; padding: 30px 20px; }
+.practice-summary-icon { font-size: 64px; margin-bottom: 12px; }
+.practice-summary-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.practice-summary-score { font-size: 36px; font-weight: 700; font-family: var(--font-number); margin-bottom: 12px; }
+.practice-summary-detail { font-size: 14px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.8; }
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes shake { 0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)} }
+@keyframes pulse { 0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)} }
+@keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-12px)} }
+@keyframes popIn { 0%{transform:scale(0);opacity:0}80%{transform:scale(1.1)}100%{transform:scale(1);opacity:1} }
+
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+
+@media (max-width: 360px) {
+  .game-container { min-height: 540px; }
+  .game-header { padding: 12px 16px; }
+  .game-title { font-size: 17px; }
+  .months-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 768px) {
+  .game-container { max-width: 640px; min-height: 720px; }
+  .months-grid { grid-template-columns: repeat(4, 1fr); max-width: 480px; }
+}
+</style>
+</head>
+<body>
+
+<div class="game-container" id="gameContainer">
+  <div class="game-header">
+    <div class="game-title" id="gameTitle">🧳 时间旅行社</div>
+    <div class="game-stats">
+      <div class="stat-item"><span class="stat-icon">💰</span><span class="stat-value" id="scoreDisplay">0</span></div>
+      <div class="stat-item"><span class="stat-icon">🎯</span><span class="stat-value" id="levelDisplay">1/3</span></div>
+    </div>
+  </div>
+
+  <div class="level-indicator" id="levelLabel">🏖️ 第 1 关：本地游</div>
+
+  <div class="customer-area" id="customerArea">
+    <div class="customer-avatar" id="customerAvatar">🐱</div>
+    <div class="customer-bubble">
+      <div class="customer-name" id="customerName">客人A</div>
+      <div class="customer-request" id="customerRequest">请帮我安排行程！</div>
+    </div>
+  </div>
+
+  <div class="combo-indicator" id="comboIndicator"></div>
+
+  <div class="game-area" id="gameArea"></div>
+
+  <div style="padding: 0 20px;">
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <div class="game-footer">
+    <button class="restart-btn" id="restartBtn">🔄 重新开始</button>
+  </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="feedback-overlay hidden" id="feedbackOverlay">
+  <div class="feedback-modal">
+    <div class="feedback-icon" id="feedbackIcon">✅</div>
+    <div class="feedback-title" id="feedbackTitle">预订成功！</div>
+    <div class="feedback-message" id="feedbackMessage"></div>
+    <button class="feedback-btn" id="feedbackBtn">继续 →</button>
+  </div>
+</div>
+
+<!-- Practice Container -->
+<div class="practice-container hidden" id="practiceContainer">
+  <div class="practice-badge-bar">
+    <span class="practice-badge" id="practiceBadge">📝 巩固练习</span>
+    <span class="practice-progress-text" id="practiceProgress">第 1/5 题</span>
+  </div>
+  <div class="practice-question-card">
+    <div class="practice-q-num" id="practiceQNum">第 1 题</div>
+    <div class="practice-q-title" id="practiceQTitle">题目内容</div>
+    <div id="practiceQContent"></div>
+  </div>
+  <div class="practice-feedback" id="practiceFeedback"></div>
+  <div class="practice-nav">
+    <button class="practice-nav-btn secondary hidden" id="practiceSkipBtn">跳过</button>
+    <button class="practice-nav-btn primary" id="practiceNextBtn">下一题 →</button>
+  </div>
+</div>
+
+<script>
+// ============================================
+// DOM References
+// ============================================
+const $ = (sel) => document.querySelector(sel);
+const gameContainer = $('#gameContainer');
+const gameTitle = $('#gameTitle');
+const scoreDisplay = $('#scoreDisplay');
+const levelDisplay = $('#levelDisplay');
+const levelLabel = $('#levelLabel');
+const customerArea = $('#customerArea');
+const customerAvatar = $('#customerAvatar');
+const customerName = $('#customerName');
+const customerRequest = $('#customerRequest');
+const comboIndicator = $('#comboIndicator');
+const gameArea = $('#gameArea');
+const progressBar = $('#progressBar');
+const restartBtn = $('#restartBtn');
+const feedbackOverlay = $('#feedbackOverlay');
+const feedbackIcon = $('#feedbackIcon');
+const feedbackTitle = $('#feedbackTitle');
+const feedbackMessage = $('#feedbackMessage');
+const feedbackBtn = $('#feedbackBtn');
+const practiceContainer = $('#practiceContainer');
+const practiceBadge = $('#practiceBadge');
+const practiceProgress = $('#practiceProgress');
+const practiceQNum = $('#practiceQNum');
+const practiceQTitle = $('#practiceQTitle');
+const practiceQContent = $('#practiceQContent');
+const practiceFeedback = $('#practiceFeedback');
+const practiceNextBtn = $('#practiceNextBtn');
+const practiceSkipBtn = $('#practiceSkipBtn');
+
+// ============================================
+// Game State
+// ============================================
+const state = {
+  score: 0,
+  level: 1,
+  totalLevels: 3,
+  ordersPerLevel: 3,
+  currentOrder: 0,
+  totalOrders: 0,
+  totalOrdersAll: 9,
+  isAnswering: false,
+  correctCount: 0,
+  totalAttempts: 0,
+  comboCount: 0,
+  mode: 'game',
+  practiceTier: 1,
+  practiceIndex: 0,
+  practiceCorrect: 0,
+};
+
+// Helper functions
+const BIG_MONTHS = [1,3,5,7,8,10,12];
+const SMALL_MONTHS = [4,6,9,11];
+
+function isLeapYear(y) {
+  if (y % 400 === 0) return true;
+  if (y % 100 === 0) return false;
+  return y % 4 === 0;
+}
+
+function getDaysInMonth(y, m) {
+  if (m === 2) return isLeapYear(y) ? 29 : 28;
+  return BIG_MONTHS.includes(m) ? 31 : 30;
+}
+
+function updateScore(points) { state.score += points; scoreDisplay.textContent = state.score; }
+function updateLevel(level) { state.level = level; levelDisplay.textContent = `${level}/${state.totalLevels}`; }
+function updateProgress(current, total) {
+  progressBar.style.width = total > 0 ? `${Math.round((current / total) * 100)}%` : '0%';
+}
+function showFeedback(type, title, msg, cb) {
+  feedbackIcon.textContent = type === 'correct' ? '✅' : type === 'hint' ? '💡' : '❌';
+  feedbackTitle.textContent = title;
+  feedbackTitle.style.color = type === 'correct' ? 'var(--color-success)' : type === 'hint' ? 'var(--color-warning)' : 'var(--color-error)';
+  feedbackMessage.textContent = msg;
+  feedbackOverlay.classList.remove('hidden');
+  feedbackBtn.onclick = () => { feedbackOverlay.classList.add('hidden'); if (cb) cb(); };
+}
+
+// ============================================
+// Calendar Rendering
+// ============================================
+function renderCalendarHTML(year, month, clickable) {
+  const firstDay = new Date(year, month - 1, 1).getDay();
+  const daysInMonth = getDaysInMonth(year, month);
+  const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+  let html = '<div class="calendar-wrapper">';
+  html += `<div class="calendar-title">📅 ${year}年${month}月</div>`;
+  html += '<table class="calendar-table"><thead><tr>';
+  dayNames.forEach((d, i) => {
+    html += `<th class="${(i===0||i===6)?'weekend':''}">${d}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+  let day = 1;
+  for (let row = 0; row < 6; row++) {
+    html += '<tr>';
+    for (let col = 0; col < 7; col++) {
+      if (row === 0 && col < firstDay) {
+        html += '<td></td>';
+      } else if (day > daysInMonth) {
+        html += '<td></td>';
+      } else {
+        const cls = clickable ? 'cal-day' : 'cal-day disabled';
+        html += `<td><div class="${cls}" data-day="${day}">${day}</div></td>`;
+        day++;
+      }
+    }
+    html += '</tr>';
+    if (day > daysInMonth) break;
+  }
+  html += '</tbody></table></div>';
+  return html;
+}
+
+// ============================================
+// Orders Database
+// ============================================
+const levelLabels = { 1: '🏖️ 第 1 关：本地游', 2: '🏙️ 第 2 关：国内游', 3: '✈️ 第 3 关：国际游' };
+const customerAnimals = ['🐱','🐶','🐰','🐼','🐨','🦊','🐸','🐵','🦁'];
+
+const orders = {
+  // Level 1: Click a month button (big/small month selection)
+  1: [
+    {
+      name: '客人A', animal: '🐱',
+      request: '请帮我在一个<strong>大月</strong>安排出行！大月有31天哦～',
+      type: 'monthSelect',
+      correctFn: (m) => BIG_MONTHS.includes(m),
+      allCorrect: BIG_MONTHS,
+      failHint: '大月有31天呢！试试1月、3月、5月、7月、8月、10月或12月？',
+      correctHint: '大月是31天：1月、3月、5月、7月、8月、10月、12月'
+    },
+    {
+      name: '客人B', animal: '🐶',
+      request: '我想在<strong>小月</strong>出发，帮我选一个吧！',
+      type: 'monthSelect',
+      correctFn: (m) => SMALL_MONTHS.includes(m),
+      allCorrect: SMALL_MONTHS,
+      failHint: '小月有30天！想想：4月、6月、9月、11月？',
+      correctHint: '小月是30天：4月、6月、9月、11月'
+    },
+    {
+      name: '客人C', animal: '🐰',
+      request: '我要去一年中<strong>天数最少</strong>的月份旅行！',
+      type: 'monthSelect',
+      correctFn: (m) => m === 2,
+      allCorrect: [2],
+      failHint: '哪个月天数最少呢？平年28天、闰年29天的那个月——2月！',
+      correctHint: '2月天数最少，平年28天，闰年29天'
+    }
+  ],
+  // Level 2: Calendar date finding (2025年6月)
+  2: [
+    {
+      name: '客人D', animal: '🐼',
+      request: '帮我订<strong>2025年6月15日</strong>的行程！',
+      type: 'calendar',
+      year: 2025, month: 6,
+      correctDay: 15,
+      failHint: '在月历中找到6月15日，点击它！',
+      correctHint: '6月15日，直接看日历就能找到啦～'
+    },
+    {
+      name: '客人E', animal: '🐨',
+      request: '我想在<strong>2025年6月的第3个星期一</strong>出发！',
+      type: 'calendar',
+      year: 2025, month: 6,
+      correctDay: 16,
+      failHint: '6月1日是周日，第1个周一是6月2日，第2个是6月9日，第3个呢？',
+      correctHint: '6月1日周日→第1个周一:6月2日→第2个:6月9日→第3个:6月16日'
+    },
+    {
+      name: '客人F', animal: '🦊',
+      request: '安排在<strong>2025年6月的最后一天</strong>！',
+      type: 'calendar',
+      year: 2025, month: 6,
+      correctDay: 30,
+      failHint: '6月是小月，有30天。最后一天就是30日！',
+      correctHint: '6月有30天（小月），最后一天是6月30日'
+    }
+  ],
+  // Level 3: Mixed - leap year + 24h conversion
+  3: [
+    {
+      name: '客人G', animal: '🐸',
+      request: '<strong>2024年是闰年吗？</strong>如果是，帮我订<strong>2024年2月29日</strong>！如果不是，订2月28日。',
+      type: 'calendar',
+      year: 2024, month: 2,
+      correctDay: 29,
+      failHint: '2024÷4=506能整除，且不是整百年→是闰年！2月有29天哦！',
+      correctHint: '2024÷4=506（整除）→闰年！2月有29天'
+    },
+    {
+      name: '客人H', animal: '🐵',
+      request: '<strong>2025年2月</strong>有多少天？帮我订<strong>2月的最后一天</strong>！',
+      type: 'calendar',
+      year: 2025, month: 2,
+      correctDay: 28,
+      failHint: '2025÷4=506……1，有余数→平年！2月只有28天，订28日！',
+      correctHint: '2025÷4有余数→平年，2月28天，最后一天是2月28日'
+    },
+    {
+      name: '客人I', animal: '🦁',
+      request: '我的航班<strong>下午3:30起飞</strong>，请用<strong>24时计时法</strong>帮我确认起飞时间！（格式如 15:30）',
+      type: 'timeInput',
+      correctAnswer: '15:30',
+      failHint: '下午的时间=时刻+12。下午3:30 → 3+12=15 → 15:30！',
+      correctHint: '下午3:30 → 3时30分+12时 = 15:30'
+    }
+  ]
+};
+
+// ============================================
+// Game Rendering
+// ============================================
+let currentCalendarYear = null;
+let currentCalendarMonth = null;
+
+function renderOrder() {
+  const lvlOrders = orders[state.level];
+  if (!lvlOrders || state.currentOrder >= lvlOrders.length) {
+    if (state.level >= state.totalLevels) {
+      showVictory();
+    } else {
+      state.currentOrder = 0;
+      updateLevel(state.level + 1);
+      levelLabel.textContent = levelLabels[state.level];
+      renderOrder();
+    }
+    return;
+  }
+
+  const order = lvlOrders[state.currentOrder];
+  state.isAnswering = false;
+  state.totalOrders = (state.level - 1) * state.ordersPerLevel + state.currentOrder;
+  updateProgress(state.totalOrders, state.totalOrdersAll);
+
+  // Update customer dialog
+  customerAvatar.textContent = order.animal;
+  customerName.textContent = order.name;
+  customerRequest.innerHTML = order.request;
+  comboIndicator.textContent = '';
+
+  // Render game area based on order type
+  if (order.type === 'monthSelect') {
+    renderMonthSelect(order);
+  } else if (order.type === 'calendar') {
+    renderCalendarOrder(order);
+  } else if (order.type === 'timeInput') {
+    renderTimeInput(order);
+  }
+}
+
+function renderMonthSelect(order) {
+  currentCalendarYear = null;
+  currentCalendarMonth = null;
+
+  gameArea.innerHTML = `
+    <div style="text-align:center;font-size:14px;color:var(--color-text-light);margin-bottom:10px;">
+      👆 点击一个月份来预订行程
+    </div>
+    <div class="months-grid"></div>`;
+
+  const grid = gameArea.querySelector('.months-grid');
+  for (let m = 1; m <= 12; m++) {
+    const btn = document.createElement('button');
+    btn.className = 'month-btn';
+    btn.textContent = `${m}月`;
+    btn.setAttribute('data-month', m);
+    btn.addEventListener('click', () => handleMonthSelect(m, order));
+    grid.appendChild(btn);
+  }
+}
+
+function handleMonthSelect(selectedMonth, order) {
+  if (state.isAnswering) return;
+  state.isAnswering = true;
+  state.totalAttempts++;
+
+  const buttons = gameArea.querySelectorAll('.month-btn');
+  const isCorrect = order.correctFn(selectedMonth);
+
+  // Disable all buttons
+  buttons.forEach(b => b.disabled = true);
+
+  if (isCorrect) {
+    buttons.forEach(b => {
+      if (parseInt(b.getAttribute('data-month')) === selectedMonth) {
+        b.classList.add('correct');
+      }
+    });
+    state.correctCount++;
+    state.comboCount++;
+    let bonus = 10;
+    if (state.comboCount >= 3) bonus += 5;
+    updateScore(bonus);
+    state.currentOrder++;
+    updateComboIndicator();
+    setTimeout(() => {
+      showFeedback('correct', '✅ 预订成功！',
+        `正确！${order.correctHint}\n金币 +${bonus} 💰${state.comboCount>=3?' 连击奖励+5！':''}`,
+        () => renderOrder());
+    }, 400);
+  } else {
+    buttons.forEach(b => {
+      const m = parseInt(b.getAttribute('data-month'));
+      if (m === selectedMonth) b.classList.add('incorrect');
+      if (order.allCorrect.includes(m)) b.classList.add('highlight-correct');
+    });
+    state.comboCount = 0;
+    state.currentOrder++;
+    updateComboIndicator();
+    setTimeout(() => {
+      showFeedback('hint', '🤔 再想想吧',
+        order.failHint, () => renderOrder());
+    }, 600);
+  }
+}
+
+function renderCalendarOrder(order) {
+  currentCalendarYear = order.year;
+  currentCalendarMonth = order.month;
+
+  gameArea.innerHTML = renderCalendarHTML(order.year, order.month, true);
+
+  // Add click handlers
+  const days = gameArea.querySelectorAll('.cal-day');
+  days.forEach(d => {
+    d.addEventListener('click', () => handleCalendarClick(parseInt(d.getAttribute('data-day')), order));
+  });
+}
+
+function handleCalendarClick(clickedDay, order) {
+  if (state.isAnswering) return;
+  state.isAnswering = true;
+  state.totalAttempts++;
+
+  const days = gameArea.querySelectorAll('.cal-day');
+  const isCorrect = clickedDay === order.correctDay;
+
+  days.forEach(d => d.classList.add('disabled'));
+
+  if (isCorrect) {
+    days.forEach(d => {
+      if (parseInt(d.getAttribute('data-day')) === clickedDay) d.classList.add('correct');
+    });
+    state.correctCount++;
+    state.comboCount++;
+    let bonus = 10;
+    if (state.comboCount >= 3) bonus += 5;
+    updateScore(bonus);
+    state.currentOrder++;
+    updateComboIndicator();
+    setTimeout(() => {
+      showFeedback('correct', '✅ 预订成功！',
+        `正确！${order.correctHint}\n金币 +${bonus} 💰${state.comboCount>=3?' 连击奖励+5！':''}`,
+        () => renderOrder());
+    }, 400);
+  } else {
+    days.forEach(d => {
+      const dday = parseInt(d.getAttribute('data-day'));
+      if (dday === clickedDay) d.classList.add('incorrect');
+      if (dday === order.correctDay) d.classList.add('highlight-correct');
+    });
+    state.comboCount = 0;
+    state.currentOrder++;
+    updateComboIndicator();
+    setTimeout(() => {
+      showFeedback('hint', '🤔 再想想吧',
+        order.failHint, () => renderOrder());
+    }, 600);
+  }
+}
+
+function renderTimeInput(order) {
+  currentCalendarYear = null;
+  currentCalendarMonth = null;
+
+  gameArea.innerHTML = `
+    <div class="time-input-area">
+      <div style="font-size:14px;color:var(--color-text-light);margin-bottom:6px;">
+        请输入24时计时法的时间（如 15:30）
+      </div>
+      <input type="text" class="time-input" id="timeInput" placeholder="00:00" inputmode="numeric" maxlength="5">
+      <button class="submit-btn" id="timeSubmitBtn">确认预订 ✅</button>
+      <div class="time-hint">💡 提示：下午的时间 = 时刻 + 12</div>
+    </div>`;
+
+  const input = $('#timeInput');
+  const submitBtn = $('#timeSubmitBtn');
+
+  input.focus();
+  submitBtn.addEventListener('click', () => handleTimeSubmit(order));
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleTimeSubmit(order);
+  });
+}
+
+function handleTimeSubmit(order) {
+  if (state.isAnswering) return;
+  const input = $('#timeInput');
+  if (!input) return;
+
+  state.isAnswering = true;
+  state.totalAttempts++;
+
+  const userAnswer = input.value.trim();
+  const isCorrect = userAnswer === order.correctAnswer;
+
+  const submitBtn = $('#timeSubmitBtn');
+  if (submitBtn) submitBtn.disabled = true;
+  if (input) input.disabled = true;
+
+  if (isCorrect) {
+    state.correctCount++;
+    state.comboCount++;
+    let bonus = 10;
+    if (state.comboCount >= 3) bonus += 5;
+    updateScore(bonus);
+    state.currentOrder++;
+    updateComboIndicator();
+    setTimeout(() => {
+      showFeedback('correct', '✅ 预订成功！',
+        `正确！${order.correctHint}\n金币 +${bonus} 💰${state.comboCount>=3?' 连击奖励+5！':''}`,
+        () => renderOrder());
+    }, 400);
+  } else {
+    state.comboCount = 0;
+    state.currentOrder++;
+    updateComboIndicator();
+    setTimeout(() => {
+      showFeedback('hint', '🤔 再想想吧',
+        order.failHint, () => renderOrder());
+    }, 600);
+  }
+}
+
+function updateComboIndicator() {
+  if (state.comboCount >= 5) {
+    comboIndicator.innerHTML = '<span class="combo-fire">🔥 超级连击 x' + state.comboCount + '!</span>';
+  } else if (state.comboCount >= 3) {
+    comboIndicator.innerHTML = '⚡ 连击 x' + state.comboCount + '!';
+  } else if (state.comboCount > 0) {
+    comboIndicator.textContent = '👍 做得好！';
+  } else {
+    comboIndicator.textContent = '';
+  }
+}
+
+// ============================================
+// Victory Screen
+// ============================================
+function showVictory() {
+  const accuracy = state.totalAttempts > 0 ? Math.round((state.correctCount / state.totalAttempts) * 100) : 0;
+  const tier = determinePracticeTier();
+  const tierLabel = difficultyLabels[tier];
+
+  customerArea.style.display = 'none';
+  comboIndicator.textContent = '';
+
+  gameArea.innerHTML = `
+    <div class="victory-container">
+      <div class="victory-icon">🏆</div>
+      <div class="victory-title">旅行社大获成功！</div>
+      <div class="victory-stats">
+        <div>🎯 完成关卡：${state.totalLevels} 关</div>
+        <div>💰 最终金币：${state.score} 枚</div>
+        <div>📊 正确率：${accuracy}%</div>
+        <div>🔥 最高连击：${state.comboCount} 次</div>
+      </div>
+      <button class="victory-btn" onclick="enterPracticeMode()">
+        📝 进入练习 <small>(${tierLabel.icon} ${tierLabel.name})</small>
+      </button>
+      <div style="margin-top:8px;">
+        <button class="restart-btn" onclick="restartGame()">🔄 直接重玩</button>
+      </div>
+    </div>`;
+}
+
+// ============================================
+// Practice System
+// ============================================
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '一年有多少个月？', options: ['10个月', '11个月', '12个月', '13个月'], answer: 2, hint: '一年有12个月，从1月到12月。' },
+    { type: 'choice', q: '下面哪个月份有31天（大月）？', options: ['4月', '6月', '7月', '9月'], answer: 2, hint: '用拳头记忆法：7月对应关节凸起处，是大月31天。' },
+    { type: 'fill', q: '平年全年有____天。', answer: '365', hint: '平年2月有28天，全年365天。' },
+    { type: 'choice', q: '下午3时用24时计时法表示为？', options: ['3:00', '13:00', '15:00', '17:00'], answer: 2, hint: '下午的时间 = 时刻 + 12，3 + 12 = 15。' },
+    { type: 'choice', q: '一个月最多有多少天？', options: ['28天', '30天', '31天', '32天'], answer: 2, hint: '大月有31天，是所有月份中天数最多的。' },
+  ],
+  2: [
+    { type: 'choice', q: '下面哪几个月是小月（30天）？', options: ['1月、3月、5月', '4月、6月、9月、11月', '7月、8月、10月、12月', '2月、4月、6月、8月'], answer: 1, hint: '歌诀：四六九冬(11月)三十天。' },
+    { type: 'fill', q: '闰年2月有____天。', answer: '29', hint: '闰年比平年多一天，这多出的一天就加在2月。' },
+    { type: 'choice', q: '2025 ÷ 4 = 506……1，所以2025年是？', options: ['闰年', '平年', '大年', '小年'], answer: 1, hint: '年份÷4有余数就是平年，整除才是闰年（整百年还要÷400）。' },
+    { type: 'choice', q: '晚上9:30用24时计时法表示为？', options: ['9:30', '19:30', '21:30', '23:30'], answer: 2, hint: '晚上就是下午之后：9 + 12 = 21，所以是21:30。' },
+  ],
+  3: [
+    { type: 'choice', q: '2025年5月1日是星期四，5月31日是星期几？', options: ['星期四', '星期五', '星期六', '星期日'], answer: 2, hint: '5月1日到31日经过30天，30÷7=4周余2天，星期四+2天=星期六。' },
+    { type: 'fill', q: '小明的生日是2月29日，他每____年才能过一次生日。', answer: '4', hint: '2月29日只在闰年出现，闰年通常每4年一次。' },
+    { type: 'choice', q: '2100年是平年还是闰年？', options: ['平年', '闰年', '无法判断', '有时平有时闰'], answer: 0, hint: '2100是整百年 → 2100÷400=5……100（有余数）→ 平年！"百年不闰"。' },
+    { type: 'choice', q: '一场展览从3月28日到4月5日，共展出多少天？', options: ['7天', '8天', '9天', '10天'], answer: 2, hint: '3月28-31日：4天；4月1-5日：5天。总共4+5=9天。' },
+  ],
+  4: [
+    { type: 'choice', q: '某年的2月有5个星期日。这一年可能是平年吗？', options: ['可能', '不可能', '取决于年份', '以上都不对'], answer: 1, hint: '平年2月28天÷7=正好4周，每个星期出现4次。只有闰年29天÷7=4周余1天，才可能某天出现5次。' },
+    { type: 'fill', q: '如果今天是4月30日（星期三），那么5月1日是星期____。', answer: '四', hint: '4月30日是星期三，下一天5月1日就是星期四。注意4月只有30天！' },
+    { type: 'choice', q: '1896年是闰年，下一个闰年是哪一年？', options: ['1898年', '1900年', '1904年', '1908年'], answer: 2, hint: '1896+4=1900，但1900是整百年且不能被400整除→平年！再+4=1904才是下一个闰年。' },
+    { type: 'choice', q: '钟面上显示的时间是22:45，用普通计时法怎么表示？', options: ['上午10:45', '中午12:45', '下午10:45', '晚上10:45'], answer: 3, hint: '22-12=10，所以是晚上10时45分。22:45属于"晚上"范围。' },
+  ],
+  5: [
+    { type: 'choice', q: '以下哪个说法一定正确？', options: ['每年都有365天', '大月都有31天', '2月都是28天', '每4年一定有一个闰年'], answer: 1, hint: '大月的定义就是31天。其他选项都有反例：闰年366天、闰年2月29天、整百年不闰。' },
+    { type: 'fill', q: '一个小朋友说："我今年10岁，只过了2次生日。"他的生日是____月____日。', answer: '2月29日', hint: '10年只过2次生日→生日每4年才有一次→2月29日。' },
+    { type: 'choice', q: '你能用几种方法判断2028年是不是闰年？选出所有正确的方法：', options: ['2028÷4看余数', '查看2028年日历2月天数', '2028不是整百年，只需÷4', '以上方法都正确'], answer: 3, hint: '三种方法都能判断！2028不是整百年，÷4整除即可确定是闰年。' },
+    { type: 'fill', q: '如果一个月的第1天是星期日，最后一天也是星期日，这个月可能是____月（写出月份名称）。', answer: '2月', hint: '第1天和最后一天都是星期日→天数正好是7的倍数→28天→2月（平年）。28+7+7超出月范围。' },
+  ],
+};
+
+function determinePracticeTier() {
+  const accuracy = state.totalAttempts > 0 ? state.correctCount / state.totalAttempts : 0;
+  if (accuracy < 0.4) return 1;
+  if (accuracy < 0.6) return 2;
+  if (accuracy < 0.8) return 3;
+  if (accuracy < 0.95) return 4;
+  return 5;
+}
+
+function enterPracticeMode() {
+  state.practiceTier = determinePracticeTier();
+  state.mode = 'practice';
+  state.practiceIndex = 0;
+  state.practiceCorrect = 0;
+
+  gameContainer.classList.add('hidden');
+  practiceContainer.classList.remove('hidden');
+  practiceContainer.style.display = 'flex';
+
+  const tier = difficultyLabels[state.practiceTier];
+  practiceBadge.innerHTML = `${tier.icon} ${tier.name}`;
+  practiceBadge.className = `practice-badge ${tier.badgeClass}`;
+
+  practiceNextBtn.textContent = '开始答题 →';
+  practiceNextBtn.classList.remove('hidden');
+  practiceNextBtn.disabled = false;
+  renderPracticeQuestion();
+}
+
+function renderPracticeQuestion() {
+  const problems = practiceProblems[state.practiceTier];
+  if (!problems || state.practiceIndex >= problems.length) {
+    showPracticeSummary();
+    return;
+  }
+  const p = problems[state.practiceIndex];
+  const total = problems.length;
+  practiceProgress.textContent = `第 ${state.practiceIndex + 1}/${total} 题`;
+  practiceQNum.textContent = `第 ${state.practiceIndex + 1} 题`;
+  practiceQTitle.textContent = p.q;
+  practiceFeedback.classList.remove('show', 'correct', 'wrong');
+  practiceFeedback.textContent = '';
+
+  if (p.type === 'fill') {
+    practiceQContent.innerHTML = `
+      <div class="practice-input-area">
+        <input type="text" class="practice-input" id="practiceInput" placeholder="输入答案" inputmode="text">
+        <button class="submit-btn" id="practiceSubmitBtn">确认</button>
+      </div>`;
+    $('#practiceSubmitBtn').addEventListener('click', handlePracticeSubmit);
+    $('#practiceInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') handlePracticeSubmit(); });
+    $('#practiceInput').focus();
+  } else {
+    practiceQContent.innerHTML = '<div class="practice-options"></div>';
+    const opts = practiceQContent.querySelector('.practice-options');
+    p.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'practice-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => handlePracticeChoice(idx, p.answer, p.options[p.answer]));
+      opts.appendChild(btn);
+    });
+  }
+  practiceNextBtn.textContent = state.practiceIndex < problems.length - 1 ? '下一题 →' : '查看结果 📊';
+  practiceNextBtn.disabled = true;
+}
+
+function handlePracticeChoice(selected, correctIdx, correctText) {
+  const options = practiceQContent.querySelectorAll('.practice-option');
+  options.forEach(o => o.disabled = true);
+  if (selected === correctIdx) {
+    options[selected].classList.add('selected-correct');
+    state.practiceCorrect++;
+    practiceFeedback.textContent = `✅ 正确！${correctText}`;
+    practiceFeedback.className = 'practice-feedback show correct';
+  } else {
+    options[selected].classList.add('selected-wrong');
+    options[correctIdx].classList.add('show-correct');
+    practiceFeedback.textContent = `❌ 正确答案是 ${correctText}。加油！`;
+    practiceFeedback.className = 'practice-feedback show wrong';
+  }
+  practiceNextBtn.disabled = false;
+}
+
+function handlePracticeSubmit() {
+  const input = $('#practiceInput');
+  const btn = $('#practiceSubmitBtn');
+  if (!input || btn.disabled) return;
+  const problems = practiceProblems[state.practiceTier];
+  const p = problems[state.practiceIndex];
+  const userAnswer = input.value.trim();
+  btn.disabled = true;
+  input.disabled = true;
+  if (userAnswer === p.answer) {
+    state.practiceCorrect++;
+    practiceFeedback.textContent = `✅ 正确！答案就是 ${p.answer}`;
+    practiceFeedback.className = 'practice-feedback show correct';
+  } else {
+    practiceFeedback.textContent = `❌ 正确答案是 ${p.answer}。${p.hint || ''}`;
+    practiceFeedback.className = 'practice-feedback show wrong';
+  }
+  practiceNextBtn.disabled = false;
+}
+
+function handlePracticeNext() {
+  const problems = practiceProblems[state.practiceTier];
+  if (state.practiceIndex >= problems.length - 1) {
+    showPracticeSummary();
+    return;
+  }
+  state.practiceIndex++;
+  renderPracticeQuestion();
+}
+
+function showPracticeSummary() {
+  const problems = practiceProblems[state.practiceTier];
+  const total = problems ? problems.length : 0;
+  const pct = total > 0 ? Math.round((state.practiceCorrect / total) * 100) : 0;
+  let emoji, color;
+  if (pct >= 80) { emoji = '🌟'; color = 'var(--color-success)'; }
+  else if (pct >= 60) { emoji = '👍'; color = 'var(--color-primary)'; }
+  else { emoji = '💪'; color = 'var(--color-warning)'; }
+
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden');
+  practiceContainer.style.display = 'none';
+  customerArea.style.display = 'none';
+
+  gameArea.innerHTML = `
+    <div class="practice-summary">
+      <div class="practice-summary-icon">${emoji}</div>
+      <div class="practice-summary-title">练习完成！</div>
+      <div class="practice-summary-score" style="color:${color}">${state.practiceCorrect}/${total}</div>
+      <div class="practice-summary-detail">
+        <div>📊 练习正确率：${pct}%</div>
+        <div>🎮 游戏得分：${state.score} 分</div>
+        ${pct >= 80 ? '<div>🏆 太棒了，你对年月日掌握得很好！</div>' :
+          pct >= 60 ? '<div>📚 还不错，继续加油会更好！</div>' :
+          '<div>🌱 没关系，多练习几次就能进步！</div>'}
+      </div>
+      <button class="victory-btn" onclick="restartGame()">🔄 再玩一次</button>
+    </div>`;
+}
+
+practiceNextBtn.addEventListener('click', handlePracticeNext);
+
+// ============================================
+// Restart
+// ============================================
+function restartGame() {
+  state.mode = 'game';
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden');
+  practiceContainer.style.display = 'none';
+  customerArea.style.display = 'flex';
+
+  state.score = 0;
+  state.level = 1;
+  state.currentOrder = 0;
+  state.totalOrders = 0;
+  state.correctCount = 0;
+  state.totalAttempts = 0;
+  state.comboCount = 0;
+  state.isAnswering = false;
+
+  updateScore(0);
+  updateLevel(1);
+  levelLabel.textContent = levelLabels[1];
+  updateProgress(0, state.totalOrdersAll);
+  comboIndicator.textContent = '';
+  renderOrder();
+}
+
+// ============================================
+// Init
+// ============================================
+restartBtn.addEventListener('click', restartGame);
+gameTitle.textContent = '🧳 时间旅行社';
+updateProgress(0, state.totalOrdersAll);
+restartGame();
+</script>
+
+</body>
+</html>

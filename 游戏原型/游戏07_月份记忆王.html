@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🃏 月份记忆王</title>
+<style>
+/* ============================================
+   Color Palette — 紫色卡片风格
+   ============================================ */
+:root {
+  --color-primary: #7B68EE;
+  --color-primary-light: #B0A4F0;
+  --color-primary-dark: #5A4FCF;
+  --color-success: #52C41A;
+  --color-success-light: #D9F7BE;
+  --color-error: #FF6B6B;
+  --color-error-light: #FFF1F0;
+  --color-warning: #FAAD14;
+  --color-warning-light: #FFFBE6;
+  --color-gold: #FFD700;
+  --color-bg: #F5F0FF;
+  --color-card-bg: #FFFFFF;
+  --color-card-back: #7B68EE;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-border: #E0D8F0;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-button: 0 4px 12px rgba(0,0,0,0.15);
+  --font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-number: "Consolas", "Courier New", monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-family);
+  background: linear-gradient(135deg, #F5F0FF 0%, #EDE7F6 50%, #E8EAF6 100%);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.game-container {
+  width: 100%;
+  max-width: 520px;
+  background: var(--color-card-bg);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 32px rgba(123,104,238,0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 620px;
+  position: relative;
+}
+
+/* --- Header --- */
+.game-header {
+  background: linear-gradient(135deg, #7B68EE, #5A4FCF);
+  color: white;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.game-title { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+.game-stats { display: flex; gap: 14px; font-size: 14px; }
+.stat-item { display: flex; align-items: center; gap: 4px; }
+.stat-icon { font-size: 16px; }
+.stat-value { font-weight: 700; font-family: var(--font-number); }
+
+/* --- Level Bar --- */
+.level-indicator {
+  padding: 8px 20px;
+  background: var(--color-primary-light);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.level-name { font-size: 14px; }
+.level-stars { display: flex; gap: 2px; }
+.level-star { font-size: 18px; opacity: 0.3; transition: opacity 0.3s; }
+.level-star.earned { opacity: 1; }
+
+/* --- Hint Area --- */
+.question-area { padding: 14px 20px; text-align: center; flex-shrink: 0; }
+.question-text { font-size: 16px; font-weight: 600; color: var(--color-text); }
+.question-hint { font-size: 12px; color: var(--color-text-light); margin-top: 4px; }
+
+/* --- Card Grid Area --- */
+.game-area {
+  flex: 1; padding: 10px 16px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 280px;
+}
+
+.card-grid {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: 440px;
+  justify-content: center;
+}
+.card-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.card-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+
+/* --- Card Flip --- */
+.card-wrapper {
+  perspective: 600px;
+  aspect-ratio: 1;
+  min-height: 70px;
+  max-height: 90px;
+}
+.card-inner {
+  position: relative;
+  width: 100%; height: 100%;
+  transition: transform 0.45s ease;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+.card-inner.flipped { transform: rotateY(180deg); }
+.card-inner.matched {
+  transform: rotateY(180deg);
+  pointer-events: none;
+}
+
+.card-face {
+  position: absolute;
+  width: 100%; height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Card back */
+.card-back {
+  background: linear-gradient(135deg, #7B68EE, #9C8FF0);
+  color: white;
+  font-size: 28px;
+  border: 3px solid rgba(255,255,255,0.3);
+}
+.card-back::after {
+  content: '❓';
+}
+
+/* Card front */
+.card-front {
+  background: #FFFFFF;
+  color: var(--color-text);
+  transform: rotateY(180deg);
+  border: 3px solid var(--color-border);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.3;
+  padding: 4px;
+  word-break: break-all;
+}
+.card-front.type-month { border-color: #7B68EE; color: #5A4FCF; }
+.card-front.type-day { border-color: #52C41A; color: #2E7D32; }
+.card-front.type-time { border-color: #FF9800; color: #E65100; }
+
+/* Matched card */
+.card-inner.matched .card-front {
+  background: var(--color-success-light);
+  border-color: var(--color-success);
+  opacity: 0.7;
+  animation: pulse-success 0.5s ease;
+}
+
+/* Card shake on wrong */
+.card-inner.shake {
+  animation: shake-card 0.5s ease;
+}
+
+@keyframes shake-card {
+  0%,100%{transform:rotateY(180deg) translateX(0)}
+  20%{transform:rotateY(180deg) translateX(-6px)}
+  40%{transform:rotateY(180deg) translateX(6px)}
+  60%{transform:rotateY(180deg) translateX(-4px)}
+  80%{transform:rotateY(180deg) translateX(4px)}
+}
+
+/* Star burst on match */
+.star-particle {
+  position: fixed;
+  pointer-events: none;
+  font-size: 24px;
+  animation: starUp 0.8s ease-out forwards;
+  z-index: 200;
+}
+@keyframes starUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-60px) scale(1.5); }
+}
+
+/* --- Progress Bar --- */
+.progress-bar-container {
+  width: 100%; height: 8px; background: var(--color-border);
+  border-radius: 4px; margin: 0 20px 12px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success), #7B68EE);
+  border-radius: 4px; transition: width 0.5s ease;
+}
+
+/* --- Footer --- */
+.game-footer {
+  padding: 10px 20px 14px; display: flex; justify-content: center;
+  gap: 10px; border-top: 1px solid var(--color-border);
+}
+.restart-btn {
+  padding: 8px 20px; font-size: 14px; color: var(--color-text-light);
+  background: transparent; border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+}
+.restart-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+/* --- Victory --- */
+.victory-container { text-align: center; padding: 20px; }
+.victory-icon { font-size: 72px; margin-bottom: 12px; animation: bounce 0.6s ease infinite alternate; }
+.victory-title { font-size: 26px; font-weight: 700; color: var(--color-success); margin-bottom: 8px; }
+.victory-stats { font-size: 15px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.8; }
+.victory-stars { font-size: 40px; margin: 8px 0; letter-spacing: 4px; }
+.victory-btn {
+  padding: 12px 32px; font-size: 16px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; margin: 0 6px; transition: background 0.2s;
+}
+.victory-btn:hover { background: var(--color-primary-dark); }
+
+/* --- Feedback Overlay --- */
+.feedback-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4); display: flex;
+  justify-content: center; align-items: center;
+  z-index: 100; animation: fadeIn 0.2s ease;
+}
+.feedback-modal {
+  background: white; border-radius: var(--radius-lg);
+  padding: 32px 24px; text-align: center;
+  max-width: 320px; width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  animation: scaleIn 0.3s ease;
+}
+.feedback-icon { font-size: 56px; margin-bottom: 12px; }
+.feedback-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.feedback-message { font-size: 15px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.5; }
+.feedback-btn {
+  padding: 12px 32px; font-size: 16px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: background 0.2s;
+}
+.feedback-btn:hover { background: var(--color-primary-dark); }
+
+/* ============================================
+   Practice Mode Styles
+   ============================================ */
+.practice-container {
+  display: none; flex-direction: column; height: 100%;
+}
+.practice-badge-bar {
+  padding: 12px 20px; background: var(--color-bg);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+}
+.practice-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 13px; font-weight: 700;
+}
+.badge-tier-1 { background: #E8F5E9; color: #2E7D32; }
+.badge-tier-2 { background: #E3F2FD; color: #1565C0; }
+.badge-tier-3 { background: #FFF3E0; color: #E65100; }
+.badge-tier-4 { background: #F3E5F5; color: #7B1FA2; }
+.badge-tier-5 { background: #FFEBEE; color: #C62828; }
+.practice-progress-text { font-size: 13px; color: var(--color-text-light); }
+
+.practice-question-card {
+  margin: 20px; padding: 24px 20px;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); flex: 1;
+}
+.practice-q-num { font-size: 12px; font-weight: 700; color: var(--color-primary); margin-bottom: 8px; }
+.practice-q-title { font-size: 17px; font-weight: 600; color: var(--color-text); margin-bottom: 16px; line-height: 1.6; }
+.practice-options { display: flex; flex-direction: column; gap: 10px; }
+.practice-option {
+  padding: 14px 16px; font-size: 15px; text-align: left;
+  background: var(--color-bg); border: 2px solid var(--color-border);
+  border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s; line-height: 1.4;
+}
+.practice-option:hover { border-color: var(--color-primary); background: white; }
+.practice-option.selected-correct { border-color: var(--color-success); background: var(--color-success-light); }
+.practice-option.selected-wrong { border-color: var(--color-error); background: var(--color-error-light); }
+.practice-option.show-correct { border-color: var(--color-success); }
+.practice-option:disabled { pointer-events: none; }
+
+.practice-input-area { display: flex; gap: 10px; }
+.practice-input {
+  flex: 1; padding: 12px 16px; font-size: 18px; font-weight: 700;
+  font-family: var(--font-number); text-align: center;
+  border: 2px solid var(--color-border); border-radius: var(--radius-md); outline: none;
+}
+.practice-input:focus { border-color: var(--color-primary); }
+.submit-btn {
+  padding: 14px 24px; font-size: 16px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: background 0.2s; min-width: 72px;
+}
+.submit-btn:hover { background: var(--color-primary-dark); }
+
+.practice-feedback {
+  margin: 0 20px 12px; padding: 12px 16px;
+  border-radius: var(--radius-md); font-size: 14px;
+  line-height: 1.5; display: none;
+}
+.practice-feedback.show { display: block; animation: fadeIn 0.3s ease; }
+.practice-feedback.correct { background: var(--color-success-light); color: #2E7D32; }
+.practice-feedback.wrong { background: var(--color-error-light); color: #C62828; }
+
+.practice-nav {
+  padding: 12px 20px; display: flex; gap: 10px;
+  justify-content: center; border-top: 1px solid var(--color-border);
+}
+.practice-nav-btn {
+  padding: 10px 24px; font-size: 15px; font-weight: 700;
+  border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s;
+}
+.practice-nav-btn.primary { background: var(--color-primary); color: white; }
+.practice-nav-btn.primary:hover { background: var(--color-primary-dark); }
+.practice-nav-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.practice-nav-btn.secondary { background: transparent; color: var(--color-text-light); border: 1px solid var(--color-border); }
+.practice-nav-btn.secondary:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+.practice-summary { text-align: center; padding: 30px 20px; }
+.practice-summary-icon { font-size: 64px; margin-bottom: 12px; }
+.practice-summary-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.practice-summary-score { font-size: 36px; font-weight: 700; font-family: var(--font-number); margin-bottom: 12px; }
+.practice-summary-detail { font-size: 14px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.8; }
+
+/* --- Animations --- */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-12px)} }
+@keyframes pulse-success { 0%{transform:rotateY(180deg) scale(1)}50%{transform:rotateY(180deg) scale(1.08)}100%{transform:rotateY(180deg) scale(1)} }
+
+.hidden { display: none !important; }
+
+/* --- Responsive --- */
+@media (max-width: 380px) {
+  .card-grid { gap: 5px; }
+  .card-wrapper { min-height: 60px; max-height: 76px; }
+  .card-front { font-size: 11px; padding: 2px; }
+  .card-back { font-size: 24px; }
+  .game-title { font-size: 17px; }
+  .game-stats { gap: 8px; font-size: 12px; }
+}
+@media (min-width: 768px) {
+  .game-container { max-width: 600px; min-height: 700px; }
+  .card-grid { gap: 10px; max-width: 500px; }
+  .card-wrapper { max-height: 100px; }
+  .card-front { font-size: 15px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==============================
+     GAME MODE
+     ============================== -->
+<div class="game-container" id="gameContainer">
+  <div class="game-header">
+    <div class="game-title">🃏 月份记忆王</div>
+    <div class="game-stats">
+      <div class="stat-item"><span class="stat-icon">✅</span><span class="stat-value" id="scoreDisplay">0</span></div>
+      <div class="stat-item"><span class="stat-icon">🃏</span><span class="stat-value" id="flipsDisplay">0</span></div>
+      <div class="stat-item"><span class="stat-icon">⏱</span><span class="stat-value" id="timerDisplay">0s</span></div>
+    </div>
+  </div>
+
+  <div class="level-indicator">
+    <span class="level-name" id="levelLabel">🏁 第1关：月份热身</span>
+    <span class="level-stars" id="levelStars">
+      <span class="level-star">⭐</span><span class="level-star">⭐</span><span class="level-star">⭐</span>
+    </span>
+  </div>
+
+  <div class="question-area">
+    <div class="question-text" id="questionText">翻开卡片，找到「月份 ↔ 天数」的配对！</div>
+    <div class="question-hint" id="questionHint">提示：大月有31天，小月有30天</div>
+  </div>
+
+  <div class="game-area" id="gameArea"></div>
+
+  <div style="padding: 0 20px;">
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <div class="game-footer">
+    <button class="restart-btn" id="restartBtn">🔄 重新开始</button>
+  </div>
+</div>
+
+<!-- Feedback Overlay -->
+<div class="feedback-overlay hidden" id="feedbackOverlay">
+  <div class="feedback-modal">
+    <div class="feedback-icon" id="feedbackIcon">✅</div>
+    <div class="feedback-title" id="feedbackTitle">回答正确！</div>
+    <div class="feedback-message" id="feedbackMessage"></div>
+    <button class="feedback-btn" id="feedbackBtn">继续 →</button>
+  </div>
+</div>
+
+<!-- ==============================
+     PRACTICE MODE
+     ============================== -->
+<div class="practice-container hidden" id="practiceContainer">
+  <div class="practice-badge-bar">
+    <span class="practice-badge" id="practiceBadge">📝 巩固练习</span>
+    <span class="practice-progress-text" id="practiceProgress">第 1/5 题</span>
+  </div>
+  <div class="practice-question-card">
+    <div class="practice-q-num" id="practiceQNum">第 1 题</div>
+    <div class="practice-q-title" id="practiceQTitle">题目内容</div>
+    <div id="practiceQContent"></div>
+  </div>
+  <div class="practice-feedback" id="practiceFeedback"></div>
+  <div class="practice-nav">
+    <button class="practice-nav-btn secondary hidden" id="practiceSkipBtn">跳过</button>
+    <button class="practice-nav-btn primary" id="practiceNextBtn">下一题 →</button>
+  </div>
+</div>
+
+
+<script>
+// ============================================
+// DOM References
+// ============================================
+const $ = (sel) => document.querySelector(sel);
+const gameContainer = $('#gameContainer');
+const gameTitle = $('.game-title');
+const scoreDisplay = $('#scoreDisplay');
+const flipsDisplay = $('#flipsDisplay');
+const timerDisplay = $('#timerDisplay');
+const levelLabel = $('#levelLabel');
+const levelStars = $('#levelStars');
+const questionText = $('#questionText');
+const questionHint = $('#questionHint');
+const gameArea = $('#gameArea');
+const progressBar = $('#progressBar');
+const restartBtn = $('#restartBtn');
+const feedbackOverlay = $('#feedbackOverlay');
+const feedbackIcon = $('#feedbackIcon');
+const feedbackTitle = $('#feedbackTitle');
+const feedbackMessage = $('#feedbackMessage');
+const feedbackBtn = $('#feedbackBtn');
+const practiceContainer = $('#practiceContainer');
+const practiceBadge = $('#practiceBadge');
+const practiceProgress = $('#practiceProgress');
+const practiceQNum = $('#practiceQNum');
+const practiceQTitle = $('#practiceQTitle');
+const practiceQContent = $('#practiceQContent');
+const practiceFeedback = $('#practiceFeedback');
+const practiceNextBtn = $('#practiceNextBtn');
+const practiceSkipBtn = $('#practiceSkipBtn');
+
+// ============================================
+// Game State
+// ============================================
+const state = {
+  score: 0,
+  level: 1,
+  totalLevels: 3,
+  flipCount: 0,           // total pair-flip attempts
+  correctCount: 0,        // successful matches
+  totalAttempts: 0,       // same as flipCount for ratio calc
+  matchedCount: 0,
+  totalPairs: 0,
+  cardFlipped: [],        // currently flipped card indices (max 2)
+  isChecking: false,
+  timerSeconds: 0,
+  timerInterval: null,
+  levelStarsEarned: [0,0,0], // stars per level
+  // Practice
+  mode: 'game',
+  practiceTier: 1,
+  practiceIndex: 0,
+  practiceCorrect: 0,
+};
+
+// ============================================
+// Card Pair Data — 3 levels
+// ============================================
+const levelData = {
+  1: {
+    name: '月份热身',
+    icon: '🏁',
+    hint: '提示：大月有31天，小月有30天',
+    pairs: [
+      { id: 'p1', a: { text: '1月', type: 'month' }, b: { text: '31天\n(大月)', type: 'day' } },
+      { id: 'p2', a: { text: '3月', type: 'month' }, b: { text: '31天\n(大月)', type: 'day' } },
+      { id: 'p3', a: { text: '4月', type: 'month' }, b: { text: '30天\n(小月)', type: 'day' } },
+      { id: 'p4', a: { text: '6月', type: 'month' }, b: { text: '30天\n(小月)', type: 'day' } },
+      { id: 'p5', a: { text: '8月', type: 'month' }, b: { text: '31天\n(大月)', type: 'day' } },
+      { id: 'p6', a: { text: '11月', type: 'month' }, b: { text: '30天\n(小月)', type: 'day' } },
+    ],
+    cols: 4,
+  },
+  2: {
+    name: '平闰挑战',
+    icon: '🔍',
+    hint: '提示：2月平年28天，闰年29天',
+    pairs: [
+      { id: 'p1', a: { text: '1月', type: 'month' }, b: { text: '31天\n(大月)', type: 'day' } },
+      { id: 'p2', a: { text: '4月', type: 'month' }, b: { text: '30天\n(小月)', type: 'day' } },
+      { id: 'p3', a: { text: '7月', type: 'month' }, b: { text: '31天\n(大月)', type: 'day' } },
+      { id: 'p4', a: { text: '9月', type: 'month' }, b: { text: '30天\n(小月)', type: 'day' } },
+      { id: 'p5', a: { text: '2月\n(平年)', type: 'month' }, b: { text: '28天', type: 'day' } },
+      { id: 'p6', a: { text: '2月\n(闰年)', type: 'month' }, b: { text: '29天', type: 'day' } },
+      { id: 'p7', a: { text: '12月', type: 'month' }, b: { text: '31天\n(大月)', type: 'day' } },
+      { id: 'p8', a: { text: '10月', type: 'month' }, b: { text: '31天\n(大月)', type: 'day' } },
+    ],
+    cols: 4,
+  },
+  3: {
+    name: '终极记忆',
+    icon: '🏆',
+    hint: '提示：月份配对 + 24时计时法转换',
+    pairs: [
+      { id: 'p1', a: { text: '1月', type: 'month' }, b: { text: '31天\n(大月)', type: 'day' } },
+      { id: 'p2', a: { text: '4月', type: 'month' }, b: { text: '30天\n(小月)', type: 'day' } },
+      { id: 'p3', a: { text: '7月', type: 'month' }, b: { text: '31天\n(大月)', type: 'day' } },
+      { id: 'p4', a: { text: '9月', type: 'month' }, b: { text: '30天\n(小月)', type: 'day' } },
+      { id: 'p5', a: { text: '2月\n(平年)', type: 'month' }, b: { text: '28天', type: 'day' } },
+      { id: 'p6', a: { text: '2月\n(闰年)', type: 'month' }, b: { text: '29天', type: 'day' } },
+      { id: 'p7', a: { text: '12月', type: 'month' }, b: { text: '31天\n(大月)', type: 'day' } },
+      { id: 'p8', a: { text: '10月', type: 'month' }, b: { text: '31天\n(大月)', type: 'day' } },
+      { id: 'p9', a: { text: '14:00', type: 'time' }, b: { text: '下午\n2时', type: 'time' } },
+      { id: 'p10', a: { text: '20:00', type: 'time' }, b: { text: '晚上\n8时', type: 'time' } },
+    ],
+    cols: 5,
+  },
+};
+
+// ============================================
+// Fisher-Yates Shuffle
+// ============================================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ============================================
+// Build Card Deck
+// ============================================
+function buildDeck(level) {
+  const data = levelData[level];
+  const cards = [];
+  data.pairs.forEach(pair => {
+    cards.push({ pairId: pair.id, ...pair.a });
+    cards.push({ pairId: pair.id, ...pair.b });
+  });
+  return { cards: shuffle(cards), cols: data.cols, totalPairs: data.pairs.length };
+}
+
+// ============================================
+// Timer
+// ============================================
+function startTimer() {
+  stopTimer();
+  state.timerSeconds = 0;
+  timerDisplay.textContent = '0s';
+  state.timerInterval = setInterval(() => {
+    state.timerSeconds++;
+    timerDisplay.textContent = state.timerSeconds + 's';
+  }, 1000);
+}
+function stopTimer() {
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+}
+
+// ============================================
+// Star Rating
+// ============================================
+function calcStars() {
+  if (state.totalAttempts === 0) return 1;
+  const ratio = state.correctCount / state.totalAttempts;
+  if (ratio >= 0.8) return 3;
+  if (ratio >= 0.6) return 2;
+  return 1;
+}
+
+function renderLevelStars() {
+  const stars = levelStars.querySelectorAll('.level-star');
+  const earned = state.levelStarsEarned[state.level - 1] || 0;
+  stars.forEach((s, i) => { s.classList.toggle('earned', i < earned); });
+}
+
+// ============================================
+// Render Card Grid
+// ============================================
+function renderCards(level) {
+  const deck = buildDeck(level);
+  state.totalPairs = deck.totalPairs;
+  state.matchedCount = 0;
+  state.flipCount = 0;
+  state.cardFlipped = [];
+  state.isChecking = false;
+  state.currentDeck = deck.cards;
+  flipsDisplay.textContent = '0';
+  updateProgress();
+
+  const data = levelData[level];
+  levelLabel.textContent = data.icon + ' 第' + level + '关：' + data.name;
+  questionHint.textContent = data.hint;
+
+  let html = '<div class="card-grid cols-' + deck.cols + '">';
+  deck.cards.forEach((card, idx) => {
+    const typeClass = card.type === 'month' ? 'type-month' : card.type === 'day' ? 'type-day' : 'type-time';
+    html += `
+      <div class="card-wrapper">
+        <div class="card-inner" data-index="${idx}" data-pair="${card.pairId}">
+          <div class="card-face card-back"></div>
+          <div class="card-face card-front ${typeClass}">${card.text.replace(/\n/g,'<br>')}</div>
+        </div>
+      </div>`;
+  });
+  html += '</div>';
+  gameArea.innerHTML = html;
+
+  // Add click handlers
+  gameArea.querySelectorAll('.card-inner').forEach(el => {
+    el.addEventListener('click', () => handleCardClick(el));
+  });
+}
+
+function handleCardClick(el) {
+  if (state.isChecking) return;
+  const idx = parseInt(el.dataset.index);
+  if (el.classList.contains('flipped') || el.classList.contains('matched')) return;
+  if (state.cardFlipped.includes(idx)) return;
+
+  // Flip card
+  el.classList.add('flipped');
+  state.cardFlipped.push(idx);
+
+  if (state.cardFlipped.length === 2) {
+    // Two cards flipped — check match
+    state.flipCount++;
+    state.totalAttempts++;
+    flipsDisplay.textContent = state.flipCount;
+    state.isChecking = true;
+    checkMatch();
+  }
+}
+
+function checkMatch() {
+  const [i1, i2] = state.cardFlipped;
+  const c1 = state.currentDeck[i1];
+  const c2 = state.currentDeck[i2];
+  const el1 = gameArea.querySelector(`.card-inner[data-index="${i1}"]`);
+  const el2 = gameArea.querySelector(`.card-inner[data-index="${i2}"]`);
+
+  if (c1.pairId === c2.pairId && i1 !== i2) {
+    // Match!
+    state.correctCount++;
+    state.matchedCount++;
+    updateScore(10);
+    updateProgress();
+
+    // Mark matched
+    setTimeout(() => {
+      el1.classList.add('matched');
+      el2.classList.add('matched');
+      spawnStar(el1);
+      spawnStar(el2);
+      state.cardFlipped = [];
+      state.isChecking = false;
+
+      // Level complete?
+      if (state.matchedCount >= state.totalPairs) {
+        onLevelComplete();
+      }
+    }, 350);
+  } else {
+    // Mismatch
+    setTimeout(() => {
+      el1.classList.add('shake');
+      el2.classList.add('shake');
+    }, 350);
+
+    setTimeout(() => {
+      el1.classList.remove('flipped', 'shake');
+      el2.classList.remove('flipped', 'shake');
+      state.cardFlipped = [];
+      state.isChecking = false;
+    }, 900);
+  }
+}
+
+function spawnStar(el) {
+  const rect = el.getBoundingClientRect();
+  const star = document.createElement('div');
+  star.className = 'star-particle';
+  star.textContent = '⭐';
+  star.style.left = rect.left + rect.width / 2 - 12 + 'px';
+  star.style.top = rect.top + 'px';
+  document.body.appendChild(star);
+  setTimeout(() => star.remove(), 800);
+}
+
+function updateScore(points) {
+  state.score += points;
+  scoreDisplay.textContent = state.score;
+}
+
+function updateProgress() {
+  const pct = state.totalPairs > 0 ? Math.round((state.matchedCount / state.totalPairs) * 100) : 0;
+  progressBar.style.width = pct + '%';
+}
+
+// ============================================
+// Level Complete
+// ============================================
+function onLevelComplete() {
+  stopTimer();
+  const stars = calcStars();
+  state.levelStarsEarned[state.level - 1] = stars;
+  renderLevelStars();
+
+  if (state.level >= state.totalLevels) {
+    // All levels done
+    setTimeout(() => showVictory(), 400);
+  } else {
+    setTimeout(() => {
+      const starEmoji = '⭐'.repeat(stars);
+      showFeedback('correct', '关卡完成！',
+        `${starEmoji}\n你获得了 ${stars} 颗星！\n配对成功率：${Math.round(state.correctCount/state.totalAttempts*100)}%`,
+        () => {
+          state.level++;
+          state.matchedCount = 0;
+          state.correctCount = 0;
+          state.totalAttempts = 0;
+          renderCards(state.level);
+          renderLevelStars();
+          startTimer();
+        });
+    }, 400);
+  }
+}
+
+// ============================================
+// Victory
+// ============================================
+function showVictory() {
+  const totalEarned = state.levelStarsEarned.reduce((a,b)=>a+b,0);
+  const maxStars = state.totalLevels * 3;
+  const starStr = '⭐'.repeat(totalEarned) + '☆'.repeat(maxStars - totalEarned);
+
+  const accuracy = state.totalAttempts > 0
+    ? Math.round((state.correctCount / state.totalAttempts) * 100) : 0;
+
+  const tier = determinePracticeTier();
+  const tierLabel = difficultyLabels[tier];
+
+  gameArea.innerHTML = `
+    <div class="victory-container">
+      <div class="victory-icon">🏆</div>
+      <div class="victory-title">恭喜通关！</div>
+      <div class="victory-stars">${starStr}</div>
+      <div class="victory-stats">
+        <div>🎯 完成关卡：${state.totalLevels} 关</div>
+        <div>🃏 翻牌次数：${state.totalAttempts} 次</div>
+        <div>✅ 配对成功：${state.correctCount} 次</div>
+        <div>📊 配对效率：${accuracy}%</div>
+        <div>⏱ 用时：${state.timerSeconds} 秒</div>
+      </div>
+      <button class="victory-btn" onclick="enterPracticeMode()">
+        📝 进入练习 <small>(${tierLabel.icon} ${tierLabel.name})</small>
+      </button>
+      <div style="margin-top:8px;">
+        <button class="restart-btn" onclick="restartGame()">🔄 直接重玩</button>
+      </div>
+    </div>`;
+}
+
+// ============================================
+// Show Feedback Modal
+// ============================================
+function showFeedback(type, title, message, onContinue) {
+  feedbackIcon.textContent = type === 'correct' ? '✅' : type === 'hint' ? '💡' : '😅';
+  feedbackTitle.textContent = title;
+  feedbackTitle.style.color = type === 'correct' ? 'var(--color-success)'
+    : type === 'hint' ? 'var(--color-warning)' : 'var(--color-error)';
+  feedbackMessage.textContent = message;
+  feedbackOverlay.classList.remove('hidden');
+  feedbackBtn.onclick = () => { feedbackOverlay.classList.add('hidden'); if (onContinue) onContinue(); };
+}
+
+// ============================================
+// PRACTICE SYSTEM
+// ============================================
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '一年有多少个月？', options: ['10个月', '11个月', '12个月', '13个月'], answer: 2, hint: '一年有12个月，从1月到12月。' },
+    { type: 'choice', q: '下面哪个月份有31天（大月）？', options: ['4月', '6月', '7月', '9月'], answer: 2, hint: '用拳头记忆法：7月对应关节凸起处，是大月31天。' },
+    { type: 'fill', q: '平年全年有____天。', answer: '365', hint: '平年2月有28天，全年365天。' },
+    { type: 'choice', q: '下午3时用24时计时法表示为？', options: ['3:00', '13:00', '15:00', '17:00'], answer: 2, hint: '下午的时间 = 时刻 + 12，3 + 12 = 15。' },
+    { type: 'choice', q: '一个月最多有多少天？', options: ['28天', '30天', '31天', '32天'], answer: 2, hint: '大月有31天，是所有月份中天数最多的。' },
+  ],
+  2: [
+    { type: 'choice', q: '下面哪几个月是小月（30天）？', options: ['1月、3月、5月', '4月、6月、9月、11月', '7月、8月、10月、12月', '2月、4月、6月、8月'], answer: 1, hint: '歌诀：四六九冬(11月)三十天。' },
+    { type: 'fill', q: '闰年2月有____天。', answer: '29', hint: '闰年比平年多一天，这多出的一天就加在2月。' },
+    { type: 'choice', q: '2025 ÷ 4 = 506……1，所以2025年是？', options: ['闰年', '平年', '大年', '小年'], answer: 1, hint: '年份÷4有余数就是平年，整除才是闰年（整百年还要÷400）。' },
+    { type: 'choice', q: '晚上9:30用24时计时法表示为？', options: ['9:30', '19:30', '21:30', '23:30'], answer: 2, hint: '晚上就是下午之后：9 + 12 = 21，所以是21:30。' },
+  ],
+  3: [
+    { type: 'choice', q: '2025年5月1日是星期四，5月31日是星期几？', options: ['星期四', '星期五', '星期六', '星期日'], answer: 2, hint: '5月1日到31日经过30天，30÷7=4周余2天，星期四+2天=星期六。' },
+    { type: 'fill', q: '小明的生日是2月29日，他每____年才能过一次生日。', answer: '4', hint: '2月29日只在闰年出现，闰年通常每4年一次。' },
+    { type: 'choice', q: '2100年是平年还是闰年？', options: ['平年', '闰年', '无法判断', '有时平有时闰'], answer: 0, hint: '2100是整百年 → 2100÷400=5……100（有余数）→ 平年！"百年不闰"。' },
+    { type: 'choice', q: '一场展览从3月28日到4月5日，共展出多少天？', options: ['7天', '8天', '9天', '10天'], answer: 2, hint: '3月28-31日：4天；4月1-5日：5天。总共4+5=9天。' },
+  ],
+  4: [
+    { type: 'choice', q: '某年的2月有5个星期日。这一年可能是平年吗？', options: ['可能', '不可能', '取决于年份', '以上都不对'], answer: 1, hint: '平年2月28天÷7=正好4周，每个星期出现4次。只有闰年29天÷7=4周余1天，才可能某天出现5次。' },
+    { type: 'fill', q: '如果今天是4月30日（星期三），那么5月1日是星期____。', answer: '四', hint: '4月30日是星期三，下一天5月1日就是星期四。注意4月只有30天！' },
+    { type: 'choice', q: '1896年是闰年，下一个闰年是哪一年？', options: ['1898年', '1900年', '1904年', '1908年'], answer: 2, hint: '1896+4=1900，但1900是整百年且不能被400整除→平年！再+4=1904才是下一个闰年。' },
+    { type: 'choice', q: '钟面上显示的时间是22:45，用普通计时法怎么表示？', options: ['上午10:45', '中午12:45', '下午10:45', '晚上10:45'], answer: 3, hint: '22-12=10，所以是晚上10时45分。22:45属于"晚上"范围。' },
+  ],
+  5: [
+    { type: 'choice', q: '以下哪个说法一定正确？', options: ['每年都有365天', '大月都有31天', '2月都是28天', '每4年一定有一个闰年'], answer: 1, hint: '大月的定义就是31天。其他选项都有反例：闰年366天、闰年2月29天、整百年不闰。' },
+    { type: 'fill', q: '一个小朋友说："我今年10岁，只过了2次生日。"他的生日是____月____日。', answer: '2月29日', hint: '10年只过2次生日→生日每4年才有一次→2月29日。' },
+    { type: 'choice', q: '你能用几种方法判断2028年是不是闰年？选出所有正确的方法：', options: ['2028÷4看余数', '查看2028年日历2月天数', '2028不是整百年，只需÷4', '以上方法都正确'], answer: 3, hint: '三种方法都能判断！2028不是整百年，÷4整除即可确定是闰年。' },
+    { type: 'fill', q: '如果一个月的第1天是星期日，最后一天也是星期日，这个月可能是____月（写出月份名称）。', answer: '2月', hint: '第1天=最后一天=周日，说明这个月正好整周。28÷7=4→2月（平年）。42天超出月份范围。' },
+  ],
+};
+
+function determinePracticeTier() {
+  const accuracy = state.totalAttempts > 0 ? state.correctCount / state.totalAttempts : 0;
+  if (accuracy < 0.4) return 1;
+  if (accuracy < 0.6) return 2;
+  if (accuracy < 0.8) return 3;
+  if (accuracy < 0.95) return 4;
+  return 5;
+}
+
+function enterPracticeMode() {
+  state.practiceTier = determinePracticeTier();
+  state.mode = 'practice';
+  state.practiceIndex = 0;
+  state.practiceCorrect = 0;
+
+  gameContainer.classList.add('hidden');
+  practiceContainer.classList.remove('hidden');
+  practiceContainer.style.display = 'flex';
+
+  const tier = difficultyLabels[state.practiceTier];
+  practiceBadge.innerHTML = `${tier.icon} ${tier.name}`;
+  practiceBadge.className = `practice-badge ${tier.badgeClass}`;
+  practiceNextBtn.textContent = '开始答题 →';
+  practiceNextBtn.classList.remove('hidden');
+  practiceNextBtn.disabled = false;
+  renderPracticeQuestion();
+}
+
+function renderPracticeQuestion() {
+  const problems = practiceProblems[state.practiceTier];
+  if (!problems || state.practiceIndex >= problems.length) {
+    showPracticeSummary();
+    return;
+  }
+  const p = problems[state.practiceIndex];
+  const total = problems.length;
+  practiceProgress.textContent = `第 ${state.practiceIndex + 1}/${total} 题`;
+  practiceQNum.textContent = `第 ${state.practiceIndex + 1} 题`;
+  practiceQTitle.textContent = p.q;
+  practiceFeedback.classList.remove('show', 'correct', 'wrong');
+  practiceFeedback.textContent = '';
+
+  if (p.type === 'fill') {
+    practiceQContent.innerHTML = `
+      <div class="practice-input-area">
+        <input type="text" class="practice-input" id="practiceInput" placeholder="输入答案">
+        <button class="submit-btn" id="practiceSubmitBtn">确认</button>
+      </div>`;
+    $('#practiceSubmitBtn').addEventListener('click', handlePracticeSubmit);
+    $('#practiceInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') handlePracticeSubmit(); });
+    $('#practiceInput').focus();
+  } else {
+    practiceQContent.innerHTML = '<div class="practice-options"></div>';
+    const opts = practiceQContent.querySelector('.practice-options');
+    p.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'practice-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => handlePracticeChoice(idx, p.answer, p.options[p.answer]));
+      opts.appendChild(btn);
+    });
+  }
+  practiceNextBtn.textContent = state.practiceIndex < problems.length - 1 ? '下一题 →' : '查看结果 📊';
+  practiceNextBtn.disabled = true;
+}
+
+function handlePracticeChoice(selected, correctIdx, correctText) {
+  const options = practiceQContent.querySelectorAll('.practice-option');
+  options.forEach(o => o.disabled = true);
+  if (selected === correctIdx) {
+    options[selected].classList.add('selected-correct');
+    state.practiceCorrect++;
+    practiceFeedback.textContent = `✅ 正确！${correctText}`;
+    practiceFeedback.className = 'practice-feedback show correct';
+  } else {
+    options[selected].classList.add('selected-wrong');
+    options[correctIdx].classList.add('show-correct');
+    practiceFeedback.textContent = `❌ 正确答案是 ${correctText}。加油！`;
+    practiceFeedback.className = 'practice-feedback show wrong';
+  }
+  practiceNextBtn.disabled = false;
+}
+
+function handlePracticeSubmit() {
+  const input = $('#practiceInput');
+  const btn = $('#practiceSubmitBtn');
+  if (!input || btn.disabled) return;
+  const problems = practiceProblems[state.practiceTier];
+  const p = problems[state.practiceIndex];
+  const userAnswer = input.value.trim();
+  btn.disabled = true;
+  input.disabled = true;
+  if (userAnswer === p.answer) {
+    state.practiceCorrect++;
+    practiceFeedback.textContent = `✅ 正确！答案就是 ${p.answer}`;
+    practiceFeedback.className = 'practice-feedback show correct';
+  } else {
+    practiceFeedback.textContent = `❌ 正确答案是 ${p.answer}。${p.hint || ''}`;
+    practiceFeedback.className = 'practice-feedback show wrong';
+  }
+  practiceNextBtn.disabled = false;
+}
+
+function handlePracticeNext() {
+  const problems = practiceProblems[state.practiceTier];
+  if (state.practiceIndex >= problems.length - 1) {
+    showPracticeSummary();
+    return;
+  }
+  state.practiceIndex++;
+  renderPracticeQuestion();
+}
+
+function showPracticeSummary() {
+  const problems = practiceProblems[state.practiceTier];
+  const total = problems ? problems.length : 0;
+  const pct = total > 0 ? Math.round((state.practiceCorrect / total) * 100) : 0;
+  let emoji, color;
+  if (pct >= 80) { emoji = '🌟'; color = 'var(--color-success)'; }
+  else if (pct >= 60) { emoji = '👍'; color = 'var(--color-primary)'; }
+  else { emoji = '💪'; color = 'var(--color-warning)'; }
+
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden');
+  practiceContainer.style.display = 'none';
+
+  gameArea.innerHTML = `
+    <div class="practice-summary">
+      <div class="practice-summary-icon">${emoji}</div>
+      <div class="practice-summary-title">练习完成！</div>
+      <div class="practice-summary-score" style="color:${color}">${state.practiceCorrect}/${total}</div>
+      <div class="practice-summary-detail">
+        <div>📊 练习正确率：${pct}%</div>
+        <div>🎮 游戏得分：${state.score} 分</div>
+        ${pct >= 80 ? '<div>🏆 太棒了，你对年月日知识掌握得很好！</div>' :
+          pct >= 60 ? '<div>📚 还不错，继续加油会更好！</div>' :
+          '<div>🌱 没关系，多练习几次就能进步！</div>'}
+      </div>
+      <button class="victory-btn" onclick="restartGame()">🔄 再玩一次</button>
+    </div>`;
+}
+
+practiceNextBtn.addEventListener('click', handlePracticeNext);
+
+// ============================================
+// Restart
+// ============================================
+function restartGame() {
+  stopTimer();
+  state.mode = 'game';
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden');
+  practiceContainer.style.display = 'none';
+
+  state.score = 0;
+  state.level = 1;
+  state.flipCount = 0;
+  state.correctCount = 0;
+  state.totalAttempts = 0;
+  state.matchedCount = 0;
+  state.cardFlipped = [];
+  state.isChecking = false;
+  state.levelStarsEarned = [0, 0, 0];
+
+  scoreDisplay.textContent = '0';
+  flipsDisplay.textContent = '0';
+  updateProgress();
+  renderCards(1);
+  renderLevelStars();
+  startTimer();
+}
+
+// ============================================
+// Initialize
+// ============================================
+restartBtn.addEventListener('click', restartGame);
+restartGame();
+</script>
+
+</body>
+</html>

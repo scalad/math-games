@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔐 日历谜题大挑战</title>
+<style>
+/* ============================================
+   Escape Room Theme — Dark Mystery Style
+   ============================================ */
+:root {
+  --color-bg: #1A1D23;
+  --color-card: #252830;
+  --color-surface: #2C3038;
+  --color-primary: #F39C12;
+  --color-primary-light: #F5B041;
+  --color-primary-dark: #D68910;
+  --color-success: #27AE60;
+  --color-success-light: #1E3A2F;
+  --color-error: #E74C3C;
+  --color-error-light: #3D2025;
+  --color-warning: #F39C12;
+  --color-warning-light: #3D3020;
+  --color-text: #ECF0F1;
+  --color-text-light: #95A5A6;
+  --color-border: #3D4048;
+  --color-gold: #F1C40F;
+  --color-locked: #7F8C8D;
+  --color-unlocked: #2ECC71;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --shadow-card: 0 4px 16px rgba(0,0,0,0.3);
+  --shadow-glow: 0 0 20px rgba(243,156,18,0.3);
+  --shadow-unlock: 0 0 30px rgba(46,204,113,0.5);
+
+  --font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-number: "Consolas", "Courier New", monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-family);
+  background: #0F1115;
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* --- Game Container --- */
+.game-container {
+  width: 100%;
+  max-width: 480px;
+  background: var(--color-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 620px;
+  position: relative;
+}
+
+/* --- Header --- */
+.game-header {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  color: #F1C40F;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #2C3E50;
+}
+.game-title { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(241,196,15,0.3); }
+.game-stats { display: flex; gap: 16px; font-size: 13px; }
+.stat-item { display: flex; align-items: center; gap: 4px; }
+.stat-icon { font-size: 16px; }
+.stat-value { font-weight: 700; font-family: var(--font-number); color: #F1C40F; }
+
+/* --- Room Scene --- */
+.room-scene {
+  padding: 12px 20px;
+  background: #1E2229;
+  border-bottom: 1px solid var(--color-border);
+  text-align: center;
+}
+.room-msg { font-size: 13px; color: var(--color-text-light); }
+.room-msg .emoji { font-size: 20px; }
+
+/* --- Progress Indicator --- */
+.lock-progress {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--color-surface);
+}
+.lock-dot {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #3D4048;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  transition: all 0.4s ease;
+  border: 2px solid #555;
+}
+.lock-dot.unlocked {
+  background: var(--color-unlocked);
+  border-color: var(--color-unlocked);
+  box-shadow: var(--shadow-unlock);
+}
+.lock-dot.current {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-glow);
+  animation: pulse-glow 1.5s ease infinite;
+}
+@keyframes pulse-glow {
+  0%,100% { box-shadow: 0 0 10px rgba(243,156,18,0.3); }
+  50% { box-shadow: 0 0 25px rgba(243,156,18,0.6); }
+}
+
+/* --- Game Area --- */
+.game-area {
+  flex: 1; padding: 16px 20px;
+  display: flex; flex-direction: column;
+  align-items: center;
+  min-height: 280px;
+}
+
+/* --- Lock Display --- */
+.lock-container {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+.lock-icon-big {
+  font-size: 64px;
+  margin-bottom: 8px;
+  transition: all 0.5s ease;
+  display: block;
+}
+.lock-icon-big.unlocked-anim {
+  animation: unlock-pop 0.6s ease;
+}
+@keyframes unlock-pop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.3); }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.lock-name {
+  font-size: 20px; font-weight: 700;
+  color: var(--color-primary); margin-bottom: 4px;
+}
+.lock-desc {
+  font-size: 14px; color: var(--color-text-light); margin-bottom: 12px;
+}
+
+/* --- Clue Button --- */
+.clue-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; font-size: 14px; font-weight: 600;
+  color: var(--color-primary); background: rgba(243,156,18,0.1);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.2s;
+  margin-bottom: 16px;
+}
+.clue-btn:hover { background: rgba(243,156,18,0.2); }
+.clue-btn:active { transform: scale(0.96); }
+
+/* --- Clue Card --- */
+.clue-card {
+  width: 100%; max-width: 380px;
+  background: rgba(243,156,18,0.08);
+  border: 1px dashed var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #F5B041;
+  line-height: 1.6;
+  animation: fadeIn 0.3s ease;
+  display: none;
+}
+.clue-card.show { display: block; }
+.clue-card .clue-label { font-size: 12px; color: var(--color-primary); font-weight: 700; margin-bottom: 6px; }
+.clue-card .clue-highlight {
+  display: inline-block;
+  background: rgba(243,156,18,0.15);
+  color: #F1C40F;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-family: var(--font-number);
+}
+
+/* Mini calendar display */
+.mini-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  max-width: 300px;
+  margin: 8px auto;
+  font-size: 12px;
+  text-align: center;
+}
+.mini-calendar .day-header {
+  color: var(--color-text-light);
+  font-weight: 600;
+  padding: 4px 0;
+}
+.mini-calendar .day-cell {
+  padding: 4px 2px;
+  border-radius: 3px;
+  color: #ccc;
+}
+.mini-calendar .day-cell.highlight {
+  background: rgba(243,156,18,0.3);
+  color: #F1C40F;
+  font-weight: 700;
+}
+.mini-calendar .day-cell.special {
+  background: rgba(231,76,60,0.3);
+  color: #E74C3C;
+  font-weight: 700;
+}
+.mini-calendar .day-cell.empty { color: transparent; }
+
+/* --- Password Input --- */
+.password-area {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px; width: 100%; max-width: 380px;
+}
+.password-label {
+  font-size: 14px; color: var(--color-text-light);
+}
+.password-display {
+  width: 100%; max-width: 240px;
+  padding: 14px; font-size: 28px; font-weight: 700;
+  font-family: var(--font-number); color: #F1C40F;
+  text-align: center; letter-spacing: 8px;
+  background: #1A1D23; border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  min-height: 60px;
+  display: flex; align-items: center; justify-content: center;
+}
+.password-display.filled {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 12px rgba(243,156,18,0.15);
+}
+/* --- Number Keypad --- */
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%; max-width: 260px;
+}
+.keypad-btn {
+  padding: 16px; font-size: 22px; font-weight: 700;
+  font-family: var(--font-number); color: var(--color-text);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); cursor: pointer;
+  transition: all 0.15s; min-height: 52px;
+  display: flex; align-items: center; justify-content: center;
+}
+.keypad-btn:hover { background: #3a3e48; border-color: var(--color-primary); }
+.keypad-btn:active { background: #444; transform: scale(0.94); }
+.keypad-btn.fn {
+  font-size: 14px; color: var(--color-primary);
+  font-family: var(--font-family);
+}
+.keypad-btn.submit-btn {
+  background: var(--color-primary); color: #1A1D23;
+  border-color: var(--color-primary); font-family: var(--font-family);
+  font-size: 16px;
+}
+.keypad-btn.submit-btn:hover { background: var(--color-primary-light); }
+.keypad-btn.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* --- Error Hint (below password) --- */
+.error-hint {
+  font-size: 13px; min-height: 20px; padding: 4px 0;
+  transition: all 0.3s;
+}
+.error-hint.level-1 { color: #F5B041; }
+.error-hint.level-2 { color: #E67E22; }
+.error-hint.level-3 { color: #E74C3C; }
+
+/* --- Feedback Overlay --- */
+.feedback-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6); display: flex;
+  justify-content: center; align-items: center;
+  z-index: 100; animation: fadeIn 0.2s ease;
+}
+.feedback-modal {
+  background: var(--color-card); border-radius: var(--radius-lg);
+  padding: 32px 24px; text-align: center;
+  max-width: 320px; width: 90%;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  animation: scaleIn 0.3s ease;
+}
+.feedback-icon { font-size: 56px; margin-bottom: 12px; }
+.feedback-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; color: var(--color-text); }
+.feedback-message { font-size: 15px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.5; }
+.feedback-btn {
+  padding: 12px 32px; font-size: 16px; font-weight: 700;
+  color: #1A1D23; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: background 0.2s;
+}
+.feedback-btn:hover { background: var(--color-primary-light); }
+
+/* --- Victory Screen --- */
+.victory-container { text-align: center; padding: 20px; }
+.victory-icon { font-size: 72px; margin-bottom: 12px; animation: bounce 0.6s ease infinite alternate; }
+.victory-title { font-size: 26px; font-weight: 700; color: #F1C40F; margin-bottom: 8px; text-shadow: 0 0 20px rgba(241,196,15,0.3); }
+.victory-subtitle { font-size: 15px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.8; }
+.victory-btn {
+  padding: 12px 32px; font-size: 16px; font-weight: 700;
+  color: #1A1D23; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; margin: 0 6px; transition: all 0.2s;
+}
+.victory-btn:hover { background: var(--color-primary-light); transform: translateY(-2px); }
+.victory-btn practice-hint { font-size: 12px; opacity: 0.7; display: block; }
+
+/* --- Footer --- */
+.game-footer {
+  padding: 12px 20px; display: flex; justify-content: center;
+  border-top: 1px solid var(--color-border);
+}
+.restart-btn {
+  padding: 8px 20px; font-size: 14px; color: var(--color-text-light);
+  background: transparent; border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+}
+.restart-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+/* ============================================
+   Practice Mode Styles
+   ============================================ */
+.practice-container {
+  display: none; flex-direction: column;
+  height: 100%;
+}
+.practice-badge-bar {
+  padding: 12px 20px;
+  background: var(--color-surface);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+}
+.practice-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 13px; font-weight: 700;
+}
+.badge-tier-1 { background: rgba(46,125,50,0.2); color: #4CAF50; }
+.badge-tier-2 { background: rgba(21,101,192,0.2); color: #42A5F5; }
+.badge-tier-3 { background: rgba(230,81,0,0.2); color: #FF9800; }
+.badge-tier-4 { background: rgba(123,31,162,0.2); color: #AB47BC; }
+.badge-tier-5 { background: rgba(198,40,40,0.2); color: #EF5350; }
+.practice-progress-text { font-size: 13px; color: var(--color-text-light); }
+.practice-question-card {
+  margin: 20px; padding: 24px 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  flex: 1;
+}
+.practice-q-num { font-size: 12px; font-weight: 700; color: var(--color-primary); margin-bottom: 8px; }
+.practice-q-title { font-size: 17px; font-weight: 600; color: var(--color-text); margin-bottom: 16px; line-height: 1.6; }
+.practice-options { display: flex; flex-direction: column; gap: 10px; }
+.practice-option {
+  padding: 14px 16px; font-size: 15px; text-align: left;
+  background: var(--color-card); border: 2px solid var(--color-border);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: all 0.2s; line-height: 1.4; color: var(--color-text);
+}
+.practice-option:hover { border-color: var(--color-primary); background: #2C3038; }
+.practice-option.selected-correct { border-color: var(--color-success); background: var(--color-success-light); }
+.practice-option.selected-wrong { border-color: var(--color-error); background: var(--color-error-light); }
+.practice-option.show-correct { border-color: var(--color-success); }
+.practice-option:disabled { pointer-events: none; }
+.practice-input-area { display: flex; gap: 10px; }
+.practice-input {
+  flex: 1; padding: 12px 16px; font-size: 18px; font-weight: 700;
+  font-family: var(--font-number); text-align: center;
+  border: 2px solid var(--color-border); border-radius: var(--radius-md);
+  outline: none; background: var(--color-card); color: var(--color-text);
+}
+.practice-input:focus { border-color: var(--color-primary); }
+.submit-btn {
+  padding: 14px 24px; font-size: 16px; font-weight: 700;
+  color: #1A1D23; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: background 0.2s; min-width: 72px;
+}
+.submit-btn:hover { background: var(--color-primary-light); }
+.practice-feedback {
+  margin: 0 20px 12px; padding: 12px 16px;
+  border-radius: var(--radius-md); font-size: 14px;
+  line-height: 1.5; display: none;
+}
+.practice-feedback.show { display: block; animation: fadeIn 0.3s ease; }
+.practice-feedback.correct { background: rgba(46,125,50,0.15); color: #4CAF50; }
+.practice-feedback.wrong { background: rgba(198,40,40,0.15); color: #EF5350; }
+.practice-nav {
+  padding: 12px 20px; display: flex; gap: 10px;
+  justify-content: center; border-top: 1px solid var(--color-border);
+}
+.practice-nav-btn {
+  padding: 10px 24px; font-size: 15px; font-weight: 700;
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: all 0.2s;
+}
+.practice-nav-btn.primary { background: var(--color-primary); color: #1A1D23; }
+.practice-nav-btn.primary:hover { background: var(--color-primary-light); }
+.practice-nav-btn.primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.practice-nav-btn.secondary { background: transparent; color: var(--color-text-light); border: 1px solid var(--color-border); }
+.practice-nav-btn.secondary:hover { color: var(--color-primary); border-color: var(--color-primary); }
+.practice-summary { text-align: center; padding: 30px 20px; }
+.practice-summary-icon { font-size: 64px; margin-bottom: 12px; }
+.practice-summary-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; color: var(--color-text); }
+.practice-summary-score { font-size: 36px; font-weight: 700; font-family: var(--font-number); margin-bottom: 12px; }
+.practice-summary-detail { font-size: 14px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.8; }
+
+/* --- Animations --- */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes shake { 0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)} }
+@keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-12px)} }
+
+.hidden { display: none !important; }
+
+@media (max-width: 360px) {
+  .game-container { min-height: 540px; }
+  .game-header { padding: 12px 16px; }
+  .game-title { font-size: 16px; }
+  .lock-icon-big { font-size: 52px; }
+  .keypad-btn { padding: 12px; font-size: 18px; min-height: 44px; }
+}
+@media (min-width: 768px) {
+  .game-container { max-width: 560px; min-height: 700px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==============================
+     GAME MODE
+     ============================== -->
+<div class="game-container" id="gameContainer">
+  <div class="game-header">
+    <div class="game-title">🔐 日历谜题大挑战</div>
+    <div class="game-stats">
+      <div class="stat-item"><span class="stat-icon">🔓</span><span class="stat-value" id="unlockedDisplay">0/4</span></div>
+      <div class="stat-item"><span class="stat-icon">💡</span><span class="stat-value" id="attemptDisplay">0</span></div>
+    </div>
+  </div>
+
+  <div class="room-scene" id="roomScene">
+    <span class="emoji">🏚️</span>
+    <span class="room-msg" id="roomMsg">你被困在一间时间密室里，墙上挂着日历和钟……<br>解开4道密码锁才能逃出去！</span>
+  </div>
+
+  <div class="lock-progress" id="lockProgress">
+    <div class="lock-dot current" id="dot1">1</div>
+    <div class="lock-dot" id="dot2">2</div>
+    <div class="lock-dot" id="dot3">3</div>
+    <div class="lock-dot" id="dot4">4</div>
+  </div>
+
+  <div class="game-area" id="gameArea"><!-- injected by JS --></div>
+
+  <div class="game-footer">
+    <button class="restart-btn" id="restartBtn">🔄 重新开始</button>
+  </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="feedback-overlay hidden" id="feedbackOverlay">
+  <div class="feedback-modal">
+    <div class="feedback-icon" id="feedbackIcon">🔓</div>
+    <div class="feedback-title" id="feedbackTitle">锁已解开！</div>
+    <div class="feedback-message" id="feedbackMessage"></div>
+    <button class="feedback-btn" id="feedbackBtn">继续 →</button>
+  </div>
+</div>
+
+<!-- ==============================
+     PRACTICE MODE
+     ============================== -->
+<div class="practice-container hidden" id="practiceContainer">
+  <div class="practice-badge-bar">
+    <span class="practice-badge" id="practiceBadge">📝 巩固练习</span>
+    <span class="practice-progress-text" id="practiceProgress">第 1/5 题</span>
+  </div>
+  <div class="practice-question-card">
+    <div class="practice-q-num" id="practiceQNum">第 1 题</div>
+    <div class="practice-q-title" id="practiceQTitle">题目内容</div>
+    <div id="practiceQContent"></div>
+  </div>
+  <div class="practice-feedback" id="practiceFeedback"></div>
+  <div class="practice-nav">
+    <button class="practice-nav-btn secondary hidden" id="practiceSkipBtn">跳过</button>
+    <button class="practice-nav-btn primary" id="practiceNextBtn">下一题 →</button>
+  </div>
+</div>
+
+<script>
+// ============================================
+// DOM References
+// ============================================
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+const gameContainer = $('#gameContainer');
+const gameTitle = $('.game-title');
+const unlockedDisplay = $('#unlockedDisplay');
+const attemptDisplay = $('#attemptDisplay');
+const roomMsg = $('#roomMsg');
+const lockProgress = $('#lockProgress');
+const gameArea = $('#gameArea');
+const restartBtn = $('#restartBtn');
+const feedbackOverlay = $('#feedbackOverlay');
+const feedbackIcon = $('#feedbackIcon');
+const feedbackTitle = $('#feedbackTitle');
+const feedbackMessage = $('#feedbackMessage');
+const feedbackBtn = $('#feedbackBtn');
+
+const practiceContainer = $('#practiceContainer');
+const practiceBadge = $('#practiceBadge');
+const practiceProgress = $('#practiceProgress');
+const practiceQNum = $('#practiceQNum');
+const practiceQTitle = $('#practiceQTitle');
+const practiceQContent = $('#practiceQContent');
+const practiceFeedback = $('#practiceFeedback');
+const practiceNextBtn = $('#practiceNextBtn');
+const practiceSkipBtn = $('#practiceSkipBtn');
+
+// ============================================
+// Game State
+// ============================================
+const state = {
+  score: 0,
+  unlockedLocks: 0,       // 0-4
+  totalLocks: 4,
+  currentLock: 1,
+  currentInput: '',
+  currentAttemptsOnLock: 0, // 当前锁尝试次数（用于3级提示）
+  isTransitioning: false,
+
+  // Performance tracking
+  correctCount: 0,        // 正确解锁数 (1 per lock)
+  totalAttempts: 0,       // 总解锁尝试次数
+
+  // Practice
+  mode: 'game',
+  practiceTier: 1,
+  practiceIndex: 0,
+  practiceCorrect: 0,
+};
+
+// ============================================
+// Lock Data: 4 locks with clues, answers, hints
+// ============================================
+const locks = {
+  1: {
+    name: '🔒 第一道锁：月份之锁',
+    desc: '锁上刻着：<b>"大月有几个？密码 = 大月数量 × 2"</b>',
+    answer: '14',
+    clueHTML: `
+      <div class="clue-label">📋 线索便签</div>
+      <div>一年有12个月，其中<strong>大月（31天）</strong>的月份是：</div>
+      <div style="margin:6px 0;font-size:16px;">1月、3月、5月、7月、8月、10月、12月</div>
+      <div>数一数有几个？再 <strong>× 2</strong> 就是密码！</div>
+    `,
+    hints: [
+      '🤔 提示：用拳头记忆法数一数，大月有31天……',
+      '💡 再想想：1月、3月、5月、7月、8月、10月、12月——一共几个？',
+      '📖 答案是：大月共有 <b>7个</b>。密码 = 7 × 2 = <b>14</b>。请在密码盘输入 14。'
+    ],
+    roomMsgAfter: '🔓 第一道锁打开了！前方出现第二道锁……',
+    points: 20
+  },
+  2: {
+    name: '🔒 第二道锁：闰年之锁',
+    desc: '锁旁贴着一张<b>2024年2月的月历</b>，锁上刻着：<b>"密码是这个年份的总天数"</b>',
+    answer: '366',
+    clueHTML: `
+      <div class="clue-label">📅 2024年2月 月历</div>
+      <div class="mini-calendar">
+        <div class="day-header">日</div><div class="day-header">一</div><div class="day-header">二</div><div class="day-header">三</div><div class="day-header">四</div><div class="day-header">五</div><div class="day-header">六</div>
+        <div class="day-cell empty">-</div><div class="day-cell empty">-</div><div class="day-cell empty">-</div><div class="day-cell empty">-</div><div class="day-cell">1</div><div class="day-cell">2</div><div class="day-cell">3</div>
+        <div class="day-cell">4</div><div class="day-cell">5</div><div class="day-cell">6</div><div class="day-cell">7</div><div class="day-cell">8</div><div class="day-cell">9</div><div class="day-cell">10</div>
+        <div class="day-cell">11</div><div class="day-cell">12</div><div class="day-cell">13</div><div class="day-cell">14</div><div class="day-cell">15</div><div class="day-cell">16</div><div class="day-cell">17</div>
+        <div class="day-cell">18</div><div class="day-cell">19</div><div class="day-cell">20</div><div class="day-cell">21</div><div class="day-cell">22</div><div class="day-cell">23</div><div class="day-cell">24</div>
+        <div class="day-cell">25</div><div class="day-cell">26</div><div class="day-cell">27</div><div class="day-cell">28</div><div class="day-cell special">29</div><div class="day-cell empty">-</div><div class="day-cell empty">-</div>
+      </div>
+      <div style="margin-top:6px;">👀 发现了吗？2月有 <strong>29天</strong>！说明2024年是什么年？全年一共多少天？</div>
+    `,
+    hints: [
+      '🤔 提示：看看2月有几天？28天还是29天？这说明了什么？',
+      '💡 2月有29天 → 2024年是<b>闰年</b>！闰年全年有多少天？',
+      '📖 答案是：2024年2月有29天→<b>闰年</b>→全年<b>366天</b>。请输入密码 366。'
+    ],
+    roomMsgAfter: '🔓 第二道锁也开了！还有两道锁……',
+    points: 30
+  },
+  3: {
+    name: '🔒 第三道锁：时钟之锁',
+    desc: '墙上挂着一个时钟指向<b>下午3点</b>。便签写：<b>"密码 = 24时制对应的小时数 × 10"</b>',
+    answer: '150',
+    clueHTML: `
+      <div class="clue-label">🕒 时钟线索</div>
+      <div style="font-size:48px;margin:8px 0;">🕒</div>
+      <div>时钟显示：<strong>下午 3 时</strong></div>
+      <div style="margin-top:6px;">📝 便签提示：<br>用<strong>24时计时法</strong>表示这个时刻，<br>然后把<strong>小时数 × 10</strong>！</div>
+    `,
+    hints: [
+      '🤔 提示：下午3时用24时计时法怎么表示？下午要加多少？',
+      '💡 下午3时 = 3 + 12 = <b>15:00</b>。那小时数是15，15 × 10 = ？',
+      '📖 答案是：下午3时→15:00→小时数<b>15</b>。密码 = 15 × 10 = <b>150</b>。'
+    ],
+    roomMsgAfter: '🔓 第三道锁解开！还剩最后一道终极锁……',
+    points: 30
+  },
+  4: {
+    name: '🔒 第四道锁：终极之锁',
+    desc: '一张<b>2025年6月月历</b>和便签：<b>"密码 = 第2个星期五的日期 × 第3个星期一的日期"</b>',
+    answer: '208',
+    clueHTML: `
+      <div class="clue-label">📅 2025年6月 月历</div>
+      <div class="mini-calendar">
+        <div class="day-header">日</div><div class="day-header">一</div><div class="day-header">二</div><div class="day-header">三</div><div class="day-header">四</div><div class="day-header">五</div><div class="day-header">六</div>
+        <div class="day-cell">1</div><div class="day-cell">2</div><div class="day-cell">3</div><div class="day-cell">4</div><div class="day-cell">5</div><div class="day-cell">6</div><div class="day-cell">7</div>
+        <div class="day-cell">8</div><div class="day-cell">9</div><div class="day-cell">10</div><div class="day-cell">11</div><div class="day-cell">12</div><div class="day-cell highlight">13</div><div class="day-cell">14</div>
+        <div class="day-cell">15</div><div class="day-cell highlight">16</div><div class="day-cell">17</div><div class="day-cell">18</div><div class="day-cell">19</div><div class="day-cell">20</div><div class="day-cell">21</div>
+        <div class="day-cell">22</div><div class="day-cell">23</div><div class="day-cell">24</div><div class="day-cell">25</div><div class="day-cell">26</div><div class="day-cell">27</div><div class="day-cell">28</div>
+        <div class="day-cell">29</div><div class="day-cell">30</div><div class="day-cell empty">-</div><div class="day-cell empty">-</div><div class="day-cell empty">-</div><div class="day-cell empty">-</div><div class="day-cell empty">-</div>
+      </div>
+      <div style="margin-top:6px;">
+        👀 6月1日是<b>星期日</b>。<br>
+        🟡 黄色 = 星期五；🔵 蓝色 = 星期一<br>
+        📝 <b>密码 = 第2个星期五 × 第3个星期一</b>
+      </div>
+    `,
+    hints: [
+      '🤔 提示：先找出所有星期五和星期一，然后数第2个和第3个分别是几号？',
+      '💡 星期五在6号和13号列 → 第2个星期五 = <b>13日</b>。<br>星期一在2、9、16号列 → 第3个星期一 = <b>16日</b>。<br>13 × 16 = ？',
+      '📖 答案是：第2个星期五 = <b>13日</b>，第3个星期一 = <b>16日</b>。密码 = 13 × 16 = <b>208</b>。'
+    ],
+    roomMsgAfter: null, // Victory!
+    points: 40
+  }
+};
+
+// ============================================
+// Render Current Lock
+// ============================================
+function renderLock() {
+  if (state.currentLock > state.totalLocks) {
+    showVictory();
+    return;
+  }
+
+  const lock = locks[state.currentLock];
+  state.currentInput = '';
+  state.currentAttemptsOnLock = 0;
+
+  updateProgressDots();
+  roomMsg.innerHTML = lock.roomMsgAfter ? lock.roomMsgAfter : '仔细查看线索，输入密码解锁！';
+
+  gameArea.innerHTML = `
+    <div class="lock-container">
+      <span class="lock-icon-big" id="lockIcon">🔒</span>
+      <div class="lock-name">${lock.name}</div>
+      <div class="lock-desc">${lock.desc}</div>
+      <button class="clue-btn" id="clueBtn">🔍 查看线索</button>
+      <div class="clue-card" id="clueCard">${lock.clueHTML}</div>
+      <div class="password-area">
+        <div class="password-label">请输入密码：</div>
+        <div class="password-display" id="passwordDisplay"></div>
+        <div class="error-hint" id="errorHint"></div>
+        <div class="keypad" id="keypad">
+          <button class="keypad-btn" data-key="1">1</button>
+          <button class="keypad-btn" data-key="2">2</button>
+          <button class="keypad-btn" data-key="3">3</button>
+          <button class="keypad-btn" data-key="4">4</button>
+          <button class="keypad-btn" data-key="5">5</button>
+          <button class="keypad-btn" data-key="6">6</button>
+          <button class="keypad-btn" data-key="7">7</button>
+          <button class="keypad-btn" data-key="8">8</button>
+          <button class="keypad-btn" data-key="9">9</button>
+          <button class="keypad-btn fn" data-key="clear">清空</button>
+          <button class="keypad-btn" data-key="0">0</button>
+          <button class="keypad-btn submit-btn" id="submitBtn">确认</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Bind clue toggle
+  $('#clueBtn').addEventListener('click', () => {
+    const card = $('#clueCard');
+    if (card.classList.contains('show')) {
+      card.classList.remove('show');
+      $('#clueBtn').textContent = '🔍 查看线索';
+    } else {
+      card.classList.add('show');
+      $('#clueBtn').textContent = '🔍 隐藏线索';
+    }
+  });
+
+  // Bind keypad
+  const pwDisplay = $('#passwordDisplay');
+  const errorHint = $('#errorHint');
+
+  $$('#keypad .keypad-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (state.isTransitioning) return;
+      const key = btn.dataset.key;
+      if (key === 'clear') {
+        state.currentInput = '';
+      } else if (key !== undefined && key !== 'clear' && btn.id !== 'submitBtn') {
+        if (state.currentInput.length < 6) {
+          state.currentInput += key;
+        }
+      }
+      pwDisplay.textContent = state.currentInput || '···';
+      if (state.currentInput) pwDisplay.classList.add('filled');
+      else pwDisplay.classList.remove('filled');
+      errorHint.textContent = '';
+      errorHint.className = 'error-hint';
+    });
+  });
+
+  // Bind submit
+  const submitBtn = $('#submitBtn');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', () => handleSubmit());
+  }
+
+  // Also allow Enter key on document
+  document.addEventListener('keydown', handleKeydown);
+}
+
+function handleKeydown(e) {
+  if (state.mode !== 'game' || state.isTransitioning) return;
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    handleSubmit();
+  } else if (e.key === 'Backspace') {
+    e.preventDefault();
+    state.currentInput = state.currentInput.slice(0, -1);
+    const pwDisplay = $('#passwordDisplay');
+    if (pwDisplay) {
+      pwDisplay.textContent = state.currentInput || '···';
+      if (state.currentInput) pwDisplay.classList.add('filled');
+      else pwDisplay.classList.remove('filled');
+    }
+  } else if (/^[0-9]$/.test(e.key) && state.currentInput.length < 6) {
+    e.preventDefault();
+    state.currentInput += e.key;
+    const pwDisplay = $('#passwordDisplay');
+    if (pwDisplay) {
+      pwDisplay.textContent = state.currentInput;
+      pwDisplay.classList.add('filled');
+    }
+  }
+}
+
+function handleSubmit() {
+  if (state.isTransitioning) return;
+  if (!state.currentInput) {
+    const errorHint = $('#errorHint');
+    if (errorHint) {
+      errorHint.textContent = '请先输入密码！';
+      errorHint.className = 'error-hint level-1';
+    }
+    return;
+  }
+
+  state.totalAttempts++;
+  state.currentAttemptsOnLock++;
+  updateAttemptDisplay();
+
+  const lock = locks[state.currentLock];
+  const errorHint = $('#errorHint');
+
+  if (state.currentInput === lock.answer) {
+    // Correct!
+    state.correctCount++;
+    state.score += lock.points;
+    state.isTransitioning = true;
+
+    // Animate lock opening
+    const lockIcon = $('#lockIcon');
+    if (lockIcon) {
+      lockIcon.textContent = '🔓';
+      lockIcon.classList.add('unlocked-anim');
+    }
+
+    // Update progress dot
+    updateLockDot(state.currentLock, 'unlocked');
+
+    // Disable keypad
+    $$('#keypad .keypad-btn').forEach(b => b.disabled = true);
+    const submitBtn = $('#submitBtn');
+    if (submitBtn) submitBtn.disabled = true;
+
+    // Show feedback
+    if (errorHint) {
+      errorHint.textContent = '✅ 密码正确！锁已打开！';
+      errorHint.className = 'error-hint';
+      errorHint.style.color = '#2ECC71';
+    }
+
+    setTimeout(() => {
+      const nextLock = state.currentLock + 1;
+      const tierLabel = nextLock > state.totalLocks ? '最后一道锁！' : '进入下一道锁';
+      showFeedback('correct',
+        '🔓 锁已解开！',
+        `密码 <b>${lock.answer}</b> 正确！(+${lock.points}分)<br>${tierLabel}`,
+        () => {
+          state.currentLock = nextLock;
+          updateUnlockedDisplay();
+          state.isTransitioning = false;
+          renderLock();
+        }
+      );
+    }, 800);
+  } else {
+    // Wrong answer — 3-level hint system
+    const hintLevel = Math.min(state.currentAttemptsOnLock, 3);
+    updateAttemptDisplay();
+
+    if (errorHint) {
+      errorHint.innerHTML = lock.hints[hintLevel - 1] || lock.hints[2];
+      errorHint.className = `error-hint level-${hintLevel}`;
+    }
+
+    // Shake password display
+    const pwDisplay = $('#passwordDisplay');
+    if (pwDisplay) {
+      pwDisplay.style.animation = 'none';
+      pwDisplay.offsetHeight; // trigger reflow
+      pwDisplay.style.animation = 'shake 0.4s ease';
+    }
+
+    state.currentInput = '';
+    if (pwDisplay) {
+      pwDisplay.textContent = '···';
+      pwDisplay.classList.remove('filled');
+    }
+  }
+}
+
+function updateLockDot(lockNum, cls) {
+  const dot = $(`#dot${lockNum}`);
+  if (dot) {
+    dot.classList.remove('current');
+    dot.classList.add(cls);
+    dot.textContent = cls === 'unlocked' ? '✓' : lockNum;
+  }
+}
+
+function updateProgressDots() {
+  for (let i = 1; i <= state.totalLocks; i++) {
+    const dot = $(`#dot${i}`);
+    if (!dot) continue;
+    dot.classList.remove('unlocked', 'current');
+    if (i < state.currentLock) {
+      dot.classList.add('unlocked');
+      dot.textContent = '✓';
+    } else if (i === state.currentLock) {
+      dot.classList.add('current');
+      dot.textContent = i;
+    } else {
+      dot.textContent = i;
+    }
+  }
+}
+
+function updateUnlockedDisplay() {
+  unlockedDisplay.textContent = `${state.unlockedLocks}/${state.totalLocks}`;
+}
+
+function updateAttemptDisplay() {
+  attemptDisplay.textContent = state.totalAttempts;
+}
+
+function showFeedback(type, title, message, onContinue) {
+  feedbackIcon.textContent = type === 'correct' ? '🔓' : '💡';
+  feedbackTitle.textContent = title;
+  feedbackTitle.style.color = type === 'correct' ? '#2ECC71' : '#F39C12';
+  feedbackMessage.innerHTML = message;
+  feedbackOverlay.classList.remove('hidden');
+  feedbackBtn.onclick = () => {
+    feedbackOverlay.classList.add('hidden');
+    if (onContinue) onContinue();
+  };
+}
+
+// ============================================
+// Victory Screen
+// ============================================
+function showVictory() {
+  updateUnlockedDisplay();
+  const accuracy = state.totalAttempts > 0
+    ? Math.round((state.correctCount / state.totalAttempts) * 100)
+    : 100;
+
+  const tier = determinePracticeTier();
+  const tierLabel = difficultyLabels[tier];
+
+  gameArea.innerHTML = `
+    <div class="victory-container">
+      <div class="victory-icon">🎉</div>
+      <div class="victory-title">逃出密室！</div>
+      <div class="victory-subtitle">
+        <div>🔓 全部 <b>4</b> 道锁已解开</div>
+        <div>⭐ 获得 <b>${state.score}</b> 分</div>
+        <div>📊 正确率：<b>${accuracy}%</b></div>
+        <div>💡 总尝试次数：<b>${state.totalAttempts}</b></div>
+      </div>
+      <button class="victory-btn" onclick="enterPracticeMode()">
+        📝 进入练习
+        <practice-hint>${tierLabel.icon} ${tierLabel.name}</practice-hint>
+      </button>
+      <div style="margin-top:8px;">
+        <button class="restart-btn" onclick="restartGame()">🔄 再玩一次</button>
+      </div>
+    </div>
+  `;
+
+  // Update all dots
+  for (let i = 1; i <= state.totalLocks; i++) {
+    updateLockDot(i, 'unlocked');
+  }
+  roomMsg.innerHTML = '🎉 所有密码锁全部解开！你成功逃出密室！';
+}
+
+// ============================================
+// PRACTICE SYSTEM
+// ============================================
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '一年有多少个月？', options: ['10个月', '11个月', '12个月', '13个月'], answer: 2, hint: '一年有12个月，从1月到12月。' },
+    { type: 'choice', q: '下面哪个月份有31天（大月）？', options: ['4月', '6月', '7月', '9月'], answer: 2, hint: '用拳头记忆法：7月对应关节凸起处，是大月31天。' },
+    { type: 'fill', q: '平年全年有____天。', answer: '365', hint: '平年2月有28天，全年365天。' },
+    { type: 'choice', q: '下午3时用24时计时法表示为？', options: ['3:00', '13:00', '15:00', '17:00'], answer: 2, hint: '下午的时间 = 时刻 + 12，3 + 12 = 15。' },
+    { type: 'choice', q: '一个月最多有多少天？', options: ['28天', '30天', '31天', '32天'], answer: 2, hint: '大月有31天，是所有月份中天数最多的。' },
+  ],
+  2: [
+    { type: 'choice', q: '下面哪几个月是小月（30天）？', options: ['1月、3月、5月', '4月、6月、9月、11月', '7月、8月、10月、12月', '2月、4月、6月、8月'], answer: 1, hint: '歌诀：四六九冬(11月)三十天。' },
+    { type: 'fill', q: '闰年2月有____天。', answer: '29', hint: '闰年比平年多一天，这多出的一天就加在2月。' },
+    { type: 'choice', q: '2025 ÷ 4 = 506……1，所以2025年是？', options: ['闰年', '平年', '大年', '小年'], answer: 1, hint: '年份÷4有余数就是平年，整除才是闰年（整百年还要÷400）。' },
+    { type: 'choice', q: '晚上9:30用24时计时法表示为？', options: ['9:30', '19:30', '21:30', '23:30'], answer: 2, hint: '晚上就是下午之后：9 + 12 = 21，所以是21:30。' },
+  ],
+  3: [
+    { type: 'choice', q: '2025年5月1日是星期四，5月31日是星期几？', options: ['星期四', '星期五', '星期六', '星期日'], answer: 2, hint: '5月1日到31日经过30天，30÷7=4周余2天，星期四+2天=星期六。' },
+    { type: 'fill', q: '小明的生日是2月29日，他每____年才能过一次生日。', answer: '4', hint: '2月29日只在闰年出现，闰年通常每4年一次。' },
+    { type: 'choice', q: '2100年是平年还是闰年？', options: ['平年', '闰年', '无法判断', '有时平有时闰'], answer: 0, hint: '2100是整百年 → 2100÷400=5……100（有余数）→ 平年！"百年不闰"。' },
+    { type: 'choice', q: '一场展览从3月28日到4月5日，共展出多少天？', options: ['7天', '8天', '9天', '10天'], answer: 2, hint: '3月28-31日：4天；4月1-5日：5天。总共4+5=9天。' },
+  ],
+  4: [
+    { type: 'choice', q: '某年的2月有5个星期日。这一年可能是平年吗？', options: ['可能', '不可能', '取决于年份', '以上都不对'], answer: 1, hint: '平年2月28天÷7=正好4周，每个星期出现4次。只有闰年29天÷7=4周余1天，才可能某天出现5次。' },
+    { type: 'fill', q: '如果今天是4月30日（星期三），那么5月1日是星期____。', answer: '四', hint: '4月30日是星期三，下一天5月1日就是星期四。注意4月只有30天！' },
+    { type: 'choice', q: '1896年是闰年，下一个闰年是哪一年？', options: ['1898年', '1900年', '1904年', '1908年'], answer: 2, hint: '1896+4=1900，但1900是整百年且不能被400整除→平年！再+4=1904才是下一个闰年。' },
+    { type: 'choice', q: '钟面上显示的时间是22:45，用普通计时法怎么表示？', options: ['上午10:45', '中午12:45', '下午10:45', '晚上10:45'], answer: 3, hint: '22-12=10，所以是晚上10时45分。22:45属于"晚上"范围。' },
+  ],
+  5: [
+    { type: 'choice', q: '以下哪个说法一定正确？', options: ['每年都有365天', '大月都有31天', '2月都是28天', '每4年一定有一个闰年'], answer: 1, hint: '大月的定义就是31天。其他选项都有反例：闰年366天、闰年2月29天、整百年不闰。' },
+    { type: 'fill', q: '一个小朋友说："我今年10岁，只过了2次生日。"他的生日是____月____日。', answer: '2月29日', hint: '10年只过2次生日→生日每4年才有一次→2月29日。' },
+    { type: 'choice', q: '你能用几种方法判断2028年是不是闰年？选出所有正确的方法：', options: ['2028÷4看余数', '查看2028年日历2月天数', '2028不是整百年，只需÷4', '以上方法都正确'], answer: 3, hint: '三种方法都能判断！2028不是整百年，÷4整除即可确定是闰年。' },
+    { type: 'fill', q: '如果一个月的第1天是星期日，最后一天也是星期日，这个月可能是____月。', answer: '2月', hint: '第1天和最后一天都是星期日→天数÷7余0→整周。28÷7=4→2月（平年）。' },
+  ],
+};
+
+function determinePracticeTier() {
+  const accuracy = state.totalAttempts > 0
+    ? state.correctCount / state.totalAttempts
+    : 0;
+  if (accuracy < 0.4) return 1;
+  if (accuracy < 0.6) return 2;
+  if (accuracy < 0.8) return 3;
+  if (accuracy < 0.95) return 4;
+  return 5;
+}
+
+function enterPracticeMode() {
+  state.practiceTier = determinePracticeTier();
+  state.mode = 'practice';
+  state.practiceIndex = 0;
+  state.practiceCorrect = 0;
+
+  gameContainer.classList.add('hidden');
+  practiceContainer.classList.remove('hidden');
+  practiceContainer.style.display = 'flex';
+
+  const tier = difficultyLabels[state.practiceTier];
+  practiceBadge.innerHTML = `${tier.icon} ${tier.name}`;
+  practiceBadge.className = `practice-badge ${tier.badgeClass}`;
+
+  practiceNextBtn.textContent = '开始答题 →';
+  practiceNextBtn.classList.remove('hidden');
+  practiceNextBtn.disabled = false;
+
+  renderPracticeQuestion();
+}
+
+function renderPracticeQuestion() {
+  const problems = practiceProblems[state.practiceTier];
+  if (!problems || state.practiceIndex >= problems.length) {
+    showPracticeSummary();
+    return;
+  }
+
+  const p = problems[state.practiceIndex];
+  const total = problems.length;
+
+  practiceProgress.textContent = `第 ${state.practiceIndex + 1}/${total} 题`;
+  practiceQNum.textContent = `第 ${state.practiceIndex + 1} 题`;
+  practiceQTitle.textContent = p.q;
+
+  practiceFeedback.classList.remove('show', 'correct', 'wrong');
+  practiceFeedback.textContent = '';
+
+  if (p.type === 'fill') {
+    practiceQContent.innerHTML = `
+      <div class="practice-input-area">
+        <input type="text" class="practice-input" id="practiceInput" placeholder="输入答案" inputmode="text">
+        <button class="submit-btn" id="practiceSubmitBtn">确认</button>
+      </div>`;
+    $('#practiceSubmitBtn').addEventListener('click', handlePracticeSubmit);
+    $('#practiceInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') handlePracticeSubmit(); });
+    setTimeout(() => { const inp = $('#practiceInput'); if (inp) inp.focus(); }, 100);
+  } else {
+    practiceQContent.innerHTML = `<div class="practice-options"></div>`;
+    const opts = practiceQContent.querySelector('.practice-options');
+    p.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'practice-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => handlePracticeChoice(idx, p.answer, p.options[p.answer]));
+      opts.appendChild(btn);
+    });
+  }
+
+  practiceNextBtn.textContent = state.practiceIndex < problems.length - 1 ? '下一题 →' : '查看结果 📊';
+  practiceNextBtn.disabled = true;
+}
+
+function handlePracticeChoice(selected, correctIdx, correctText) {
+  const options = practiceQContent.querySelectorAll('.practice-option');
+  options.forEach(o => o.disabled = true);
+
+  if (selected === correctIdx) {
+    options[selected].classList.add('selected-correct');
+    state.practiceCorrect++;
+    practiceFeedback.textContent = `✅ 正确！${correctText}`;
+    practiceFeedback.className = 'practice-feedback show correct';
+  } else {
+    options[selected].classList.add('selected-wrong');
+    options[correctIdx].classList.add('show-correct');
+    practiceFeedback.textContent = `❌ 正确答案是 ${correctText}。加油！`;
+    practiceFeedback.className = 'practice-feedback show wrong';
+  }
+
+  practiceNextBtn.disabled = false;
+}
+
+function handlePracticeSubmit() {
+  const input = $('#practiceInput');
+  const btn = $('#practiceSubmitBtn');
+  if (!input || (btn && btn.disabled)) return;
+
+  const problems = practiceProblems[state.practiceTier];
+  const p = problems[state.practiceIndex];
+  const userAnswer = input.value.trim();
+
+  if (btn) btn.disabled = true;
+  input.disabled = true;
+
+  if (userAnswer === p.answer) {
+    state.practiceCorrect++;
+    practiceFeedback.textContent = `✅ 正确！答案就是 ${p.answer}`;
+    practiceFeedback.className = 'practice-feedback show correct';
+  } else {
+    practiceFeedback.textContent = `❌ 正确答案是 ${p.answer}。${p.hint || ''}`;
+    practiceFeedback.className = 'practice-feedback show wrong';
+  }
+
+  practiceNextBtn.disabled = false;
+}
+
+function handlePracticeNext() {
+  const problems = practiceProblems[state.practiceTier];
+  if (state.practiceIndex >= problems.length - 1) {
+    showPracticeSummary();
+    return;
+  }
+  state.practiceIndex++;
+  renderPracticeQuestion();
+}
+
+function showPracticeSummary() {
+  const problems = practiceProblems[state.practiceTier];
+  const total = problems ? problems.length : 0;
+  const pct = total > 0 ? Math.round((state.practiceCorrect / total) * 100) : 0;
+
+  let emoji, color;
+  if (pct >= 80) { emoji = '🌟'; color = '#2ECC71'; }
+  else if (pct >= 60) { emoji = '👍'; color = '#F39C12'; }
+  else { emoji = '💪'; color = '#E67E22'; }
+
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden');
+  practiceContainer.style.display = 'none';
+
+  state.mode = 'game';
+
+  gameArea.innerHTML = `
+    <div class="practice-summary">
+      <div class="practice-summary-icon">${emoji}</div>
+      <div class="practice-summary-title">练习完成！</div>
+      <div class="practice-summary-score" style="color:${color}">${state.practiceCorrect}/${total}</div>
+      <div class="practice-summary-detail">
+        <div>📊 练习正确率：${pct}%</div>
+        <div>🎮 游戏得分：${state.score} 分</div>
+        <div>🔓 密室解锁：${state.correctCount}/${state.totalLocks} 道锁</div>
+        ${pct >= 80 ? '<div>🏆 太棒了，你对年月日知识掌握得很好！</div>' :
+          pct >= 60 ? '<div>📚 还不错，继续加油会更好！</div>' :
+          '<div>🌱 没关系，多练习几次就能进步！</div>'}
+      </div>
+      <button class="victory-btn" onclick="restartGame()">🔄 再玩一次</button>
+    </div>`;
+}
+
+// ============================================
+// Practice nav
+// ============================================
+practiceNextBtn.addEventListener('click', handlePracticeNext);
+
+// ============================================
+// Restart
+// ============================================
+function restartGame() {
+  state.mode = 'game';
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden');
+  practiceContainer.style.display = 'none';
+
+  state.score = 0;
+  state.unlockedLocks = 0;
+  state.currentLock = 1;
+  state.currentInput = '';
+  state.currentAttemptsOnLock = 0;
+  state.isTransitioning = false;
+  state.correctCount = 0;
+  state.totalAttempts = 0;
+  state.practiceIndex = 0;
+  state.practiceCorrect = 0;
+
+  updateUnlockedDisplay();
+  updateAttemptDisplay();
+  updateProgressDots();
+  roomMsg.innerHTML = '你被困在一间时间密室里，墙上挂着日历和钟……<br>解开4道密码锁才能逃出去！';
+
+  renderLock();
+}
+
+// ============================================
+// Initialize
+// ============================================
+restartBtn.addEventListener('click', restartGame);
+gameTitle.textContent = '🔐 日历谜题大挑战';
+restartGame();
+</script>
+
+</body>
+</html>
