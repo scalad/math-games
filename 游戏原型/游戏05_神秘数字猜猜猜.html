@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>神秘数字猜猜猜 - 1~5数字推理游戏</title>
+<style>
+:root {
+  --detective-blue: #5C6BC0;
+  --detective-dark: #3F51B5;
+  --detective-light: #C5CAE9;
+  --gold: #FFB300;
+  --danger: #EF5350;
+  --success: #66BB6A;
+  --bg: #E8EAF6;
+  --card-bg: #FFF;
+  --card-excluded: #BDBDBD;
+  --text-dark: #2C3E50;
+  --text-light: #FFF;
+  --shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+/* 放大镜粒子背景 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(92,107,192,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(92,107,192,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255,179,0,0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.game-wrapper {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 500px;
+  padding: 12px;
+}
+
+/* ===== 顶部标题栏 ===== */
+.header {
+  background: var(--detective-blue);
+  border-radius: 20px 20px 0 0;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -2px 20px rgba(92,107,192,0.3);
+}
+
+.header-left { display: flex; align-items: center; gap: 12px; }
+.detective-hat {
+  width: 42px; height: 42px;
+  background: var(--text-dark);
+  border-radius: 50% 50% 5px 5px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.detective-hat::before {
+  content: '🔍';
+  font-size: 24px;
+}
+.detective-hat::after {
+  content: '';
+  position: absolute; bottom: -8px; left: -8px;
+  width: 58px; height: 10px;
+  background: var(--text-dark);
+  border-radius: 5px;
+}
+.title { color: var(--text-light); font-size: 20px; font-weight: 700; letter-spacing: 2px; }
+
+.header-right { display: flex; align-items: center; gap: 16px; }
+.score-display {
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+  padding: 6px 14px;
+  color: var(--gold);
+  font-size: 18px;
+  font-weight: 700;
+}
+.level-badge {
+  background: var(--gold);
+  color: var(--text-dark);
+  border-radius: 12px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ===== 主游戏区 ===== */
+.game-main {
+  background: var(--bg);
+  border-radius: 0 0 20px 20px;
+  padding: 20px 16px;
+  min-height: 460px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+/* 舞台装饰 */
+.stage-decor {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(to top, rgba(92,107,192,0.07) 0%, transparent 100%);
+  border-radius: 0 0 20px 20px;
+  pointer-events: none;
+}
+
+/* ===== 动物角色区 ===== */
+.animals-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 2;
+}
+
+.animal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+.animal:hover { transform: scale(1.08); }
+.animal.active { transform: scale(1.12); }
+
+.animal-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+  border: 3px solid transparent;
+  transition: all 0.3s;
+}
+.animal.active .animal-avatar {
+  border-color: var(--detective-blue);
+  box-shadow: 0 3px 16px rgba(92,107,192,0.4);
+}
+
+.animal-label {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--detective-blue);
+  font-weight: 600;
+  background: rgba(92,107,192,0.1);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+/* ===== 线索气泡 ===== */
+.clue-area {
+  position: relative;
+  z-index: 3;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0 12px;
+}
+
+.speech-bubble {
+  background: var(--text-light);
+  border-radius: 18px;
+  padding: 12px 18px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  position: relative;
+  font-size: 15px;
+  color: var(--text-dark);
+  text-align: center;
+  max-width: 85%;
+  animation: bubbleIn 0.5s ease-out;
+  border: 2px solid var(--detective-light);
+}
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 12px solid var(--detective-light);
+}
+.speech-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 11px solid var(--text-light);
+  z-index: 1;
+}
+
+.clue-text { font-weight: 600; color: var(--detective-dark); }
+.clue-hint { font-size: 12px; color: #888; margin-top: 4px; }
+
+.clue-list { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 350px; }
+.clue-item {
+  background: rgba(255,255,255,0.9);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+  border-left: 4px solid var(--detective-blue);
+  animation: slideIn 0.4s ease-out;
+}
+
+/* ===== 数字卡片 ===== */
+.cards-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0;
+  position: relative;
+  z-index: 2;
+  flex-wrap: wrap;
+}
+
+.number-card {
+  width: 58px; height: 80px;
+  background: linear-gradient(145deg, var(--card-bg) 0%, #f0f0f0 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--detective-blue);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  border: 3px solid transparent;
+}
+.number-card:hover:not(.excluded):not(.disabled) {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(92,107,192,0.25);
+  border-color: var(--detective-light);
+}
+.number-card.excluded {
+  background: linear-gradient(145deg, #E0E0E0 0%, #BDBDBD 100%);
+  color: #9E9E9E;
+  transform: scale(0.9);
+  opacity: 0.5;
+  border-color: #BDBDBD;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+.number-card.selected {
+  border-color: var(--gold);
+  background: linear-gradient(145deg, #FFF8E1 0%, #FFECB3 100%);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(255,179,0,0.3);
+  animation: pulse 0.8s ease-in-out infinite;
+}
+.number-card.correct {
+  background: linear-gradient(145deg, #C8E6C9 0%, #A5D6A7 100%);
+  border-color: var(--success);
+  animation: popCorrect 0.5s ease-out;
+}
+.number-card.wrong {
+  background: linear-gradient(145deg, #FFCDD2 0%, #EF9A9A 100%);
+  border-color: var(--danger);
+  animation: shake 0.5s ease-out;
+}
+.number-card.disabled { cursor: default; opacity: 0.7; }
+
+.card-animal-icon {
+  position: absolute;
+  top: -8px; right: -8px;
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.number-card.selected .card-animal-icon { opacity: 1; }
+
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulse {
+  0%, 100% { transform: translateY(-4px) scale(1); }
+  50% { transform: translateY(-4px) scale(1.05); }
+}
+@keyframes popCorrect {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+/* ===== 操作区 ===== */
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
+}
+
+.btn {
+  padding: 10px 24px;
+  border-radius: 25px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  letter-spacing: 1px;
+  font-family: inherit;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-confirm { background: var(--detective-blue); color: var(--text-light); }
+.btn-hint { background: var(--gold); color: var(--text-dark); }
+.btn-next { background: var(--success); color: var(--text-light); }
+.btn-reset { background: #78909C; color: var(--text-light); }
+.btn-choice {
+  background: var(--text-light);
+  color: var(--text-dark);
+  border: 2px solid var(--detective-light);
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 20px;
+  width: 100%;
+  text-align: left;
+}
+.btn-choice:hover {
+  background: var(--detective-light);
+  border-color: var(--detective-blue);
+}
+.btn-choice.selected {
+  background: var(--detective-blue);
+  color: var(--text-light);
+  border-color: var(--detective-blue);
+}
+
+/* ===== 消息弹窗 ===== */
+.message-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.3s ease-out;
+}
+.message-box {
+  background: var(--text-light);
+  border-radius: 24px;
+  padding: 28px 24px;
+  text-align: center;
+  max-width: 340px;
+  width: 90%;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.message-icon { font-size: 52px; margin-bottom: 8px; }
+.message-title { font-size: 22px; font-weight: 700; color: var(--detective-blue); margin-bottom: 6px; }
+.message-text { font-size: 15px; color: #555; margin-bottom: 16px; line-height: 1.6; }
+.message-score { font-size: 28px; font-weight: 800; color: var(--gold); }
+.message-score .plus { color: var(--success); font-size: 20px; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ===== 练习模式 ===== */
+.practice-panel {
+  display: none;
+  position: relative;
+  z-index: 2;
+}
+.practice-panel.active { display: block; }
+
+.practice-question {
+  background: var(--text-light);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.practice-q-type {
+  font-size: 11px;
+  color: var(--detective-blue);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.practice-q-text { font-size: 16px; color: var(--text-dark); font-weight: 600; margin-bottom: 10px; }
+.practice-options { display: flex; flex-direction: column; gap: 6px; }
+.practice-option {
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+  text-align: left;
+}
+.practice-option:hover { background: var(--detective-light); }
+.practice-option.correct { background: #C8E6C9; border-color: var(--success); }
+.practice-option.wrong { background: #FFCDD2; border-color: var(--danger); }
+.practice-fill-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 2px solid var(--detective-light);
+  font-size: 16px;
+  text-align: center;
+  font-family: inherit;
+  outline: none;
+}
+.practice-fill-input:focus { border-color: var(--detective-blue); }
+.practice-hint {
+  display: none;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #FFF8E1;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #F57F17;
+}
+.practice-hint.visible { display: block; }
+.practice-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+.practice-counter { font-size: 13px; color: #888; }
+
+/* ===== 响应式 ===== */
+@media (max-width: 400px) {
+  .number-card { width: 48px; height: 68px; font-size: 26px; }
+  .cards-row { gap: 8px; }
+  .animals-row { gap: 12px; }
+  .animal-avatar { width: 44px; height: 44px; font-size: 28px; }
+  .speech-bubble { font-size: 13px; padding: 10px 14px; }
+}
+
+/* 隐藏 */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="game-wrapper">
+  <!-- 头部 -->
+  <div class="header">
+    <div class="header-left">
+      <div class="detective-hat"></div>
+      <span class="title">神秘数字猜猜猜</span>
+    </div>
+    <div class="header-right">
+      <span class="level-badge" id="levelBadge">第1关</span>
+      <span class="score-display">⭐ <span id="scoreVal">0</span></span>
+    </div>
+  </div>
+
+  <!-- 主游戏区 -->
+  <div class="game-main">
+    <div class="stage-decor"></div>
+
+    <!-- 动物角色 -->
+    <div class="animals-row" id="animalsRow">
+      <div class="animal active" data-animal="rabbit" id="animalRabbit">
+        <div class="animal-avatar">🐰</div>
+        <span class="animal-label">兔侦探</span>
+      </div>
+      <div class="animal" data-animal="duck" id="animalDuck">
+        <div class="animal-avatar">🦆</div>
+        <span class="animal-label">鸭侦探</span>
+      </div>
+      <div class="animal" data-animal="chick" id="animalChick">
+        <div class="animal-avatar">🐤</div>
+        <span class="animal-label">鸡侦探</span>
+      </div>
+    </div>
+
+    <!-- 线索气泡区 -->
+    <div class="clue-area" id="clueArea">
+      <div class="speech-bubble" id="speechBubble">
+        <span id="messageText">准备开始侦探任务！</span>
+      </div>
+    </div>
+
+    <!-- 数字卡片 -->
+    <div class="cards-row" id="cardsRow">
+      <div class="number-card" data-num="1">1</div>
+      <div class="number-card" data-num="2">2</div>
+      <div class="number-card" data-num="3">3</div>
+      <div class="number-card" data-num="4">4</div>
+      <div class="number-card" data-num="5">5</div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="actions" id="actionsArea">
+      <button class="btn btn-confirm" id="btnConfirm" disabled>🔍 确认猜测</button>
+      <button class="btn btn-hint" id="btnHint">💡 提示</button>
+      <button class="btn btn-next hidden" id="btnNext">▶ 下一关</button>
+    </div>
+
+    <!-- 练习面板 -->
+    <div class="practice-panel" id="practicePanel"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // ===== 自适应练习题目池 =====
+  const practiceProblems = {
+    1: [
+      { type: 'choice', q: '下面哪个是数字 3？', options: ['1', '2', '3', '4'], answer: 2, hint: '3 像耳朵，两个半圆叠起来' },
+      { type: 'choice', q: '图上有几个苹果？🍎🍎🍎', options: ['1个', '2个', '3个', '4个'], answer: 2, hint: '用手指点数：1-2-3，一共3个' },
+      { type: 'choice', q: '数字 5 表示有几个？', options: ['3个', '4个', '5个', '6个'], answer: 2, hint: '伸出5根手指看看' },
+    ],
+    2: [
+      { type: 'choice', q: '●●●● 表示数字几？', options: ['2', '3', '4', '5'], answer: 2, hint: '数一数：1-2-3-4，4个点=数字4' },
+      { type: 'choice', q: '数字 2 的前面是几？', options: ['0', '1', '3', '4'], answer: 1, hint: '1→2→3→4→5，2前面是1' },
+      { type: 'fill', q: '🐤🐤🐤🐤🐤 一共有多少只小鸡？', answer: '5', hint: '点数：1-2-3-4-5' },
+    ],
+    3: [
+      { type: 'choice', q: '比 3 大、比 5 小的数是几？', options: ['2', '3', '4', '5'], answer: 2, hint: '在3和5中间的是4' },
+      { type: 'choice', q: '小兔子有3根🥕，妈妈又给了1根，现在有几根？', options: ['2根', '3根', '4根', '5根'], answer: 2, hint: '3添上1是4' },
+      { type: 'fill', q: '3 添上 1 是几？', answer: '4', hint: '3+1=4' },
+    ],
+    4: [
+      { type: 'choice', q: '下面哪组物品的数量是 4？', options: ['🍎🍎🍎', '🍎🍎🍎🍎', '🍎🍎🍎🍎🍎', '🍎🍎'], answer: 1, hint: '数每组：3,4✓,5,2' },
+      { type: 'choice', q: '按顺序：1、2、__、4、5，空格填几？', options: ['1', '2', '3', '5'], answer: 2, hint: '1-2-3-4-5' },
+      { type: 'fill', q: '数字 5 比数字 2 多几个？', answer: '3', hint: '5-2=3' },
+    ],
+    5: [
+      { type: 'choice', q: '数字 4 可以由哪两个数组成？', options: ['1和3', '2和2', '1和1', '1和3或2和2都对'], answer: 3, hint: '两种都正确' },
+      { type: 'fill', q: '1~5中比3大的数有哪些？（如"4,5"）', answer: '4,5', hint: '4和5' },
+      { type: 'choice', q: '苹果比橙子多2个，橙子1个，苹果几个？', options: ['1个', '2个', '3个', '4个'], answer: 2, hint: '1+2=3' },
+    ],
+  };
+
+  // ===== DOM引用 =====
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
+
+  const levelBadge = $('#levelBadge');
+  const scoreVal = $('#scoreVal');
+  const messageText = $('#messageText');
+  const speechBubble = $('#speechBubble');
+  const clueArea = $('#clueArea');
+  const cardsRow = $('#cardsRow');
+  const actionsArea = $('#actionsArea');
+  const btnConfirm = $('#btnConfirm');
+  const btnHint = $('#btnHint');
+  const btnNext = $('#btnNext');
+  const practicePanel = $('#practicePanel');
+  const animalsRow = $('#animalsRow');
+
+  // ===== 游戏状态 =====
+  const TOTAL_LEVELS = 3;
+  let state = {
+    level: 1,
+    score: 0,
+    mysteryNumber: 0,
+    clues: [],
+    cluesShown: 0,
+    excludedCards: new Set(),
+    selectedCard: null,
+    usedHint: false,
+    playerChosenNumber: 0,
+    clueTemplates: [],
+    selectedTemplate: null,
+    levelComplete: false,
+    practiceIdx: 0,
+    practiceAnswered: 0,
+  };
+
+  // ===== 线索模板 =====
+  const clueTemplatesAll = [
+    { text: '这个数比X大', generate: (n) => {
+      const x = n - 1;
+      return x >= 1 ? { text: `这个数比${x}大`, valid: true } : { text: '', valid: false };
+    }},
+    { text: '这个数比X小', generate: (n) => {
+      const x = n + 1;
+      return x <= 5 ? { text: `这个数比${x}小`, valid: true } : { text: '', valid: false };
+    }},
+    { text: '这个数在X和Y之间', generate: (n) => {
+      if (n >= 2 && n <= 4) return { text: `这个数在${n-1}和${n+1}之间`, valid: true };
+      if (n === 1) return { text: '这个数在0和2之间', valid: true };
+      if (n === 5) return { text: '这个数在4和6之间', valid: true };
+      return { text: '', valid: false };
+    }},
+    { text: '这个数不是X', generate: (n) => {
+      // Pick a number that is NOT n
+      const others = [1,2,3,4,5].filter(x => x !== n);
+      const x = others[Math.floor(Math.random() * others.length)];
+      return { text: `这个数不是${x}`, valid: true };
+    }},
+  ];
+
+  // ===== 工具函数 =====
+  function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function setMessage(msg, isClue) {
+    messageText.innerHTML = msg;
+    if (isClue) {
+      messageText.classList.add('clue-text');
+    } else {
+      messageText.classList.remove('clue-text');
+    }
+    speechBubble.style.animation = 'none';
+    speechBubble.offsetHeight;
+    speechBubble.style.animation = 'bubbleIn 0.5s ease-out';
+  }
+
+  function showClueItem(text, delay) {
+    const div = document.createElement('div');
+    div.className = 'clue-item';
+    div.textContent = text;
+    div.style.animationDelay = delay + 's';
+    return div;
+  }
+
+  function updateScore(points) {
+    state.score += points;
+    scoreVal.textContent = state.score;
+    // 飞分动画
+    scoreVal.style.transform = 'scale(1.3)';
+    setTimeout(() => { scoreVal.style.transform = 'scale(1)'; }, 300);
+  }
+
+  function setAnimal(index) {
+    $$('.animal').forEach((el, i) => {
+      el.classList.toggle('active', i === index);
+    });
+  }
+
+  function renderCards() {
+    const cards = $$('.number-card');
+    cards.forEach(card => {
+      const num = parseInt(card.dataset.num);
+      card.classList.remove('selected', 'correct', 'wrong', 'excluded', 'disabled');
+      if (state.excludedCards.has(num)) card.classList.add('excluded');
+    });
+    btnConfirm.disabled = true;
+  }
+
+  function clearCards() {
+    state.excludedCards.clear();
+    state.selectedCard = null;
+    renderCards();
+  }
+
+  function setCardsClickable(clickable) {
+    $$('.number-card').forEach(card => {
+      if (!state.excludedCards.has(parseInt(card.dataset.num))) {
+        card.classList.toggle('disabled', !clickable);
+      }
+    });
+  }
+
+  // ===== 卡片点击处理 =====
+  function onCardClick(e) {
+    if (state.levelComplete) return;
+    const card = e.currentTarget;
+    const num = parseInt(card.dataset.num);
+
+    if (state.level === 3) {
+      // 第3关: 玩家点选数字卡片 - 两种模式
+      if (state.playerChosenNumber === 0) {
+        // 选择神秘数字
+        state.playerChosenNumber = num;
+        renderCards();
+        card.classList.add('selected');
+        setMessage(`你选择了数字 <b>${num}</b>，现在请选择一个正确的线索来描述它`, false);
+        generateClueChoices(num);
+      }
+      return;
+    }
+
+    // 第1/2关: 排除或选择
+    if (state.excludedCards.has(num)) {
+      // 取消排除
+      state.excludedCards.delete(num);
+      card.classList.remove('excluded');
+    } else {
+      // 切换选择
+      $$('.number-card').forEach(c => c.classList.remove('selected'));
+      state.selectedCard = num;
+      card.classList.add('selected');
+      btnConfirm.disabled = false;
+    }
+  }
+
+  // 排除卡片（双击或右键）
+  function onCardRightClick(e) {
+    e.preventDefault();
+    if (state.levelComplete || state.level === 3) return;
+    const card = e.currentTarget;
+    const num = parseInt(card.dataset.num);
+
+    if (state.excludedCards.has(num)) {
+      state.excludedCards.delete(num);
+      card.classList.remove('excluded');
+    } else {
+      if (state.selectedCard === num) {
+        state.selectedCard = null;
+        btnConfirm.disabled = true;
+      }
+      state.excludedCards.add(num);
+      card.classList.add('excluded');
+      card.classList.remove('selected');
+    }
+  }
+
+  // ===== 游戏流程 =====
+  async function initGame() {
+    state.level = 1;
+    state.score = 0;
+    scoreVal.textContent = '0';
+    levelBadge.textContent = '第1关';
+    btnNext.classList.add('hidden');
+    practicePanel.classList.remove('active');
+    practicePanel.innerHTML = '';
+    await startLevel(1);
+  }
+
+  async function startLevel(level) {
+    state.level = level;
+    state.levelComplete = false;
+    state.cluesShown = 0;
+    state.clues = [];
+    state.usedHint = false;
+    state.playerChosenNumber = 0;
+    state.selectedCard = null;
+    state.selectedTemplate = null;
+    state.excludedCards.clear();
+    levelBadge.textContent = `第${level}关`;
+    btnConfirm.disabled = true;
+    btnHint.classList.remove('hidden');
+    btnNext.classList.add('hidden');
+    practicePanel.classList.remove('active');
+    practicePanel.innerHTML = '';
+
+    // 显示卡片
+    renderCards();
+    $$('.number-card').forEach(c => c.classList.remove('disabled'));
+
+    if (level === 1) {
+      await startLevel1();
+    } else if (level === 2) {
+      await startLevel2();
+    } else if (level === 3) {
+      await startLevel3();
+    }
+  }
+
+  // ===== 第1关: 1条线索 =====
+  async function startLevel1() {
+    setAnimal(0); // 兔子侦探
+    state.mysteryNumber = randomInt(1, 5);
+    state.clues = generateLevel1Clue(state.mysteryNumber);
+
+    setMessage('我是兔侦探！让我来给你一条线索吧 🔍', false);
+    await sleep(1200);
+
+    // 弹出线索
+    setMessage(`<b>线索：</b>${state.clues[0]}`, true);
+    state.cluesShown = 1;
+    setCardsClickable(true);
+    setMessage(`<b>线索：</b>${state.clues[0]}<br><span class="clue-hint">点击你认为正确的数字卡片吧！</span>`, true);
+  }
+
+  function generateLevel1Clue(mystery) {
+    // 生成1条有意义的线索
+    const clueTypes = [
+      () => {
+        const x = mystery - 1;
+        return x >= 1 ? `这个数比${x}大` : `这个数比${mystery + 1}小`;
+      },
+      () => {
+        const x = mystery + 1;
+        return x <= 5 ? `这个数比${x}小` : `这个数比${mystery - 1}大`;
+      },
+      () => {
+        const others = [1,2,3,4,5].filter(n => n !== mystery);
+        return `这个数不是${others[randomInt(0, others.length - 1)]}`;
+      },
+    ];
+    const gen = clueTypes[randomInt(0, 2)];
+    return [gen()];
+  }
+
+  // ===== 第2关: 2条线索 =====
+  async function startLevel2() {
+    setAnimal(1); // 鸭侦探
+    state.mysteryNumber = randomInt(1, 5);
+    state.clues = generateLevel2Clues(state.mysteryNumber);
+
+    setMessage('我是鸭侦探！让我来给你两条线索吧 🔍', false);
+    await sleep(1200);
+
+    // 依次弹出线索
+    for (let i = 0; i < state.clues.length; i++) {
+      setMessage(`<b>线索${i + 1}：</b>${state.clues[i]}`, true);
+      state.cluesShown = i + 1;
+      await sleep(1500);
+    }
+
+    setCardsClickable(true);
+    setMessage(`<b>两条线索已给出！</b><br><span class="clue-hint">结合两条线索，推断出神秘数字吧</span>`, true);
+  }
+
+  function generateLevel2Clues(mystery) {
+    // 生成2条线索，结合后能唯一确定数字
+    // 策略: 给出"比X大"和"比Y小"的两面夹击
+    const lower = mystery - 1;
+    const upper = mystery + 1;
+
+    let clues = [];
+    if (lower >= 1 && upper <= 5) {
+      clues = [`这个数比${lower}大`, `这个数比${upper}小`];
+    } else if (lower < 1) {
+      // mystery = 1
+      const notX = randomInt(2, 5);
+      clues = [`这个数比1大`, `这个数不是${notX}`];
+      // 等等，mystery=1时"比1大"不对...重新设计
+      clues = [`这个数比${mystery + 1}小`, `这个数不是${randomInt(2, 5)}`];
+    } else if (upper > 5) {
+      // mystery = 5
+      clues = [`这个数比${mystery - 1}大`, `这个数不是${randomInt(1, 4)}`];
+    }
+
+    // 确保两条线索联合后唯一确定数字
+    // 验证
+    const possible = [1,2,3,4,5].filter(n => {
+      return checkAllClues(n, clues);
+    });
+    if (possible.length !== 1 || possible[0] !== mystery) {
+      // 回退到安全策略
+      if (mystery >= 2 && mystery <= 4) {
+        clues = [`这个数比${mystery - 1}大`, `这个数比${mystery + 1}小`];
+      } else if (mystery === 1) {
+        clues = [`这个数比2小`, `这个数不是5`];
+      } else {
+        clues = [`这个数比4大`, `这个数不是4`];
+      }
+    }
+
+    return clues;
+  }
+
+  function checkAllClues(num, clues) {
+    for (const clue of clues) {
+      if (!checkClue(num, clue)) return false;
+    }
+    return true;
+  }
+
+  function checkClue(num, clue) {
+    // 解析线索文本
+    const biggerMatch = clue.match(/比(\d+)大/);
+    const smallerMatch = clue.match(/比(\d+)小/);
+    const notMatch = clue.match(/不是(\d+)/);
+
+    if (biggerMatch) return num > parseInt(biggerMatch[1]);
+    if (smallerMatch) return num < parseInt(smallerMatch[1]);
+    if (notMatch) return num !== parseInt(notMatch[1]);
+    return true;
+  }
+
+  // ===== 第3关: 反向出题 =====
+  async function startLevel3() {
+    setAnimal(2); // 鸡侦探
+    state.clues = [];
+    state.playerChosenNumber = 0;
+    state.selectedTemplate = null;
+
+    setMessage('我是鸡侦探！这次<b>你来选一个神秘数字</b>，然后给它选一个正确的线索！', false);
+    await sleep(1500);
+
+    setCardsClickable(true);
+    setMessage('先在1~5中选一个神秘数字吧 ✨', false);
+  }
+
+  function generateClueChoices(mysteryNum) {
+    // 为第3关生成3个线索选项（1个正确+2个错误）
+    const allClues = [];
+
+    // 收集所有可能的正确线索
+    for (const template of clueTemplatesAll) {
+      const result = template.generate(mysteryNum);
+      if (result.valid) {
+        allClues.push({ text: result.text, correct: true, template: template.text });
+      }
+    }
+
+    // 收集错误线索
+    const wrongClues = [];
+    for (let wrongNum = 1; wrongNum <= 5; wrongNum++) {
+      if (wrongNum === mysteryNum) continue;
+      for (const template of clueTemplatesAll) {
+        const result = template.generate(wrongNum);
+        if (result.valid) {
+          // 确保这个线索对 mysteryNum 不正确
+          if (!checkClue(mysteryNum, result.text)) {
+            wrongClues.push({ text: result.text, correct: false, template: template.text });
+          }
+        }
+      }
+    }
+
+    // 随机选1个正确+2个错误
+    const correctOne = allClues[randomInt(0, allClues.length - 1)];
+    const shuffledWrong = wrongClues.sort(() => Math.random() - 0.5);
+    const wrongTwo = shuffledWrong.slice(0, 2);
+
+    state.clueTemplates = [correctOne, ...wrongTwo].sort(() => Math.random() - 0.5);
+
+    // 渲染线索选择按钮
+    state.selectedTemplate = null;
+    btnConfirm.disabled = true;
+
+    let html = '<div style="margin-top:8px;font-size:14px;font-weight:600;color:var(--detective-blue);">选择正确的线索：</div>';
+    html += '<div class="clue-list" style="margin-top:8px">';
+    state.clueTemplates.forEach((ct, idx) => {
+      html += `<button class="btn btn-choice clue-template-btn" data-idx="${idx}">${ct.text}</button>`;
+    });
+    html += '</div>';
+
+    // 替换线索区域的内容
+    clueArea.innerHTML = html;
+  }
+
+  // ===== 确认猜测 =====
+  async function onConfirm() {
+    if (state.levelComplete) return;
+
+    if (state.level === 3) {
+      if (!state.selectedTemplate && state.playerChosenNumber > 0) {
+        // 检查是否有选中的模板
+        const selectedBtn = clueArea.querySelector('.clue-template-btn.selected');
+        if (!selectedBtn) {
+          setMessage('请先选择一个线索描述！', false);
+          return;
+        }
+        state.selectedTemplate = parseInt(selectedBtn.dataset.idx);
+      }
+
+      if (state.playerChosenNumber === 0) {
+        setMessage('请先在卡片中选择一个神秘数字！', false);
+        return;
+      }
+
+      const chosenClue = state.clueTemplates[state.selectedTemplate];
+      if (chosenClue.correct) {
+        // 正确
+        const points = 40;
+        updateScore(points);
+        state.levelComplete = true;
+        await showResult(true, points, `数字${state.playerChosenNumber}的线索选对了！`);
+      } else {
+        // 错误
+        setMessage(`"${chosenClue.text}" 不能描述数字${state.playerChosenNumber}，再想想！`, false);
+        // 重置选择
+        state.selectedTemplate = null;
+        clueArea.querySelectorAll('.clue-template-btn').forEach(b => b.classList.remove('selected'));
+        return;
+      }
+    } else {
+      if (!state.selectedCard) {
+        setMessage('请先点击一个数字卡片！', false);
+        return;
+      }
+
+      if (state.selectedCard === state.mysteryNumber) {
+        // 猜对了！
+        const basePoints = state.level === 1 ? 30 : 20;
+        const points = state.usedHint ? 10 : basePoints;
+        updateScore(points);
+        state.levelComplete = true;
+
+        // 高亮正确卡片
+        $$('.number-card').forEach(card => {
+          if (parseInt(card.dataset.num) === state.mysteryNumber) {
+            card.classList.add('correct');
+          }
+        });
+
+        await showResult(true, points, `太棒了！神秘数字就是 <b>${state.mysteryNumber}</b>！`);
+      } else {
+        // 猜错了
+        const card = $$('.number-card')[state.selectedCard - 1];
+        card.classList.add('wrong');
+        setMessage(`数字${state.selectedCard}不对哦，再试试！`, false);
+        state.selectedCard = null;
+        btnConfirm.disabled = true;
+
+        setTimeout(() => {
+          card.classList.remove('wrong');
+          card.classList.remove('selected');
+        }, 800);
+        return;
+      }
+    }
+  }
+
+  // ===== 提示 =====
+  function onHint() {
+    if (state.levelComplete) return;
+    state.usedHint = true;
+
+    if (state.level === 1) {
+      // 给更具体的提示
+      setMessage(`💡 <b>提示：</b>${state.clues[0]}，想想1~5中哪些数字满足这个条件？`, false);
+    } else if (state.level === 2) {
+      // 排除了哪些数字的提示
+      const possible = [1,2,3,4,5].filter(n => checkAllClues(n, state.clues));
+      if (possible.length === 1) {
+        setMessage(`💡 <b>提示：</b>满足两条线索的数字只有一个！`, false);
+      } else {
+        setMessage(`💡 <b>提示：</b>满足线索的数字有 ${possible.join('、')}，再想想是哪一个？`, false);
+      }
+    } else if (state.level === 3) {
+      if (state.playerChosenNumber === 0) {
+        setMessage('💡 <b>提示：</b>先在上方选一个你喜欢的数字作为神秘数字', false);
+      } else {
+        setMessage(`💡 <b>提示：</b>想想数字${state.playerChosenNumber}的特点，比如它比哪些数大？比哪些数小？`, false);
+      }
+    }
+  }
+
+  // ===== 结果弹窗 =====
+  function showResult(isCorrect, points, msg) {
+    return new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.className = 'message-overlay';
+      overlay.innerHTML = `
+        <div class="message-box">
+          <div class="message-icon">${isCorrect ? '🎉' : '😊'}</div>
+          <div class="message-title">${isCorrect ? '答对了！' : '继续加油'}</div>
+          <div class="message-text">${msg}</div>
+          <div class="message-score">${isCorrect ? '<span class="plus">+</span>' + points : ''}</div>
+          <button class="btn btn-next" style="margin-top:12px">${state.level < TOTAL_LEVELS ? '▶ 下一关' : '🏆 查看成绩'}</button>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      overlay.querySelector('.btn-next').addEventListener('click', () => {
+        overlay.remove();
+        if (state.level < TOTAL_LEVELS) {
+          startLevel(state.level + 1);
+        } else {
+          startPractice();
+        }
+        resolve();
+      });
+    });
+  }
+
+  // ===== 练习模式 =====
+  function startPractice() {
+    state.practiceIdx = 0;
+    state.practiceAnswered = 0;
+    btnConfirm.classList.add('hidden');
+    btnHint.classList.add('hidden');
+    btnNext.classList.remove('hidden');
+    btnNext.textContent = '▶ 下一题';
+    btnNext.onclick = nextPractice;
+
+    // 收集所有练习题目
+    state.allPractice = [];
+    for (const key in practiceProblems) {
+      practiceProblems[key].forEach((p, i) => {
+        state.allPractice.push({ ...p, sourceKey: key, sourceIdx: i });
+      });
+    }
+    // 随机打乱
+    state.allPractice.sort(() => Math.random() - 0.5);
+
+    clueArea.innerHTML = '<div class="speech-bubble"><span>侦探任务完成！来做几道练习题吧 📝</span></div>';
+    cardsRow.classList.add('hidden');
+    actionsArea.classList.add('hidden');
+    practicePanel.classList.add('active');
+    levelBadge.textContent = '练习';
+
+    renderPractice();
+  }
+
+  function renderPractice() {
+    if (state.practiceIdx >= state.allPractice.length) {
+      finishPractice();
+      return;
+    }
+
+    const p = state.allPractice[state.practiceIdx];
+    state.currentPractice = p;
+
+    let html = `
+      <div class="practice-question">
+        <div class="practice-q-type">${getTypeLabel(p.type)} · 第${state.practiceIdx + 1}/${state.allPractice.length}题</div>
+        <div class="practice-q-text">${p.q}</div>
+    `;
+
+    if (p.type === 'choice') {
+      html += '<div class="practice-options">';
+      p.options.forEach((opt, i) => {
+        html += `<div class="practice-option" data-idx="${i}">${opt}</div>`;
+      });
+      html += '</div>';
+    } else if (p.type === 'fill') {
+      html += `<input class="practice-fill-input" type="text" placeholder="请输入答案" id="fillInput">`;
+      html += `<button class="btn btn-confirm" style="margin-top:8px;width:100%;" id="fillSubmit">确认</button>`;
+    }
+
+    html += `
+        <div class="practice-hint" id="practiceHint">💡 ${p.hint}</div>
+      </div>
+    `;
+
+    practicePanel.innerHTML = html;
+    practicePanel.classList.add('active');
+
+    // 绑定事件
+    if (p.type === 'choice') {
+      practicePanel.querySelectorAll('.practice-option').forEach(opt => {
+        opt.addEventListener('click', function() {
+          const idx = parseInt(this.dataset.idx);
+          handlePracticeAnswer(idx);
+        });
+      });
+    } else if (p.type === 'fill') {
+      const fillSubmit = $('#fillSubmit');
+      if (fillSubmit) {
+        fillSubmit.addEventListener('click', () => {
+          const input = $('#fillInput');
+          if (input) handlePracticeAnswer(input.value.trim());
+        });
+      }
+    }
+  }
+
+  function handlePracticeAnswer(answer) {
+    const p = state.currentPractice;
+    const isCorrect = p.type === 'choice'
+      ? (answer === p.answer)
+      : (answer === p.answer);
+
+    if (isCorrect) {
+      updateScore(5);
+      state.practiceAnswered++;
+      if (p.type === 'choice') {
+        practicePanel.querySelectorAll('.practice-option').forEach((opt, i) => {
+          if (i === p.answer) opt.classList.add('correct');
+        });
+      }
+      setTimeout(() => {
+        state.practiceIdx++;
+        renderPractice();
+      }, 1000);
+    } else {
+      if (p.type === 'choice') {
+        practicePanel.querySelectorAll('.practice-option').forEach((opt, i) => {
+          if (i === answer) opt.classList.add('wrong');
+        });
+      }
+      // 显示提示
+      const hint = $('#practiceHint');
+      if (hint) hint.classList.add('visible');
+
+      setTimeout(() => {
+        if (p.type === 'choice') {
+          // 自动展示正确答案
+          practicePanel.querySelectorAll('.practice-option').forEach((opt, i) => {
+            if (i === p.answer) opt.classList.add('correct');
+          });
+        }
+      }, 1500);
+
+      setTimeout(() => {
+        state.practiceIdx++;
+        renderPractice();
+      }, 2500);
+    }
+  }
+
+  function nextPractice() {
+    // 由renderPractice自动处理
+  }
+
+  function finishPractice() {
+    practicePanel.innerHTML = `
+      <div style="text-align:center;padding:20px;">
+        <div style="font-size:48px;">🏆</div>
+        <div style="font-size:22px;font-weight:700;color:var(--detective-blue);margin:12px 0;">全部完成！</div>
+        <div style="font-size:16px;color:#555;">游戏得分: <b style="font-size:24px;color:var(--gold);">${state.score}</b> 分</div>
+        <div style="font-size:14px;color:#888;margin-top:8px;">练习答题: ${state.practiceAnswered}/${state.allPractice.length}</div>
+        <button class="btn btn-confirm" style="margin-top:16px;" onclick="location.reload()">🔄 再玩一次</button>
+      </div>
+    `;
+    practicePanel.classList.add('active');
+  }
+
+  function getTypeLabel(type) {
+    return type === 'choice' ? '选择题' : '填空题';
+  }
+
+  // ===== 事件绑定 =====
+  btnConfirm.addEventListener('click', onConfirm);
+  btnHint.addEventListener('click', onHint);
+
+  // 卡片事件
+  cardsRow.addEventListener('click', (e) => {
+    const card = e.target.closest('.number-card');
+    if (!card) return;
+    if (state.level === 3 && state.playerChosenNumber === 0) {
+      // 第3关选神秘数字模式
+      onCardClick({ currentTarget: card });
+    } else if (state.level === 3 && state.playerChosenNumber > 0 && !state.selectedTemplate) {
+      // 已选数字但还没选线索，不允许修改
+      return;
+    } else if (!state.levelComplete) {
+      onCardClick({ currentTarget: card });
+    }
+  });
+
+  cardsRow.addEventListener('contextmenu', (e) => {
+    const card = e.target.closest('.number-card');
+    if (!card) return;
+    onCardRightClick({ currentTarget: card, preventDefault: () => {} });
+  });
+
+  // 长按排除（触屏）
+  let longPressTimer;
+  cardsRow.addEventListener('touchstart', (e) => {
+    const card = e.target.closest('.number-card');
+    if (!card) return;
+    longPressTimer = setTimeout(() => {
+      onCardRightClick({ currentTarget: card, preventDefault: () => {} });
+    }, 500);
+  });
+  cardsRow.addEventListener('touchend', () => clearTimeout(longPressTimer));
+  cardsRow.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+
+  // 线索模板按钮事件（委托）
+  clueArea.addEventListener('click', (e) => {
+    const btn = e.target.closest('.clue-template-btn');
+    if (!btn) return;
+    const idx = parseInt(btn.dataset.idx);
+    state.selectedTemplate = idx;
+    clueArea.querySelectorAll('.clue-template-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    btnConfirm.disabled = false;
+  });
+
+  // 动物点击切换
+  animalsRow.addEventListener('click', (e) => {
+    const animal = e.target.closest('.animal');
+    if (!animal) return;
+    const idx = Array.from(animalsRow.children).indexOf(animal);
+    setAnimal(idx);
+  });
+
+  // ===== 初始化 =====
+  initGame();
+})();
+</script>
+</body>
+</html>

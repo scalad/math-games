@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数物连连看 — 1~5数字认识</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(180deg, #1B5E20 0%, #2E7D32 30%, #388E3C 70%, #1B5E20 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 10px;
+  overflow-x: hidden;
+}
+
+/* ===== Main Container ===== */
+.game-container {
+  width: 100%;
+  max-width: 750px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(250,250,245,0.94) 100%);
+  border-radius: 20px;
+  box-shadow: 0 6px 36px rgba(0,0,0,0.5), 0 0 0 3px #C8B89A, 0 0 0 8px #8B7355;
+  padding: 20px 16px 28px;
+  margin-top: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Chalk dust texture overlay */
+.game-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.15) 0%, transparent 50%),
+              radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== Header ===== */
+.game-header {
+  text-align: center;
+  padding: 18px 20px;
+  margin: -20px -16px 18px;
+  background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 50%, #2E7D32 100%);
+  border-radius: 18px 18px 12px 12px;
+  position: relative;
+  z-index: 1;
+}
+.game-header h1 {
+  font-size: 28px;
+  color: #FFF8DC;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.3), 0 0 12px rgba(255,255,255,0.4);
+  letter-spacing: 4px;
+  position: relative;
+}
+.game-header .subtitle {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+  margin-top: 4px;
+  letter-spacing: 2px;
+}
+.header-deco {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 8px;
+  background: linear-gradient(90deg, transparent, #FFD700, #FFA000, #FFD700, transparent);
+  border-radius: 4px;
+}
+
+/* ===== Score & Level Bar ===== */
+.info-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+  border-radius: 14px;
+  margin-bottom: 16px;
+  border: 2px solid #4CAF50;
+  position: relative;
+  z-index: 1;
+  flex-wrap: wrap;
+}
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #1B5E20;
+}
+.info-item .icon { font-size: 20px; }
+.info-value {
+  background: #4CAF50;
+  color: white;
+  padding: 3px 12px;
+  border-radius: 10px;
+  font-size: 17px;
+  min-width: 40px;
+  text-align: center;
+}
+
+/* ===== Level Title ===== */
+.level-title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: #2E7D32;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+  letter-spacing: 2px;
+}
+
+/* ===== Game Area ===== */
+.game-area {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 20px;
+  min-height: 380px;
+  padding: 15px;
+  background: linear-gradient(135deg, #FFFDE7, #FFF9C4);
+  border-radius: 16px;
+  border: 2px dashed #A5D6A7;
+  margin-bottom: 8px;
+}
+
+/* Left Column */
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  justify-content: center;
+}
+
+.left-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px;
+  background: linear-gradient(135deg, #FFFFFF, #F5F5F5);
+  border: 3px solid #BDBDBD;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 28px;
+  min-height: 58px;
+  position: relative;
+  user-select: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.left-item:hover {
+  border-color: #4CAF50;
+  box-shadow: 0 4px 16px rgba(76,175,80,0.3);
+  transform: translateY(-2px);
+}
+.left-item.selected {
+  border-color: #FF9800;
+  background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+  box-shadow: 0 0 0 3px rgba(255,152,0,0.35), 0 4px 16px rgba(255,152,0,0.3);
+  animation: pulse 0.8s ease-in-out infinite;
+}
+.left-item.matched {
+  border-color: #4CAF50;
+  background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+  cursor: default;
+  opacity: 0.75;
+}
+.left-item.matched::after {
+  content: '✓';
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  background: #4CAF50;
+  color: white;
+  border-radius: 50%;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Dots display */
+.left-item.dots-display {
+  font-size: 22px;
+  letter-spacing: 4px;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+/* Right Column */
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  justify-content: center;
+}
+
+.right-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+  margin: 0 auto;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 32px;
+  font-weight: bold;
+  color: white;
+  position: relative;
+  user-select: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.right-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+.right-item.matched {
+  cursor: default;
+  opacity: 0.6;
+  transform: scale(0.9);
+}
+
+/* Number colors */
+.right-item.num-1 { background: linear-gradient(135deg, #FF5252, #FF4081); }
+.right-item.num-2 { background: linear-gradient(135deg, #FF9800, #FF7043); }
+.right-item.num-3 { background: linear-gradient(135deg, #4CAF50, #388E3C); }
+.right-item.num-4 { background: linear-gradient(135deg, #2196F3, #1976D2); }
+.right-item.num-5 { background: linear-gradient(135deg, #9C27B0, #7B1FA2); }
+
+/* ===== SVG Lines Overlay ===== */
+.lines-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.rainbow-line {
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 8 4;
+  animation: dash-flow 0.6s linear infinite;
+}
+
+.error-line {
+  stroke: #FF1744;
+  stroke-width: 4;
+  stroke-linecap: round;
+  animation: error-flash 0.5s ease-out forwards;
+}
+
+@keyframes dash-flow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 24; }
+}
+
+@keyframes error-flash {
+  0% { opacity: 1; stroke-width: 4; }
+  30% { opacity: 1; stroke-width: 6; }
+  100% { opacity: 0; stroke-width: 2; }
+}
+
+/* ===== Hint Area ===== */
+.hint-area {
+  text-align: center;
+  padding: 8px 12px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #757575;
+  min-height: 28px;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s;
+}
+.hint-area.info { color: #1976D2; }
+.hint-area.success { color: #2E7D32; font-weight: bold; }
+.hint-area.error { color: #D32F2F; font-weight: bold; }
+
+/* ===== Buttons ===== */
+.btn-row {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+.btn {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 2px;
+  font-family: inherit;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+.btn:active { transform: translateY(0); }
+.btn-primary {
+  background: linear-gradient(135deg, #4CAF50, #388E3C);
+  color: white;
+}
+.btn-secondary {
+  background: linear-gradient(135deg, #FF9800, #F57C00);
+  color: white;
+}
+.btn-chalk {
+  background: linear-gradient(135deg, #FFF8DC, #FFE4B5);
+  color: #5D3A00;
+  border: 2px solid #C8B89A;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===== Practice Screen ===== */
+.practice-screen {
+  display: none;
+  position: relative;
+  z-index: 1;
+}
+.practice-card {
+  background: linear-gradient(135deg, #FFFFFF, #FFFDE7);
+  border: 3px solid #FFD700;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+.practice-card .pq {
+  font-size: 18px;
+  font-weight: bold;
+  color: #1B5E20;
+  margin-bottom: 14px;
+  text-align: center;
+}
+.practice-card .options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.practice-card .option-btn {
+  padding: 14px 10px;
+  border: 2px solid #BDBDBD;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: bold;
+  color: #333;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.practice-card .option-btn:hover {
+  border-color: #4CAF50;
+  background: #E8F5E9;
+}
+.practice-card .option-btn.correct {
+  border-color: #4CAF50;
+  background: #C8E6C9;
+  color: #2E7D32;
+  animation: correct-pop 0.4s ease;
+}
+.practice-card .option-btn.wrong {
+  border-color: #F44336;
+  background: #FFEBEE;
+  color: #D32F2F;
+  animation: shake 0.4s ease;
+}
+.practice-card .fill-input {
+  width: 100%;
+  padding: 14px;
+  font-size: 20px;
+  text-align: center;
+  border: 3px solid #BDBDBD;
+  border-radius: 12px;
+  font-family: inherit;
+  transition: border-color 0.3s;
+}
+.practice-card .fill-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+.practice-card .fill-submit {
+  display: block;
+  margin: 12px auto 0;
+  padding: 10px 30px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #4CAF50, #388E3C);
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: inherit;
+}
+.practice-card .hint-text {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #FF9800;
+  display: none;
+}
+.practice-card .feedback-text {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: bold;
+}
+.practice-progress {
+  text-align: center;
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+@keyframes correct-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-4px); }
+}
+
+/* ===== End Screen ===== */
+.end-screen {
+  display: none;
+  text-align: center;
+  padding: 30px;
+  position: relative;
+  z-index: 1;
+}
+.end-screen .trophy {
+  font-size: 80px;
+  margin-bottom: 10px;
+}
+.end-screen h2 {
+  font-size: 28px;
+  color: #2E7D32;
+  margin-bottom: 8px;
+}
+.end-screen .final-score {
+  font-size: 48px;
+  font-weight: bold;
+  color: #FF9800;
+  margin: 10px 0;
+}
+.end-screen .stars {
+  font-size: 40px;
+  margin: 10px 0;
+  letter-spacing: 6px;
+}
+.end-screen .summary {
+  font-size: 16px;
+  color: #555;
+  margin: 8px 0;
+}
+
+/* Confetti */
+.confetti {
+  position: fixed;
+  pointer-events: none;
+  z-index: 100;
+  animation: fall linear forwards;
+}
+
+@keyframes fall {
+  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 500px) {
+  .game-area {
+    flex-direction: row;
+    gap: 10px;
+    padding: 10px;
+  }
+  .left-item {
+    font-size: 22px;
+    padding: 8px 4px;
+    min-height: 44px;
+  }
+  .right-item {
+    width: 52px;
+    height: 52px;
+    font-size: 24px;
+  }
+  .game-header h1 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+<div class="game-container" id="app">
+
+  <!-- Header -->
+  <div class="game-header">
+    <h1>数物连连看</h1>
+    <p class="subtitle">1~5 数字认识</p>
+    <div class="header-deco"></div>
+  </div>
+
+  <!-- Info Bar -->
+  <div class="info-bar">
+    <div class="info-item"><span class="icon">⭐</span> 得分 <span class="info-value" id="scoreDisplay">0</span></div>
+    <div class="info-item"><span class="icon">🎯</span> 关卡 <span class="info-value" id="levelDisplay">1/3</span></div>
+    <div class="info-item"><span class="icon">✅</span> 正确 <span class="info-value" id="correctDisplay">0</span></div>
+  </div>
+
+  <!-- Level Title -->
+  <div class="level-title" id="levelTitle">第1关：物品 → 数字</div>
+
+  <!-- Game Area -->
+  <div class="game-area" id="gameArea">
+    <div class="left-column" id="leftColumn"></div>
+    <svg class="lines-svg" id="linesSvg">
+      <defs>
+        <linearGradient id="rainbowGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#FF4081"/>
+          <stop offset="20%" stop-color="#FF9800"/>
+          <stop offset="40%" stop-color="#FFEB3B"/>
+          <stop offset="60%" stop-color="#4CAF50"/>
+          <stop offset="80%" stop-color="#2196F3"/>
+          <stop offset="100%" stop-color="#9C27B0"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <div class="right-column" id="rightColumn"></div>
+  </div>
+
+  <!-- Hint -->
+  <div class="hint-area" id="hintArea">👆 先点击左边的物品，再点击右边的数字</div>
+
+  <!-- Buttons -->
+  <div class="btn-row" id="btnRow">
+    <button class="btn btn-chalk" id="btnReset" onclick="resetLevel()">🔄 重玩本关</button>
+    <button class="btn btn-primary" id="btnPractice" style="display:none" onclick="startPractice()">📝 进入练习</button>
+  </div>
+
+  <!-- Practice Screen -->
+  <div class="practice-screen" id="practiceScreen"></div>
+
+  <!-- End Screen -->
+  <div class="end-screen" id="endScreen">
+    <div class="trophy">🏆</div>
+    <h2>太棒啦！全部完成！</h2>
+    <div class="final-score" id="finalScore">0</div>
+    <div class="stars" id="starsRow">⭐⭐⭐</div>
+    <p class="summary" id="summaryText"></p>
+    <button class="btn btn-primary" onclick="restartGame()" style="margin-top:16px">🔄 再来一次</button>
+  </div>
+
+</div>
+
+<script>
+// ====== 游戏数据 ======
+const gameLevels = [
+  {
+    name: '第1关：物品 → 数字',
+    pairs: [
+      { display: '☀️', value: 1 },
+      { display: '🐦🐦', value: 2 },
+      { display: '🐤🐤🐤', value: 3 },
+      { display: '🐰🐰🐰🐰', value: 4 },
+      { display: '🐴🐴🐴🐴🐴', value: 5 },
+    ],
+    rightValues: [1, 2, 3, 4, 5],
+  },
+  {
+    name: '第2关：点子 → 数字',
+    pairs: [
+      { display: '●', value: 1 },
+      { display: '●●', value: 2 },
+      { display: '●●●', value: 3 },
+      { display: '●●●●', value: 4 },
+      { display: '●●●●●', value: 5 },
+    ],
+    rightValues: [1, 2, 3, 4, 5],
+  },
+  {
+    name: '第3关：含干扰项',
+    pairs: [
+      { display: '●', value: 1 },
+      { display: '●●', value: 2 },
+      { display: '●●●', value: 3 },
+      { display: '●●●●', value: 4 },
+      { display: '●●●●●', value: 5 },
+      { display: '●●', value: 2, distractor: true },
+      { display: '●●●●●●', value: 6, distractor: true },
+    ],
+    rightValues: [1, 2, 3, 4, 5],
+  },
+];
+
+// ====== 自适应练习题目池 ======
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '下面哪个是数字 3？', options: ['1', '2', '3', '4'], answer: 2, hint: '3 像耳朵' },
+    { type: 'choice', q: '图上有几个苹果？🍎🍎🍎', options: ['1个', '2个', '3个', '4个'], answer: 2, hint: '点数：1-2-3，一共3个' },
+    { type: 'choice', q: '数字 5 表示有几个？', options: ['3个', '4个', '5个', '6个'], answer: 2, hint: '伸出5根手指' },
+  ],
+  2: [
+    { type: 'choice', q: '●●●● 表示数字几？', options: ['2', '3', '4', '5'], answer: 2, hint: '4个点=数字4' },
+    { type: 'choice', q: '数字 2 的前面是几？', options: ['0', '1', '3', '4'], answer: 1, hint: '2前面是1' },
+    { type: 'fill', q: '🐤🐤🐤🐤🐤 一共有多少只小鸡？', answer: '5', hint: '点数1-2-3-4-5' },
+  ],
+  3: [
+    { type: 'choice', q: '比 3 大、比 5 小的数是几？', options: ['2', '3', '4', '5'], answer: 2, hint: '3和5中间是4' },
+    { type: 'choice', q: '小兔子有3根🥕，妈妈又给了1根，现在有几根？', options: ['2根', '3根', '4根', '5根'], answer: 2, hint: '3添上1是4' },
+    { type: 'fill', q: '3 添上 1 是几？', answer: '4', hint: '3+1=4' },
+  ],
+  4: [
+    { type: 'choice', q: '下面哪组物品的数量是 4？', options: ['🍎🍎🍎', '🍎🍎🍎🍎', '🍎🍎🍎🍎🍎', '🍎🍎'], answer: 1, hint: '数每组：3,4✓,5,2' },
+    { type: 'choice', q: '按顺序：1、2、__、4、5，空格填几？', options: ['1', '2', '3', '5'], answer: 2, hint: '1-2-3-4-5' },
+    { type: 'fill', q: '数字 5 比数字 2 多几个？', answer: '3', hint: '5-2=3' },
+  ],
+  5: [
+    { type: 'choice', q: '数字 4 可以由哪两个数组成？', options: ['1和3', '2和2', '1和1', '1和3或2和2都对'], answer: 3, hint: '两种都正确' },
+    { type: 'fill', q: '1~5中比3大的数有哪些？（如"4,5"）', answer: '4,5', hint: '4和5' },
+    { type: 'choice', q: '苹果比橙子多2个，橙子1个，苹果几个？', options: ['1个', '2个', '3个', '4个'], answer: 2, hint: '1+2=3' },
+  ],
+};
+
+// ====== 游戏状态 ======
+let currentLevel = 0;          // 0-indexed
+let score = 0;
+let selectedLeftId = null;    // currently selected left item id
+let leftMatchState = {};      // id -> { matched, partnerRightId }
+let rightMatchState = {};     // id -> matched
+let levelMistakes = 0;
+let levelPairsTotal = 0;
+let levelPairsDone = 0;
+let shuffledRight = [];
+let lines = [];               // track SVG line elements
+let gameState = 'playing';    // 'playing' | 'levelComplete' | 'practicing' | 'gameOver'
+
+// ====== DOM refs ======
+const $ = (id) => document.getElementById(id);
+const scoreDisplay = $('scoreDisplay');
+const levelDisplay = $('levelDisplay');
+const correctDisplay = $('correctDisplay');
+const levelTitle = $('levelTitle');
+const gameArea = $('gameArea');
+const leftColumn = $('leftColumn');
+const rightColumn = $('rightColumn');
+const linesSvg = $('linesSvg');
+const hintArea = $('hintArea');
+const btnPractice = $('btnPractice');
+const btnReset = $('btnReset');
+const btnRow = $('btnRow');
+const practiceScreen = $('practiceScreen');
+const endScreen = $('endScreen');
+
+// ====== 工具函数 ======
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function getElementCenter(el, relativeTo) {
+  const elRect = el.getBoundingClientRect();
+  const parentRect = relativeTo.getBoundingClientRect();
+  return {
+    x: elRect.left + elRect.width / 2 - parentRect.left,
+    y: elRect.top + elRect.height / 2 - parentRect.top,
+  };
+}
+
+// ====== SVG 连线 ======
+function drawConnection(leftEl, rightEl, isCorrect) {
+  const leftCenter = getElementCenter(leftEl, gameArea);
+  const rightCenter = getElementCenter(rightEl, gameArea);
+
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', leftCenter.x);
+  line.setAttribute('y1', leftCenter.y);
+  line.setAttribute('x2', rightCenter.x);
+  line.setAttribute('y2', rightCenter.y);
+  line.setAttribute('stroke-width', '4');
+  line.setAttribute('stroke-linecap', 'round');
+
+  if (isCorrect) {
+    line.setAttribute('stroke', 'url(#rainbowGrad)');
+    line.classList.add('rainbow-line');
+  } else {
+    line.setAttribute('stroke', '#FF1744');
+    line.classList.add('error-line');
+  }
+
+  linesSvg.appendChild(line);
+
+  if (!isCorrect) {
+    line.addEventListener('animationend', function() {
+      if (line.parentNode) line.parentNode.removeChild(line);
+    });
+  }
+
+  return line;
+}
+
+// ====== 重新计算所有正确连线的坐标（窗口大小变化时） ======
+function recalculateLines() {
+  const correctLines = linesSvg.querySelectorAll('.rainbow-line');
+  correctLines.forEach((line, i) => {
+    // 找到对应的已匹配的左右元素
+    const leftEl = leftColumn.querySelector(`[data-left-id].matched:nth-of-type(${i + 1})`);
+    // 这个方法不太对，我们通过存储线索引来对应
+  });
+  // 简单做法：删除所有线，在resize后由更高级逻辑重建
+  // 为了简单，这里不做resize重绘。如有需要可以加resize handler
+}
+
+// ====== 提示信息 ======
+function setHint(msg, type) {
+  hintArea.textContent = msg;
+  hintArea.className = 'hint-area';
+  if (type) hintArea.classList.add(type);
+}
+
+// ====== 检查关卡是否完成 ======
+function checkLevelComplete() {
+  const levelData = gameLevels[currentLevel];
+  const totalRight = levelData.rightValues.length;
+
+  const matchedRightCount = Object.values(rightMatchState).filter(v => v).length;
+
+  if (matchedRightCount >= totalRight) {
+    gameState = 'levelComplete';
+    levelPairsDone = matchedRightCount;
+
+    // 加分：全对无错误+30
+    if (levelMistakes === 0) {
+      score += 30;
+      setHint('🎉 太棒了！全对无失误，额外+30分！', 'success');
+    } else {
+      setHint('🎉 本关完成！点击下方按钮进入练习吧~', 'success');
+    }
+    updateScore();
+    btnPractice.style.display = 'inline-block';
+    btnReset.textContent = '🔄 重玩本关';
+  }
+}
+
+// ====== 更新分数显示 ======
+function updateScore() {
+  scoreDisplay.textContent = score;
+  correctDisplay.textContent = Object.values(rightMatchState).filter(v => v).length;
+}
+
+// ====== 处理右侧点击（配对） ======
+function handleRightClick(rightIndex, rightEl) {
+  if (gameState !== 'playing') return;
+  if (selectedLeftId === null) {
+    setHint('👈 请先点击左边的物品哦~', 'info');
+    return;
+  }
+  if (rightMatchState[rightIndex]) {
+    setHint('这个数字已经配对过了~', 'info');
+    return;
+  }
+
+  const levelData = gameLevels[currentLevel];
+  const leftPair = levelData.pairs[selectedLeftId];
+  const rightValue = shuffledRight[rightIndex];
+
+  const leftEl = leftColumn.querySelector(`[data-left-id="${selectedLeftId}"]`);
+
+  // 画线
+  const line = drawConnection(leftEl, rightEl, leftPair.value === rightValue);
+
+  if (leftPair.value === rightValue) {
+    // 正确配对
+    score += 20;
+    leftMatchState[selectedLeftId] = { matched: true, partnerRightId: rightIndex };
+    rightMatchState[rightIndex] = true;
+
+    leftEl.classList.add('matched');
+    leftEl.classList.remove('selected');
+    rightEl.classList.add('matched');
+
+    selectedLeftId = null;
+    setHint('✅ 配对成功！', 'success');
+    updateScore();
+
+    // 配对成功粒子效果
+    spawnParticles(rightEl);
+
+    checkLevelComplete();
+  } else {
+    // 错误配对
+    levelMistakes++;
+    leftEl.classList.remove('selected');
+    selectedLeftId = null;
+    setHint('❌ 不对哦，再试试吧！', 'error');
+
+    // 短线闪红后自动消失（已在drawConnection中处理）
+    // 恢复左项选择状态
+  }
+}
+
+// ====== 处理左侧点击 ======
+function handleLeftClick(leftId, leftEl) {
+  if (gameState !== 'playing') return;
+  if (leftMatchState[leftId] && leftMatchState[leftId].matched) {
+    setHint('这个已经配对过了~', 'info');
+    return;
+  }
+
+  // 如果点击的是已选中的，取消选中
+  if (selectedLeftId === leftId) {
+    leftEl.classList.remove('selected');
+    selectedLeftId = null;
+    setHint('已取消选择，请重新点击左边的物品~', 'info');
+    return;
+  }
+
+  // 取消之前的选中
+  if (selectedLeftId !== null) {
+    const prevEl = leftColumn.querySelector(`[data-left-id="${selectedLeftId}"]`);
+    if (prevEl) prevEl.classList.remove('selected');
+  }
+
+  // 选中当前
+  selectedLeftId = leftId;
+  leftEl.classList.add('selected');
+  setHint('👆 现在点击右边对应的数字吧~', 'info');
+}
+
+// ====== 粒子效果 ======
+function spawnParticles(el) {
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  const colors = ['#FF4081', '#FF9800', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0'];
+
+  for (let i = 0; i < 8; i++) {
+    const particle = document.createElement('div');
+    particle.style.cssText = `
+      position: fixed;
+      left: ${cx}px;
+      top: ${cy}px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      pointer-events: none;
+      z-index: 100;
+      opacity: 1;
+      transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    `;
+    document.body.appendChild(particle);
+
+    requestAnimationFrame(() => {
+      const angle = (Math.PI * 2 * i) / 8;
+      const dist = 40 + Math.random() * 40;
+      particle.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`;
+      particle.style.opacity = '0';
+    });
+
+    setTimeout(() => {
+      if (particle.parentNode) particle.parentNode.removeChild(particle);
+    }, 700);
+  }
+}
+
+// ====== 渲染关卡 ======
+function renderLevel() {
+  const levelData = gameLevels[currentLevel];
+
+  // 重置状态
+  selectedLeftId = null;
+  leftMatchState = {};
+  rightMatchState = {};
+  levelMistakes = 0;
+  levelPairsDone = 0;
+  levelPairsTotal = levelData.rightValues.length;
+  gameState = 'playing';
+
+  // 清空
+  leftColumn.innerHTML = '';
+  rightColumn.innerHTML = '';
+  // 清空SVG线（保留defs）
+  const existingLines = linesSvg.querySelectorAll('line');
+  existingLines.forEach(l => l.remove());
+
+  // 更新UI
+  levelTitle.textContent = levelData.name;
+  levelDisplay.textContent = `${currentLevel + 1}/3`;
+  updateScore();
+  btnPractice.style.display = 'none';
+  endScreen.style.display = 'none';
+  practiceScreen.style.display = 'none';
+  practiceScreen.innerHTML = '';
+  document.querySelector('.game-area').style.display = 'flex';
+  $('btnRow').style.display = 'flex';
+  setHint('👆 先点击左边的物品，再点击右边的数字');
+
+  // 渲染左侧物品
+  levelData.pairs.forEach((pair, i) => {
+    const el = document.createElement('div');
+    el.className = 'left-item';
+    // 如果display以●开头（或者全是●字符），加dots类
+    if (/^●+$/.test(pair.display.trim())) {
+      el.classList.add('dots-display');
+    }
+    el.dataset.leftId = i;
+    el.textContent = pair.display;
+    el.addEventListener('click', () => handleLeftClick(i, el));
+    leftColumn.appendChild(el);
+  });
+
+  // 渲染右侧数字（打乱）
+  shuffledRight = shuffle(levelData.rightValues);
+  shuffledRight.forEach((val, i) => {
+    const el = document.createElement('div');
+    el.className = `right-item num-${val}`;
+    el.dataset.rightId = i;
+    el.dataset.value = val;
+    el.textContent = val;
+    el.addEventListener('click', () => handleRightClick(i, el));
+    rightColumn.appendChild(el);
+  });
+}
+
+// ====== 重置关卡 ======
+function resetLevel() {
+  renderLevel();
+}
+
+// ====== 关卡完成动画 ======
+function showLevelCompleteCelebration() {
+  // 撒花
+  const colors = ['#FF4081', '#FF9800', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0', '#FF5252'];
+  for (let i = 0; i < 30; i++) {
+    setTimeout(() => {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.cssText = `
+        left: ${Math.random() * 100}vw;
+        top: -20px;
+        width: ${8 + Math.random() * 10}px;
+        height: ${8 + Math.random() * 10}px;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+        animation-duration: ${2 + Math.random() * 2}s;
+        animation-delay: 0s;
+      `;
+      document.body.appendChild(confetti);
+      setTimeout(() => {
+        if (confetti.parentNode) confetti.parentNode.removeChild(confetti);
+      }, 4000);
+    }, i * 60);
+  }
+}
+
+// ====== 练习模式 ======
+function startPractice() {
+  if (gameState !== 'levelComplete') return;
+  gameState = 'practicing';
+
+  const levelNum = currentLevel + 1;
+  const problems = practiceProblems[levelNum] || [];
+
+  showLevelCompleteCelebration();
+
+  document.querySelector('.game-area').style.display = 'none';
+  $('btnRow').style.display = 'none';
+  practiceScreen.style.display = 'block';
+  practiceScreen.innerHTML = '';
+
+  if (problems.length === 0) {
+    practiceScreen.innerHTML = '<p style="text-align:center;padding:20px">没有更多练习啦~</p>';
+    showNextLevelButton();
+    return;
+  }
+
+  // 进度
+  const progressEl = document.createElement('div');
+  progressEl.className = 'practice-progress';
+  progressEl.innerHTML = `📝 练习中 | 共 <strong>${problems.length}</strong> 题`;
+  practiceScreen.appendChild(progressEl);
+
+  let currentQ = 0;
+  let totalCorrect = 0;
+
+  function renderQuestion() {
+    if (currentQ >= problems.length) {
+      // 全部完成
+      practiceScreen.innerHTML = '';
+      const resultDiv = document.createElement('div');
+      resultDiv.style.cssText = 'text-align:center;padding:30px;';
+      resultDiv.innerHTML = `
+        <div style="font-size:50px;margin-bottom:10px;">${totalCorrect === problems.length ? '🌟' : '👍'}</div>
+        <p style="font-size:22px;font-weight:bold;color:#2E7D32;">
+          练习完成！答对 ${totalCorrect} / ${problems.length}
+        </p>
+        ${totalCorrect === problems.length ? '<p style="color:#FF9800;">完美！全部答对！</p>' : '<p style="color:#757575;">继续加油哦~</p>'}
+        <div id="nextLevelPracticeBtn"></div>
+      `;
+      practiceScreen.appendChild(resultDiv);
+      showNextLevelButton('nextLevelPracticeBtn');
+      return;
+    }
+
+    const prob = problems[currentQ];
+    const card = document.createElement('div');
+    card.className = 'practice-card';
+    card.id = 'practiceCard';
+
+    const qEl = document.createElement('div');
+    qEl.className = 'pq';
+    qEl.textContent = `第${currentQ + 1}题：${prob.q}`;
+    card.appendChild(qEl);
+
+    const feedbackEl = document.createElement('div');
+    feedbackEl.className = 'feedback-text';
+
+    const hintEl = document.createElement('div');
+    hintEl.className = 'hint-text';
+    hintEl.textContent = '💡 ' + prob.hint;
+
+    if (prob.type === 'choice') {
+      const grid = document.createElement('div');
+      grid.className = 'options-grid';
+
+      prob.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.addEventListener('click', () => {
+          // 禁用所有按钮
+          grid.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+
+          if (idx === prob.answer) {
+            btn.classList.add('correct');
+            feedbackEl.textContent = '✅ 正确！太棒了！';
+            feedbackEl.style.color = '#2E7D32';
+            totalCorrect++;
+          } else {
+            btn.classList.add('wrong');
+            // 高亮正确答案
+            grid.querySelectorAll('.option-btn')[prob.answer].classList.add('correct');
+            feedbackEl.textContent = '❌ 再想想吧~';
+            feedbackEl.style.color = '#D32F2F';
+          }
+          hintEl.style.display = 'block';
+
+          // 延迟进入下一题
+          setTimeout(() => {
+            currentQ++;
+            practiceScreen.innerHTML = '';
+            // 重新渲染进度
+            practiceScreen.appendChild(progressEl);
+            renderQuestion();
+          }, 1200);
+        });
+        grid.appendChild(btn);
+      });
+      card.appendChild(grid);
+    } else if (prob.type === 'fill') {
+      const inputGroup = document.createElement('div');
+      inputGroup.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;';
+
+      const input = document.createElement('input');
+      input.className = 'fill-input';
+      input.type = 'text';
+      input.placeholder = '请输入答案...';
+      inputGroup.appendChild(input);
+
+      const submitBtn = document.createElement('button');
+      submitBtn.className = 'fill-submit';
+      submitBtn.textContent = '提交';
+      submitBtn.addEventListener('click', () => {
+        const userAnswer = input.value.trim();
+        if (!userAnswer) {
+          feedbackEl.textContent = '请先输入答案哦~';
+          feedbackEl.style.color = '#FF9800';
+          return;
+        }
+
+        const correct = checkFillAnswer(userAnswer, prob.answer);
+
+        if (correct) {
+          feedbackEl.textContent = '✅ 正确！太棒了！';
+          feedbackEl.style.color = '#2E7D32';
+          totalCorrect++;
+        } else {
+          feedbackEl.textContent = `❌ 正确答案是：${prob.answer}`;
+          feedbackEl.style.color = '#D32F2F';
+        }
+        hintEl.style.display = 'block';
+        input.disabled = true;
+        submitBtn.disabled = true;
+
+        setTimeout(() => {
+          currentQ++;
+          practiceScreen.innerHTML = '';
+          practiceScreen.appendChild(progressEl);
+          renderQuestion();
+        }, 1200);
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitBtn.click();
+      });
+      inputGroup.appendChild(submitBtn);
+      card.appendChild(inputGroup);
+    }
+
+    card.appendChild(feedbackEl);
+    card.appendChild(hintEl);
+    practiceScreen.appendChild(card);
+  }
+
+  renderQuestion();
+}
+
+function checkFillAnswer(userAnswer, correctAnswer) {
+  const normalized = userAnswer.replace(/，/g, ',').replace(/\s+/g, '');
+  const expected = correctAnswer.replace(/\s+/g, '');
+  return normalized === expected;
+}
+
+function showNextLevelButton(containerId) {
+  const container = containerId ? document.getElementById(containerId) : practiceScreen;
+  if (!container) {
+    // 追加到practiceScreen
+    const div = document.createElement('div');
+    div.style.cssText = 'text-align:center;margin-top:12px;';
+
+    if (currentLevel + 1 < gameLevels.length) {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-primary';
+      btn.textContent = '▶ 下一关';
+      btn.onclick = nextLevel;
+      div.appendChild(btn);
+    } else {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-secondary';
+      btn.textContent = '🏆 查看成绩';
+      btn.onclick = showEndScreen;
+      div.appendChild(btn);
+    }
+    practiceScreen.appendChild(div);
+  } else {
+    if (currentLevel + 1 < gameLevels.length) {
+      container.innerHTML = `<button class="btn btn-primary" onclick="nextLevel()" style="margin-top:12px;">▶ 下一关</button>`;
+    } else {
+      container.innerHTML = `<button class="btn btn-secondary" onclick="showEndScreen()" style="margin-top:12px;">🏆 查看成绩</button>`;
+    }
+  }
+}
+
+function nextLevel() {
+  if (currentLevel + 1 < gameLevels.length) {
+    currentLevel++;
+    // 恢复游戏区域显示
+    document.querySelector('.game-area').style.display = 'flex';
+    $('btnRow').style.display = 'flex';
+    practiceScreen.style.display = 'none';
+    practiceScreen.innerHTML = '';
+    renderLevel();
+  } else {
+    showEndScreen();
+  }
+}
+
+// ====== 结束画面 ======
+function showEndScreen() {
+  gameState = 'gameOver';
+  document.querySelector('.game-area').style.display = 'none';
+  $('btnRow').style.display = 'none';
+  practiceScreen.style.display = 'none';
+  practiceScreen.innerHTML = '';
+  endScreen.style.display = 'block';
+
+  $('finalScore').textContent = score + ' 分';
+
+  // 星级评定
+  const maxScore = 3 * (5 * 20 + 30); // 3关，每关最多130
+  let stars = 1;
+  if (score >= maxScore * 0.9) stars = 3;
+  else if (score >= maxScore * 0.6) stars = 2;
+
+  const starsStr = ['', '⭐', '⭐⭐', '⭐⭐⭐'][stars];
+  $('starsRow').textContent = starsStr;
+
+  const messages = ['继续加油哦！', '很不错！', '太厉害了！你是个数学小天才！'];
+  $('summaryText').textContent = messages[stars - 1];
+
+  // 撒花
+  showLevelCompleteCelebration();
+
+  setHint('🏆 游戏完成！', 'success');
+}
+
+// ====== 重新开始 ======
+function restartGame() {
+  currentLevel = 0;
+  score = 0;
+  endScreen.style.display = 'none';
+  practiceScreen.style.display = 'none';
+  practiceScreen.innerHTML = '';
+  document.querySelector('.game-area').style.display = 'flex';
+  $('btnRow').style.display = 'flex';
+  updateScore();
+  renderLevel();
+}
+
+// ====== 窗口大小变化时重绘连线 ======
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    // 重新计算所有已存在的正确连线
+    const correctLines = linesSvg.querySelectorAll('.rainbow-line');
+    if (correctLines.length === 0) return;
+
+    // 找到所有已匹配的配对并重建连线
+    const matchedPairs = [];
+    for (const [leftId, state] of Object.entries(leftMatchState)) {
+      if (state.matched) {
+        const leftEl = leftColumn.querySelector(`[data-left-id="${leftId}"]`);
+        const rightEl = rightColumn.querySelector(`[data-right-id="${state.partnerRightId}"]`);
+        if (leftEl && rightEl) {
+          matchedPairs.push({ leftEl, rightEl });
+        }
+      }
+    }
+
+    // 清除旧线
+    correctLines.forEach(l => l.remove());
+
+    // 重绘
+    matchedPairs.forEach(({ leftEl, rightEl }) => {
+      const leftCenter = getElementCenter(leftEl, gameArea);
+      const rightCenter = getElementCenter(rightEl, gameArea);
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', leftCenter.x);
+      line.setAttribute('y1', leftCenter.y);
+      line.setAttribute('x2', rightCenter.x);
+      line.setAttribute('y2', rightCenter.y);
+      line.setAttribute('stroke-width', '4');
+      line.setAttribute('stroke-linecap', 'round');
+      line.setAttribute('stroke', 'url(#rainbowGrad)');
+      line.classList.add('rainbow-line');
+      linesSvg.appendChild(line);
+    });
+  }, 200);
+});
+
+// ====== 启动游戏 ======
+renderLevel();
+</script>
+</body>
+</html>

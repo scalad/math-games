@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>数字记忆翻翻乐 - 1~5数字认识</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  background: linear-gradient(180deg, #EDE7F6 0%, #D1C4E9 50%, #B39DDB 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 10px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.game-wrapper {
+  width: 100%;
+  max-width: 500px;
+  background: #FFFFFF;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(124, 77, 255, 0.25);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 95vh;
+}
+
+.game-header {
+  background: linear-gradient(135deg, #7C4DFF 0%, #651FFF 100%);
+  color: #FFFFFF;
+  text-align: center;
+  padding: 16px 20px;
+  position: relative;
+}
+
+.game-header h1 {
+  font-size: 1.5em;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.game-header .subtitle {
+  font-size: 0.8em;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.header-stars {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2em;
+  opacity: 0.4;
+}
+.header-stars.left { left: 12px; }
+.header-stars.right { right: 12px; }
+
+.game-info-bar {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, rgba(124,77,255,0.08), rgba(124,77,255,0.03));
+  border-bottom: 1px solid rgba(124,77,255,0.15);
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #4A148C;
+}
+
+.info-label {
+  opacity: 0.7;
+  font-weight: 400;
+  font-size: 0.8em;
+}
+
+.info-value {
+  font-size: 1.15em;
+  color: #7C4DFF;
+}
+
+.bonus-badge {
+  background: linear-gradient(135deg, #FFD700, #FFA000);
+  color: #4A148C;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7em;
+  font-weight: 700;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.game-board {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+
+.card-grid {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  max-width: 440px;
+  justify-content: center;
+}
+
+/* Dynamic column counts */
+.card-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.card-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.card-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+
+.card {
+  aspect-ratio: 1;
+  perspective: 600px;
+  cursor: pointer;
+  min-width: 60px;
+  min-height: 60px;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card.matched .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.card-back {
+  background: linear-gradient(145deg, #5E35B1 0%, #7C4DFF 40%, #9575CD 100%);
+  border: 3px solid #FFD700;
+  box-shadow: 0 4px 12px rgba(124,77,255,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  z-index: 2;
+}
+
+/* Star pattern on card back */
+.card-back::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, #FFD700 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 80% 20%, #FFD700 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 40% 70%, #FFD700 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 70% 60%, #FFD700 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 15% 80%, #FFD700 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 85% 75%, #FFD700 50%, transparent 50%);
+  background-size: 100% 100%;
+}
+
+.card-back .star-center {
+  font-size: 2em;
+  color: #FFD700;
+  text-shadow: 0 0 8px rgba(255,215,0,0.6);
+  z-index: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.card-front {
+  background: linear-gradient(145deg, #FFF9C4 0%, #FFF8E1 30%, #FFFFFF 100%);
+  border: 3px solid #FFD700;
+  box-shadow: 0 4px 12px rgba(255,215,0,0.25), inset 0 1px 0 rgba(255,255,255,0.8);
+  transform: rotateY(180deg);
+  z-index: 1;
+}
+
+.card.matched .card-front {
+  border-color: #4CAF50;
+  box-shadow: 0 4px 16px rgba(76,175,80,0.35), inset 0 1px 0 rgba(255,255,255,0.8);
+  animation: matchGlow 0.6s ease-out;
+}
+
+@keyframes matchGlow {
+  0% { box-shadow: 0 0 0 0 rgba(76,175,80,0.6); }
+  100% { box-shadow: 0 4px 16px rgba(76,175,80,0.35); }
+}
+
+.card-content {
+  font-size: 1.8em;
+  font-weight: 700;
+  color: #4A148C;
+  text-align: center;
+  line-height: 1.3;
+  word-break: break-all;
+}
+
+/* Smaller content for more cards */
+.cols-5 .card-content { font-size: 1.3em; }
+.cols-4 .card-content { font-size: 1.5em; }
+
+.game-controls {
+  padding: 10px 16px 14px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.95em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.btn-reset {
+  background: linear-gradient(135deg, #FF8A65, #FF7043);
+  color: #FFFFFF;
+  box-shadow: 0 3px 10px rgba(255,112,67,0.3);
+}
+
+.btn-reset:hover { box-shadow: 0 4px 14px rgba(255,112,67,0.4); }
+
+.btn-primary {
+  background: linear-gradient(135deg, #7C4DFF, #651FFF);
+  color: #FFFFFF;
+  box-shadow: 0 3px 10px rgba(124,77,255,0.3);
+}
+
+.btn-primary:hover { box-shadow: 0 4px 14px rgba(124,77,255,0.4); }
+
+.btn-gold {
+  background: linear-gradient(135deg, #FFD700, #FFA000);
+  color: #4A148C;
+  box-shadow: 0 3px 10px rgba(255,160,0,0.3);
+}
+
+.btn-gold:hover { box-shadow: 0 4px 14px rgba(255,160,0,0.4); }
+
+/* Overlay */
+.overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.overlay-content {
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 28px 24px;
+  text-align: center;
+  max-width: 380px;
+  width: 90%;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.overlay-title {
+  font-size: 1.6em;
+  font-weight: 700;
+  color: #7C4DFF;
+  margin-bottom: 8px;
+}
+
+.overlay-icon {
+  font-size: 3em;
+  margin-bottom: 8px;
+}
+
+.overlay-text {
+  color: #555;
+  font-size: 0.95em;
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.score-highlight {
+  display: inline-block;
+  font-size: 1.8em;
+  font-weight: 700;
+  color: #FF6D00;
+  padding: 4px 16px;
+  background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+  border-radius: 12px;
+  margin: 6px 0;
+  animation: bounceIn 0.6s ease;
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.bonus-text {
+  color: #FF8F00;
+  font-weight: 600;
+  font-size: 0.9em;
+  margin: 4px 0;
+}
+
+.overlay-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* Practice Mode */
+.practice-question {
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.practice-q-num {
+  font-size: 0.8em;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.practice-q-text {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.practice-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.practice-option {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #E0E0E0;
+  border-radius: 12px;
+  background: #FAFAFA;
+  font-size: 1em;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.practice-option:hover { border-color: #7C4DFF; background: #F3E5F5; }
+.practice-option:active { transform: scale(0.98); }
+
+.practice-option.correct {
+  border-color: #4CAF50;
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.practice-option.wrong {
+  border-color: #F44336;
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.practice-option.show-correct {
+  border-color: #4CAF50;
+  background: #E8F5E9;
+}
+
+.practice-fill {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.practice-fill input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid #E0E0E0;
+  border-radius: 10px;
+  font-size: 1em;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.practice-fill input:focus {
+  border-color: #7C4DFF;
+}
+
+.practice-feedback {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.practice-feedback.correct-fb {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.practice-feedback.wrong-fb {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.hint-text {
+  margin-top: 4px;
+  font-size: 0.8em;
+  color: #888;
+}
+
+/* Victory */
+.victory-confetti {
+  font-size: 4em;
+  animation: confettiBounce 0.8s ease infinite alternate;
+}
+
+@keyframes confettiBounce {
+  from { transform: translateY(0) rotate(-5deg); }
+  to { transform: translateY(-10px) rotate(5deg); }
+}
+
+.star-row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  font-size: 1.4em;
+  margin: 8px 0;
+}
+
+/* Step tracker */
+.step-indicator {
+  display: flex;
+  gap: 4px;
+  font-size: 0.7em;
+}
+
+.step-indicator .step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #CCC;
+  transition: background 0.3s;
+}
+
+.step-indicator .step-dot.used {
+  background: #FF7043;
+}
+
+.step-indicator .step-dot.min {
+  background: #4CAF50;
+}
+
+/* Responsive */
+@media (max-width: 400px) {
+  .game-header h1 { font-size: 1.2em; }
+  .card-grid { gap: 6px; }
+  .card-content { font-size: 1.4em; }
+  .cols-4 .card-content { font-size: 1.2em; }
+  .cols-5 .card-content { font-size: 1em; }
+  .overlay-content { padding: 20px 16px; }
+}
+
+@media (min-width: 500px) {
+  .card-grid { gap: 12px; }
+  .card-content { font-size: 2em; }
+}
+</style>
+</head>
+<body>
+<div class="game-wrapper">
+  <div class="game-header" style="background: linear-gradient(135deg, #7C4DFF 0%, #651FFF 100%);">
+    <span class="header-stars left">&#9733;&#9733;</span>
+    <h1>数字记忆翻翻乐</h1>
+    <div class="subtitle">1~5 数字认识</div>
+    <span class="header-stars right">&#9733;&#9733;</span>
+  </div>
+
+  <div class="game-info-bar">
+    <div class="info-item">
+      <span class="info-label">关卡</span>
+      <span class="info-value" id="levelDisplay">1 / 3</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">分数</span>
+      <span class="info-value" id="scoreDisplay">0</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">步数</span>
+      <span class="info-value" id="stepsDisplay">0</span>
+    </div>
+  </div>
+
+  <div class="game-board" id="gameBoard">
+    <div class="card-grid" id="cardGrid"></div>
+  </div>
+
+  <div class="game-controls">
+    <button class="btn btn-reset" onclick="restartGame()">&#8634; 重新开始</button>
+  </div>
+</div>
+
+<div id="overlayContainer"></div>
+
+<script>
+// ========== 游戏数据 ==========
+const levelConfigs = [
+  // 第1关：物品图 ↔ 数字 (3对, 6张)
+  {
+    pairs: [
+      ['☀️', '1'],
+      ['🐦🐦', '2'],
+      ['🐤🐤🐤', '3']
+    ]
+  },
+  // 第2关：点子图 ↔ 数字 (4对, 8张)
+  {
+    pairs: [
+      ['●', '1'],
+      ['●●', '2'],
+      ['●●●', '3'],
+      ['●●●●', '4']
+    ]
+  },
+  // 第3关：数字 ↔ 中文读法 (5对, 10张)
+  {
+    pairs: [
+      ['1', '一'],
+      ['2', '二'],
+      ['3', '三'],
+      ['4', '四'],
+      ['5', '五']
+    ]
+  }
+];
+
+const totalLevels = 3;
+
+// ========== 自适应练习题目池 ==========
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '下面哪个是数字 3？', options: ['1', '2', '3', '4'], answer: 2, hint: '3 像耳朵，两个半圆叠起来' },
+    { type: 'choice', q: '图上有几个苹果？🍎🍎🍎', options: ['1个', '2个', '3个', '4个'], answer: 2, hint: '用手指一个一个点数：1-2-3，一共3个' },
+    { type: 'choice', q: '数字 5 表示有几个？', options: ['3个', '4个', '5个', '6个'], answer: 2, hint: '伸出5根手指看看' },
+  ],
+  2: [
+    { type: 'choice', q: '●●●● 表示数字几？', options: ['2', '3', '4', '5'], answer: 2, hint: '数一数：1-2-3-4，4个点=数字4' },
+    { type: 'choice', q: '数字 2 的前面是几？', options: ['0', '1', '3', '4'], answer: 1, hint: '1→2→3→4→5，2前面是1' },
+    { type: 'fill', q: '🐤🐤🐤🐤🐤 一共有多少只小鸡？（写数字）', answer: '5', hint: '点数：1-2-3-4-5' },
+  ],
+  3: [
+    { type: 'choice', q: '比 3 大、比 5 小的数是几？', options: ['2', '3', '4', '5'], answer: 2, hint: '1-2-3-4-5，在3和5中间的是4' },
+    { type: 'choice', q: '小兔子有3根🥕，妈妈又给了1根，现在有几根？', options: ['2根', '3根', '4根', '5根'], answer: 2, hint: '3添上1是4' },
+    { type: 'fill', q: '3 添上 1 是几？（写数字）', answer: '4', hint: '3根小棒，再添1根，数一数：1-2-3-4' },
+  ],
+  4: [
+    { type: 'choice', q: '下面哪组物品的数量是 4？', options: ['🍎🍎🍎', '🍎🍎🍎🍎', '🍎🍎🍎🍎🍎', '🍎🍎'], answer: 1, hint: '数每组：3个, 4个✓, 5个, 2个' },
+    { type: 'choice', q: '按顺序：1、2、__、4、5，空格里填几？', options: ['1', '2', '3', '5'], answer: 2, hint: '1-2-3-4-5，缺3' },
+    { type: 'fill', q: '数字 5 比数字 2 多几个？', answer: '3', hint: '5-2=3' },
+  ],
+  5: [
+    { type: 'choice', q: '数字 4 可以由哪两个数组成？', options: ['1和3', '2和2', '1和1', '1和3或2和2都对'], answer: 3, hint: '1+3=4和2+2=4都正确' },
+    { type: 'fill', q: '1~5中比3大的数有哪些？写出来（如"4,5"）', answer: '4,5', hint: '比3大的：4和5' },
+    { type: 'choice', q: '农场里苹果比橙子多2个，橙子有1个，苹果有几个？', options: ['1个', '2个', '3个', '4个'], answer: 2, hint: '1+2=3个' },
+  ],
+};
+
+// 每关对应的练习组
+const practiceGroupsForLevel = [
+  [1, 2],  // 第1关练习
+  [2, 3],  // 第2关练习
+  [4, 5],  // 第3关练习
+];
+
+// ========== 游戏状态 ==========
+let currentLevel = 0;       // 0-based
+let score = 0;
+let steps = 0;              // 当前关步数
+let flippedCards = [];      // 当前翻开但未配对的卡片元素
+let matchedCount = 0;       // 当前关已配对数
+let isChecking = false;     // 是否正在检查配对
+let totalPairs = 0;         // 当前关总配对数
+
+// ========== DOM引用 ==========
+const levelDisplay = document.getElementById('levelDisplay');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const stepsDisplay = document.getElementById('stepsDisplay');
+const cardGrid = document.getElementById('cardGrid');
+const overlayContainer = document.getElementById('overlayContainer');
+
+// ========== 辅助函数 ==========
+function shuffle(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function updateDisplay() {
+  levelDisplay.textContent = `${currentLevel + 1} / ${totalLevels}`;
+  scoreDisplay.textContent = score;
+  stepsDisplay.textContent = steps;
+}
+
+function getMinSteps() {
+  return totalPairs;
+}
+
+// ========== 卡片创建 ==========
+function createCardEl(content, pairId) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.pairId = pairId;
+  card.dataset.content = content;
+
+  card.innerHTML = `
+    <div class="card-inner">
+      <div class="card-face card-back">
+        <span class="star-center">&#9733;</span>
+      </div>
+      <div class="card-face card-front">
+        <span class="card-content">${content}</span>
+      </div>
+    </div>
+  `;
+
+  card.addEventListener('click', () => flipCard(card));
+  return card;
+}
+
+function buildCards(levelIndex) {
+  const config = levelConfigs[levelIndex];
+  const cards = [];
+
+  config.pairs.forEach((pair, idx) => {
+    cards.push({ content: pair[0], pairId: idx });
+    cards.push({ content: pair[1], pairId: idx });
+  });
+
+  return shuffle(cards);
+}
+
+function renderCards(cards) {
+  cardGrid.innerHTML = '';
+  const cols = cards.length / 2; // 3, 4, or 5
+  cardGrid.className = `card-grid cols-${cols}`;
+
+  cards.forEach(cardData => {
+    const el = createCardEl(cardData.content, cardData.pairId);
+    cardGrid.appendChild(el);
+  });
+}
+
+// ========== 游戏逻辑 ==========
+function flipCard(card) {
+  if (isChecking) return;
+  if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+  if (flippedCards.length >= 2) return;
+
+  card.classList.add('flipped');
+  flippedCards.push(card);
+
+  if (flippedCards.length === 2) {
+    steps++;
+    updateDisplay();
+    checkMatch();
+  }
+}
+
+function checkMatch() {
+  isChecking = true;
+  const [card1, card2] = flippedCards;
+
+  if (card1.dataset.pairId === card2.dataset.pairId) {
+    // 配对成功
+    setTimeout(() => {
+      card1.classList.add('matched');
+      card2.classList.add('matched');
+      flippedCards = [];
+      matchedCount++;
+      score += 20;
+      updateDisplay();
+
+      if (matchedCount === totalPairs) {
+        setTimeout(() => levelComplete(), 500);
+      }
+      isChecking = false;
+    }, 400);
+  } else {
+    // 不匹配，翻回去
+    setTimeout(() => {
+      card1.classList.remove('flipped');
+      card2.classList.remove('flipped');
+      flippedCards = [];
+      isChecking = false;
+    }, 800);
+  }
+}
+
+// ========== 关卡流程 ==========
+function startLevel(levelIndex) {
+  currentLevel = levelIndex;
+  steps = 0;
+  flippedCards = [];
+  matchedCount = 0;
+  isChecking = false;
+  totalPairs = levelConfigs[levelIndex].pairs.length;
+
+  const cards = buildCards(levelIndex);
+  renderCards(cards);
+  updateDisplay();
+}
+
+function levelComplete() {
+  const bonus = steps === getMinSteps() ? 30 : 0;
+  if (bonus > 0) {
+    score += bonus;
+  }
+  updateDisplay();
+
+  showOverlay(`
+    <div class="overlay-icon">&#127881;</div>
+    <div class="overlay-title">第 ${currentLevel + 1} 关完成！</div>
+    <div class="overlay-text">
+      你用了 <strong>${steps}</strong> 步完成配对
+    </div>
+    <div class="score-highlight">+${20 * totalPairs + bonus} 分</div>
+    ${bonus > 0 ? '<div class="bonus-text">&#9733; 最少步数奖励 +30 分！太厉害了！</div>' : '<div class="bonus-text">最少需要' + getMinSteps() + '步，再试一次？</div>'}
+    <div class="overlay-buttons">
+      <button class="btn btn-primary" onclick="enterPracticeMode()">&#128218; 进入练习</button>
+      <button class="btn btn-reset" onclick="restartLevel()">&#8634; 重玩本关</button>
+    </div>
+  `);
+}
+
+function restartLevel() {
+  hideOverlay();
+  score -= 20 * matchedCount;
+  if (steps === matchedCount) score -= 30; // 撤销最少步数奖励
+  if (score < 0) score = 0;
+  startLevel(currentLevel);
+}
+
+// ========== 练习模式 ==========
+let practiceQuestions = [];
+let practiceIndex = 0;
+let practiceCorrect = 0;
+let practiceAnswered = false;
+
+function enterPracticeMode() {
+  hideOverlay();
+
+  const groups = practiceGroupsForLevel[currentLevel];
+  practiceQuestions = [];
+  groups.forEach(g => {
+    practiceQuestions = practiceQuestions.concat(practiceProblems[g] || []);
+  });
+  practiceIndex = 0;
+  practiceCorrect = 0;
+  practiceAnswered = false;
+
+  renderPracticeQuestion();
+}
+
+function renderPracticeQuestion() {
+  if (practiceIndex >= practiceQuestions.length) {
+    showPracticeSummary();
+    return;
+  }
+
+  const q = practiceQuestions[practiceIndex];
+  practiceAnswered = false;
+
+  let optionsHTML = '';
+  if (q.type === 'choice') {
+    optionsHTML = '<div class="practice-options">';
+    q.options.forEach((opt, i) => {
+      optionsHTML += `<button class="practice-option" onclick="answerPractice(${i}, this)">${opt}</button>`;
+    });
+    optionsHTML += '</div>';
+  } else if (q.type === 'fill') {
+    optionsHTML = `
+      <div class="practice-fill">
+        <input type="text" id="fillInput" placeholder="输入答案" autocomplete="off">
+        <button class="btn btn-primary" onclick="submitFillAnswer()">确认</button>
+      </div>
+    `;
+  }
+
+  showOverlay(`
+    <div class="practice-q-num">练习题 ${practiceIndex + 1} / ${practiceQuestions.length}</div>
+    <div class="practice-q-text">${q.q}</div>
+    ${optionsHTML}
+    <div id="practiceFeedback"></div>
+    <div class="overlay-buttons" style="margin-top: 12px;">
+      <button class="btn btn-reset" onclick="skipPractice()" style="font-size:0.8em;">跳过练习</button>
+    </div>
+  `);
+
+  // 聚焦输入框
+  setTimeout(() => {
+    const input = document.getElementById('fillInput');
+    if (input) input.focus();
+  }, 100);
+}
+
+function answerPractice(choiceIndex, btnEl) {
+  if (practiceAnswered) return;
+  practiceAnswered = true;
+
+  const q = practiceQuestions[practiceIndex];
+  const isCorrect = choiceIndex === q.answer;
+
+  if (isCorrect) {
+    practiceCorrect++;
+    btnEl.classList.add('correct');
+  } else {
+    btnEl.classList.add('wrong');
+    // 展示正确答案
+    const allBtns = document.querySelectorAll('.practice-option');
+    if (allBtns[q.answer]) {
+      allBtns[q.answer].classList.add('show-correct');
+    }
+  }
+
+  const fb = document.getElementById('practiceFeedback');
+  fb.innerHTML = `
+    <div class="practice-feedback ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '&#10004; 回答正确！' : '&#10008; 回答错误'}
+      ${!isCorrect ? '<br>正确答案：' + q.options[q.answer] : ''}
+    </div>
+    <div class="hint-text">&#128161; ${q.hint}</div>
+  `;
+
+  // 禁用所有按钮
+  const allBtns = document.querySelectorAll('.practice-option');
+  allBtns.forEach(b => b.disabled = true);
+
+  // 自动进入下一题
+  setTimeout(() => {
+    practiceIndex++;
+    renderPracticeQuestion();
+  }, 2000);
+}
+
+function submitFillAnswer() {
+  if (practiceAnswered) return;
+  const input = document.getElementById('fillInput');
+  if (!input) return;
+
+  const userAnswer = input.value.trim();
+  if (!userAnswer) return;
+
+  practiceAnswered = true;
+  const q = practiceQuestions[practiceIndex];
+
+  const normalized = userAnswer.replace(/\s+/g, '');
+  const expected = q.answer.replace(/\s+/g, '');
+  const isCorrect = normalized === expected;
+
+  if (isCorrect) {
+    practiceCorrect++;
+  }
+
+  const fb = document.getElementById('practiceFeedback');
+  fb.innerHTML = `
+    <div class="practice-feedback ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+      ${isCorrect ? '&#10004; 回答正确！' : '&#10008; 回答错误'}
+      ${!isCorrect ? '<br>正确答案：' + q.answer : ''}
+    </div>
+    <div class="hint-text">&#128161; ${q.hint}</div>
+  `;
+
+  // 禁用确认按钮
+  const submitBtn = document.querySelector('.practice-fill .btn');
+  if (submitBtn) submitBtn.disabled = true;
+  if (input) input.disabled = true;
+
+  // 自动进入下一题
+  setTimeout(() => {
+    practiceIndex++;
+    renderPracticeQuestion();
+  }, 2000);
+}
+
+function skipPractice() {
+  practiceIndex = practiceQuestions.length;
+  hideOverlay();
+  showPracticeSummary();
+}
+
+function showPracticeSummary() {
+  const total = practiceQuestions.length;
+  const ratio = total > 0 ? practiceCorrect / total : 0;
+  let stars = '';
+  if (ratio >= 0.8) stars = '&#9733;&#9733;&#9733;';
+  else if (ratio >= 0.5) stars = '&#9733;&#9733;';
+  else if (ratio > 0) stars = '&#9733;';
+
+  const isLastLevel = currentLevel >= totalLevels - 1;
+
+  showOverlay(`
+    <div class="overlay-icon">${ratio >= 0.8 ? '&#127942;' : '&#128218;'}</div>
+    <div class="overlay-title">练习总结</div>
+    <div class="overlay-text">
+      共 ${total} 题，答对 <strong>${practiceCorrect}</strong> 题
+    </div>
+    <div class="star-row">${stars}</div>
+    <div class="overlay-buttons">
+      ${isLastLevel
+        ? '<button class="btn btn-gold" onclick="showVictory()">&#127881; 查看成绩</button>'
+        : '<button class="btn btn-primary" onclick="nextLevel()">&#9654; 进入第 ' + (currentLevel + 2) + ' 关</button>'}
+      <button class="btn btn-reset" onclick="restartGame()">&#8634; 重新开始</button>
+    </div>
+  `);
+}
+
+function nextLevel() {
+  hideOverlay();
+  startLevel(currentLevel + 1);
+}
+
+function showVictory() {
+  hideOverlay();
+  showOverlay(`
+    <div class="victory-confetti">&#127881;</div>
+    <div class="overlay-icon">&#127942;</div>
+    <div class="overlay-title">恭喜通关！</div>
+    <div class="overlay-text">
+      你完成了所有 ${totalLevels} 关的挑战！
+    </div>
+    <div class="score-highlight">总得分：${score}</div>
+    <div class="star-row">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+    <div class="overlay-buttons">
+      <button class="btn btn-gold" onclick="restartGame()">&#8634; 再玩一次</button>
+    </div>
+  `);
+}
+
+function restartGame() {
+  hideOverlay();
+  score = 0;
+  startLevel(0);
+  updateDisplay();
+}
+
+// ========== 弹窗管理 ==========
+function showOverlay(html) {
+  overlayContainer.innerHTML = `
+    <div class="overlay">
+      <div class="overlay-content">
+        ${html}
+      </div>
+    </div>
+  `;
+}
+
+function hideOverlay() {
+  overlayContainer.innerHTML = '';
+}
+
+// ========== 启动游戏 ==========
+function initGame() {
+  score = 0;
+  updateDisplay();
+  startLevel(0);
+}
+
+// 页面加载完成后自动开始
+document.addEventListener('DOMContentLoaded', initGame);
+</script>
+</body>
+</html>

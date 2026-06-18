@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开心农场打地鼠 - 1~5的认识</title>
+<style>
+:root {
+  --color-primary: #8BC34A;
+  --color-primary-dark: #689F38;
+  --color-bg: #F1F8E9;
+  --color-mole: #A1887F;
+  --color-mole-dark: #6D4C41;
+  --color-text: #33691E;
+  --color-sky: #BBDEFB;
+  --color-grass: #8BC34A;
+  --color-dirt: #795548;
+  --color-sun: #FFC107;
+  --color-cloud: #FFFFFF;
+  --color-correct: #4CAF50;
+  --color-wrong: #F44336;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: var(--color-sky);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(180deg, #BBDEFB 0%, #E3F2FD 50%, #F1F8E9 70%, #C5E1A5 100%);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  padding: 10px;
+}
+
+.game-container {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  background: linear-gradient(180deg, #C8E6C9 0%, #F1F8E9 20%, #A5D6A7 40%, #66BB6A 60%, #43A047 80%, #388E3C 100%);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+}
+
+/* Header */
+.game-header {
+  background: var(--color-primary);
+  color: white;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.game-header .title {
+  font-size: 20px;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+}
+
+.game-header .stats {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.badge {
+  background: rgba(255,255,255,0.25);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge .icon {
+  font-size: 18px;
+}
+
+.score-display {
+  font-size: 22px;
+  font-weight: bold;
+  color: #FFF9C4;
+}
+
+/* Level Indicator */
+.level-indicator {
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.3);
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.level-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  color: #666;
+  transition: all 0.3s;
+}
+
+.level-dot.active {
+  background: #FFC107;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(255,193,7,0.5);
+  transform: scale(1.2);
+}
+
+.level-dot.completed {
+  background: var(--color-correct);
+  color: white;
+}
+
+.level-dot.failed {
+  background: var(--color-wrong);
+  color: white;
+}
+
+/* Question Area */
+.question-area {
+  padding: 12px 20px;
+  text-align: center;
+  background: rgba(255,255,255,0.4);
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.question-text {
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.question-timer {
+  font-size: 28px;
+  font-weight: bold;
+  color: #FF5722;
+  margin-top: 4px;
+  min-height: 36px;
+}
+
+.question-timer.urgent {
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); color: #F44336; }
+}
+
+.question-dots {
+  font-size: 40px;
+  letter-spacing: 6px;
+  line-height: 1.2;
+}
+
+/* Round Progress */
+.round-info {
+  padding: 6px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #33691E;
+  background: rgba(255,255,255,0.25);
+}
+
+.round-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.round-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #E0E0E0;
+  transition: all 0.3s;
+}
+
+.round-dot.done-correct {
+  background: var(--color-correct);
+}
+
+.round-dot.done-wrong {
+  background: var(--color-wrong);
+}
+
+.round-dot.current {
+  background: #FFC107;
+  box-shadow: 0 0 6px #FFC107;
+}
+
+/* Game Area */
+.game-area {
+  position: relative;
+  padding: 20px 10px 30px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Mole Hole */
+.mole-hole {
+  position: relative;
+  width: 100px;
+  height: 130px;
+  flex-shrink: 0;
+}
+
+.mole-hole-inner {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: radial-gradient(ellipse at center, #4E342E 0%, #3E2723 60%, transparent 70%);
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.mole-hole-dirt {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 30px;
+  background: linear-gradient(180deg, #8D6E63 0%, #5D4037 100%);
+  border-radius: 50% 50% 0 0;
+  z-index: 3;
+}
+
+/* Mole Character */
+.mole {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  width: 70px;
+  height: 70px;
+  z-index: 1;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mole.show {
+  transform: translateX(-50%) translateY(-60px);
+}
+
+.mole.hiding {
+  transform: translateX(-50%) translateY(0);
+}
+
+.mole-body {
+  width: 70px;
+  height: 70px;
+  border-radius: 50% 50% 45% 45%;
+  background: linear-gradient(180deg, #BCAAA4 0%, #8D6E63 60%, #6D4C41 100%);
+  position: relative;
+  box-shadow: inset -3px -3px 8px rgba(0,0,0,0.2), 2px 4px 6px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mole Eyes */
+.mole-eyes {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+}
+
+.mole-eye {
+  width: 12px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  position: relative;
+}
+
+.mole-eye::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 7px;
+  background: #333;
+  border-radius: 50%;
+  top: 4px;
+  left: 3px;
+}
+
+/* Mole Nose */
+.mole-nose {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 12px;
+  background: #E91E63;
+  border-radius: 50%;
+}
+
+/* Mole Mouth */
+.mole-mouth {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 6px;
+  border-bottom: 2px solid #5D4037;
+  border-radius: 0 0 50% 50%;
+}
+
+/* Mole Number Badge */
+.mole-number {
+  position: absolute;
+  top: 45px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #FFF9C4;
+  border: 3px solid #FF8F00;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  color: #E65100;
+  z-index: 5;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.mole-hit .mole-body {
+  background: linear-gradient(180deg, #FFCDD2 0%, #EF9A9A 60%, #E57373 100%);
+}
+
+.mole-hit::after {
+  content: '💫';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  animation: starPop 0.5s ease-out forwards;
+  z-index: 10;
+}
+
+@keyframes starPop {
+  0% { opacity: 1; transform: translateX(-50%) scale(0); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.5); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-30px) scale(1); }
+}
+
+.mole-wrong-hit .mole-body {
+  background: linear-gradient(180deg, #B0BEC5 0%, #90A4AE 60%, #78909C 100%);
+}
+
+/* Combo Indicator */
+.combo-indicator {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 50px;
+  font-weight: bold;
+  color: #FF6D00;
+  text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  z-index: 100;
+  pointer-events: none;
+  animation: comboPop 0.8s ease-out forwards;
+}
+
+@keyframes comboPop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1) translateY(-40px); }
+}
+
+/* Feedback Overlay */
+.feedback-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  pointer-events: none;
+  animation: fadeOut 0.8s ease-out forwards;
+}
+
+.feedback-overlay.correct::before {
+  content: '✓';
+  font-size: 100px;
+  color: #4CAF50;
+  text-shadow: 0 4px 12px rgba(76,175,80,0.5);
+  animation: popIn 0.4s ease-out;
+}
+
+.feedback-overlay.wrong::before {
+  content: '✗';
+  font-size: 100px;
+  color: #F44336;
+  text-shadow: 0 4px 12px rgba(244,67,54,0.5);
+  animation: popIn 0.4s ease-out;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fadeOut {
+  0%, 60% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Progress Bar */
+.progress-bar-container {
+  padding: 6px 20px;
+  background: rgba(255,255,255,0.3);
+}
+
+.progress-bar {
+  height: 10px;
+  background: #E0E0E0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8BC34A, #4CAF50, #FFC107);
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+
+/* Buttons */
+.btn-row {
+  padding: 10px 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  box-shadow: 0 3px 8px rgba(104,159,56,0.4);
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--color-primary-dark);
+  border: 2px solid var(--color-primary);
+}
+
+.btn-danger {
+  background: white;
+  color: #F44336;
+  border: 2px solid #F44336;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal {
+  background: white;
+  border-radius: 20px;
+  padding: 30px 24px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal .emoji-large {
+  font-size: 64px;
+  margin-bottom: 10px;
+}
+
+.modal h2 {
+  font-size: 24px;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.modal p {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.modal .score-highlight {
+  font-size: 36px;
+  font-weight: bold;
+  color: #FFC107;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+}
+
+.modal .btn {
+  margin: 6px;
+}
+
+/* Stars */
+.stars {
+  font-size: 40px;
+  margin: 10px 0;
+  letter-spacing: 4px;
+}
+
+.star-empty {
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
+/* Practice Container */
+.practice-container {
+  padding: 15px 20px 20px;
+  background: rgba(255,255,255,0.3);
+}
+
+.practice-container h3 {
+  color: var(--color-text);
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.practice-progress {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.practice-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #E0E0E0;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.practice-dot.correct {
+  background: var(--color-correct);
+  color: white;
+}
+
+.practice-dot.wrong {
+  background: var(--color-wrong);
+  color: white;
+}
+
+.practice-question {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.practice-question .q-text {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.practice-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.practice-option {
+  padding: 14px 10px;
+  font-size: 18px;
+  font-weight: bold;
+  border: 3px solid #E0E0E0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.practice-option:hover {
+  border-color: var(--color-primary);
+  background: #F1F8E9;
+}
+
+.practice-option.selected {
+  border-color: var(--color-primary);
+  background: #C8E6C9;
+}
+
+.practice-option.correct-answer {
+  border-color: #4CAF50;
+  background: #E8F5E9;
+}
+
+.practice-option.wrong-answer {
+  border-color: #F44336;
+  background: #FFEBEE;
+}
+
+.practice-input {
+  width: 120px;
+  padding: 12px;
+  font-size: 24px;
+  text-align: center;
+  border: 3px solid #E0E0E0;
+  border-radius: 12px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.practice-input:focus {
+  border-color: var(--color-primary);
+}
+
+.practice-hint {
+  background: #FFF8E1;
+  border: 1px solid #FFE082;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: #F57F17;
+  line-height: 1.5;
+}
+
+.practice-summary {
+  text-align: center;
+  padding: 10px 0;
+}
+
+.practice-summary .result-stars {
+  font-size: 48px;
+  letter-spacing: 6px;
+  margin: 10px 0;
+}
+
+.practice-summary .stats-row {
+  font-size: 16px;
+  color: #555;
+  margin: 6px 0;
+}
+
+/* Decorative Elements */
+.sun {
+  position: absolute;
+  top: 15px;
+  right: 25px;
+  width: 45px;
+  height: 45px;
+  background: var(--color-sun);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(255,193,7,0.6);
+  z-index: 0;
+}
+
+.cloud {
+  position: absolute;
+  top: 20px;
+  background: var(--color-cloud);
+  border-radius: 30px;
+  height: 28px;
+  opacity: 0.8;
+}
+
+.cloud-1 {
+  left: 30px;
+  width: 80px;
+}
+
+.cloud-2 {
+  left: 140px;
+  top: 35px;
+  width: 60px;
+}
+
+.cloud::before,
+.cloud::after {
+  content: '';
+  background: var(--color-cloud);
+  border-radius: 50%;
+  position: absolute;
+}
+
+.cloud::before {
+  width: 26px;
+  height: 26px;
+  top: -14px;
+  left: 14px;
+}
+
+.cloud::after {
+  width: 20px;
+  height: 20px;
+  top: -10px;
+  right: 12px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .mole-hole {
+    width: 60px;
+    height: 100px;
+  }
+
+  .mole-body {
+    width: 50px;
+    height: 50px;
+  }
+
+  .mole {
+    width: 50px;
+    height: 50px;
+  }
+
+  .mole.show {
+    transform: translateX(-50%) translateY(-45px);
+  }
+
+  .mole-number {
+    width: 24px;
+    height: 24px;
+    font-size: 13px;
+    top: 32px;
+  }
+
+  .mole-eyes {
+    top: 10px;
+    gap: 8px;
+  }
+
+  .mole-eye {
+    width: 9px;
+    height: 10px;
+  }
+
+  .mole-eye::after {
+    width: 4px;
+    height: 5px;
+    top: 3px;
+    left: 2px;
+  }
+
+  .mole-nose {
+    top: 20px;
+    width: 12px;
+    height: 9px;
+  }
+
+  .mole-mouth {
+    top: 30px;
+    width: 14px;
+    height: 5px;
+  }
+
+  .mole-hole-dirt {
+    width: 60px;
+    height: 24px;
+  }
+
+  .mole-hole-inner {
+    height: 40px;
+  }
+
+  .game-area {
+    gap: 6px;
+    padding: 15px 5px 25px;
+  }
+
+  .question-text {
+    font-size: 18px;
+  }
+
+  .game-header {
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+
+  .game-header .title {
+    font-size: 16px;
+  }
+
+  .practice-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 360px) {
+  .mole-hole {
+    width: 48px;
+    height: 85px;
+  }
+
+  .mole-body {
+    width: 42px;
+    height: 42px;
+  }
+
+  .mole {
+    width: 42px;
+    height: 42px;
+  }
+
+  .mole.show {
+    transform: translateX(-50%) translateY(-38px);
+  }
+
+  .mole-number {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    top: 26px;
+  }
+
+  .mole-eyes {
+    top: 8px;
+    gap: 6px;
+  }
+
+  .mole-eye {
+    width: 7px;
+    height: 8px;
+  }
+
+  .mole-eye::after {
+    width: 3px;
+    height: 4px;
+    top: 2px;
+    left: 1.5px;
+  }
+
+  .mole-nose {
+    top: 16px;
+    width: 10px;
+    height: 7px;
+  }
+
+  .mole-mouth {
+    top: 24px;
+    width: 12px;
+    height: 4px;
+  }
+
+  .mole-hole-dirt {
+    width: 50px;
+    height: 20px;
+  }
+
+  .mole-hole-inner {
+    height: 35px;
+  }
+
+  .game-area {
+    gap: 3px;
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+</style>
+</head>
+<body>
+
+<div class="game-container" id="gameContainer">
+  <!-- Decorative Sun and Clouds -->
+  <div class="sun"></div>
+  <div class="cloud cloud-1"></div>
+  <div class="cloud cloud-2"></div>
+
+  <!-- Header -->
+  <div class="game-header">
+    <span class="title">🐹 开心农场打地鼠</span>
+    <div class="stats">
+      <span class="badge"><span class="icon">⭐</span> <span id="starCount">0</span></span>
+      <span class="score-display">🏆 <span id="scoreDisplay">0</span> 分</span>
+    </div>
+  </div>
+
+  <!-- Level Indicator -->
+  <div class="level-indicator" id="levelIndicator">
+    <div class="level-dot" data-lvl="1">1</div>
+    <div class="level-dot" data-lvl="2">2</div>
+    <div class="level-dot" data-lvl="3">3</div>
+  </div>
+
+  <!-- Question Area -->
+  <div class="question-area" id="questionArea">
+    <div class="question-text" id="questionText">准备开始...</div>
+    <div class="question-timer hidden" id="questionTimer"></div>
+  </div>
+
+  <!-- Round Progress -->
+  <div class="round-info" id="roundInfo">
+    <span style="margin-right:8px;">本轮:</span>
+    <div class="round-dots" id="roundDots">
+      <div class="round-dot current"></div>
+      <div class="round-dot"></div>
+      <div class="round-dot"></div>
+    </div>
+    <span id="roundStatus" style="margin-left:8px;font-size:13px;">答对 0/3</span>
+  </div>
+
+  <!-- Game Area: 5 Mole Holes -->
+  <div class="game-area" id="gameArea">
+    <div class="mole-hole" data-index="0">
+      <div class="mole" id="mole0"><div class="mole-body">
+        <div class="mole-eyes"><div class="mole-eye"></div><div class="mole-eye"></div></div>
+        <div class="mole-nose"></div>
+        <div class="mole-mouth"></div>
+      </div><div class="mole-number hidden" id="moleNum0"></div></div>
+      <div class="mole-hole-dirt"></div>
+      <div class="mole-hole-inner"></div>
+    </div>
+    <div class="mole-hole" data-index="1">
+      <div class="mole" id="mole1"><div class="mole-body">
+        <div class="mole-eyes"><div class="mole-eye"></div><div class="mole-eye"></div></div>
+        <div class="mole-nose"></div>
+        <div class="mole-mouth"></div>
+      </div><div class="mole-number hidden" id="moleNum1"></div></div>
+      <div class="mole-hole-dirt"></div>
+      <div class="mole-hole-inner"></div>
+    </div>
+    <div class="mole-hole" data-index="2">
+      <div class="mole" id="mole2"><div class="mole-body">
+        <div class="mole-eyes"><div class="mole-eye"></div><div class="mole-eye"></div></div>
+        <div class="mole-nose"></div>
+        <div class="mole-mouth"></div>
+      </div><div class="mole-number hidden" id="moleNum2"></div></div>
+      <div class="mole-hole-dirt"></div>
+      <div class="mole-hole-inner"></div>
+    </div>
+    <div class="mole-hole" data-index="3">
+      <div class="mole" id="mole3"><div class="mole-body">
+        <div class="mole-eyes"><div class="mole-eye"></div><div class="mole-eye"></div></div>
+        <div class="mole-nose"></div>
+        <div class="mole-mouth"></div>
+      </div><div class="mole-number hidden" id="moleNum3"></div></div>
+      <div class="mole-hole-dirt"></div>
+      <div class="mole-hole-inner"></div>
+    </div>
+    <div class="mole-hole" data-index="4">
+      <div class="mole" id="mole4"><div class="mole-body">
+        <div class="mole-eyes"><div class="mole-eye"></div><div class="mole-eye"></div></div>
+        <div class="mole-nose"></div>
+        <div class="mole-mouth"></div>
+      </div><div class="mole-number hidden" id="moleNum4"></div></div>
+      <div class="mole-hole-dirt"></div>
+      <div class="mole-hole-inner"></div>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar-container">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+    </div>
+  </div>
+
+  <!-- Button Row -->
+  <div class="btn-row" id="btnRow">
+    <button class="btn btn-secondary hidden" id="restartBtn" onclick="restartGame()">🔄 重新开始</button>
+  </div>
+
+  <!-- Practice Container (hidden initially) -->
+  <div class="practice-container hidden" id="practiceContainer">
+    <h3>📝 自适应练习</h3>
+    <div class="practice-progress" id="practiceProgress"></div>
+    <div class="practice-question" id="practiceQuestionArea">
+      <div class="q-text" id="practiceQText"></div>
+      <div id="practiceOptionsArea"></div>
+    </div>
+    <div class="practice-hint hidden" id="practiceHint"></div>
+    <div class="btn-row" id="practiceBtnRow">
+      <button class="btn btn-primary hidden" id="practiceNextBtn" onclick="showNextPracticeQuestion()">下一题 ➡️</button>
+      <button class="btn btn-secondary hidden" id="practiceSummaryBtn" onclick="showPracticeSummary()">查看总结 📊</button>
+    </div>
+  </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+// ==================== GAME STATE ====================
+const state = {
+  level: 1,
+  round: 1,
+  score: 0,
+  stars: 0,
+  combo: 0,
+  comboMultiplier: 1,
+  correctCount: 0,
+  roundResults: [],
+  totalLevels: 3,
+  questionsPerLevel: 3,
+  currentTarget: null,
+  molesVisible: [],
+  timerInterval: null,
+  timeLeft: 0,
+  isPlaying: false,
+  gameOver: false,
+  practiceIndex: 0,
+  practiceResults: [],
+  practiceQuestions: [],
+};
+
+// Level config
+const levelConfig = {
+  1: { moleCount: 3, timeLimit: 0, hintType: 'text' },
+  2: { moleCount: 4, timeLimit: 8, hintType: 'dots' },
+  3: { moleCount: 5, timeLimit: 5, hintType: 'mixed' },
+};
+
+// ==================== PRACTICE PROBLEMS ====================
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '下面哪个是数字 3？', options: ['1', '2', '3', '4'], answer: 2, hint: '3 像耳朵，两个半圆叠起来' },
+    { type: 'choice', q: '图上有几个苹果？🍎🍎🍎', options: ['1个', '2个', '3个', '4个'], answer: 2, hint: '用手指一个一个点数：1-2-3，一共3个' },
+    { type: 'choice', q: '数字 5 表示有几个？', options: ['3个', '4个', '5个', '6个'], answer: 2, hint: '伸出5根手指看看，数字5就是5个东西' },
+  ],
+  2: [
+    { type: 'choice', q: '●●●● 表示数字几？', options: ['2', '3', '4', '5'], answer: 2, hint: '数一数有几个圆点：1-2-3-4，4个点=数字4' },
+    { type: 'choice', q: '数字 2 的前面是几？', options: ['0', '1', '3', '4'], answer: 1, hint: '从1数到5：1→2→3→4→5，2前面是1' },
+    { type: 'fill', q: '🐤🐤🐤🐤🐤 一共有多少只小鸡？（写数字）', answer: '5', hint: '一排小鸡，点数：1-2-3-4-5，一共5只' },
+  ],
+  3: [
+    { type: 'choice', q: '比 3 大、比 5 小的数是几？', options: ['2', '3', '4', '5'], answer: 2, hint: '1-2-3-4-5，在3和5中间的是4' },
+    { type: 'choice', q: '小兔子有3根🥕，妈妈又给了1根，现在有几根？', options: ['2根', '3根', '4根', '5根'], answer: 2, hint: '原来3根，又加1根，3添上1是4' },
+    { type: 'fill', q: '3 添上 1 是几？（写数字）', answer: '4', hint: '3根小棒，再添1根，数一数：1-2-3-4' },
+  ],
+  4: [
+    { type: 'choice', q: '下面哪组物品的数量是 4？', options: ['🍎🍎🍎', '🍎🍎🍎🍎', '🍎🍎🍎🍎🍎', '🍎🍎'], answer: 1, hint: '数一数每组：第一组3个, 第二组4个, 第三组5个, 第四组2个' },
+    { type: 'choice', q: '按顺序：1、2、__、4、5，空格里填几？', options: ['1', '2', '3', '5'], answer: 2, hint: '从1数到5：1-2-3-4-5，缺少的是3' },
+    { type: 'fill', q: '数字 5 比数字 2 多几个？（写数字）', answer: '3', hint: '5-2=3，多3个' },
+  ],
+  5: [
+    { type: 'choice', q: '数字 4 可以由哪两个数组成？（选最完整的答案）', options: ['1和3', '2和2', '1和1', '1和3或2和2都对'], answer: 3, hint: '1+3=4 ✓  2+2=4 ✓  两种都正确！' },
+    { type: 'fill', q: '用数字1~5，比3大的数有哪些？写出来（用逗号，如"4,5"）', answer: '4,5', hint: '1~5中比3大的：4和5' },
+    { type: 'choice', q: '农场里苹果比橙子多2个，橙子有1个，苹果有几个？', options: ['1个', '2个', '3个', '4个'], answer: 2, hint: '橙子=1个，苹果=1+2=3个' },
+  ],
+};
+
+// ==================== DOM REFS ====================
+const $ = id => document.getElementById(id);
+const dom = {
+  scoreDisplay: $('scoreDisplay'),
+  starCount: $('starCount'),
+  questionText: $('questionText'),
+  questionTimer: $('questionTimer'),
+  gameArea: $('gameArea'),
+  roundDots: $('roundDots'),
+  roundStatus: $('roundStatus'),
+  levelIndicator: $('levelIndicator'),
+  progressFill: $('progressFill'),
+  restartBtn: $('restartBtn'),
+  practiceContainer: $('practiceContainer'),
+  practiceProgress: $('practiceProgress'),
+  practiceQText: $('practiceQText'),
+  practiceOptionsArea: $('practiceOptionsArea'),
+  practiceHint: $('practiceHint'),
+  practiceNextBtn: $('practiceNextBtn'),
+  practiceSummaryBtn: $('practiceSummaryBtn'),
+  practiceBtnRow: $('practiceBtnRow'),
+  modalOverlay: $('modalOverlay'),
+  modalContent: $('modalContent'),
+  questionArea: $('questionArea'),
+};
+
+// ==================== AUDIO ====================
+function speakNumber(num) {
+  if (!window.speechSynthesis) return;
+  const utterance = new SpeechSynthesisUtterance(num.toString());
+  utterance.lang = 'zh-CN';
+  utterance.rate = 0.8;
+  utterance.pitch = 1.1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+// ==================== MOLE MANAGEMENT ====================
+function hideAllMoles() {
+  for (let i = 0; i < 5; i++) {
+    const mole = document.getElementById('mole' + i);
+    const numBadge = document.getElementById('moleNum' + i);
+    mole.classList.remove('show', 'hiding', 'mole-hit', 'mole-wrong-hit');
+    numBadge.classList.add('hidden');
+    numBadge.textContent = '';
+    mole.querySelector('.mole-body').style.pointerEvents = 'auto';
+  }
+  state.molesVisible = [];
+}
+
+function showMoles(config) {
+  hideAllMoles();
+  const { moleCount } = config;
+  const numbers = [1, 2, 3, 4, 5];
+
+  // Pick random positions
+  const positions = [];
+  const allPositions = [0, 1, 2, 3, 4];
+  while (positions.length < moleCount) {
+    const r = Math.floor(Math.random() * allPositions.length);
+    const pos = allPositions.splice(r, 1)[0];
+    positions.push(pos);
+  }
+
+  // Assign numbers (ensuring target is present)
+  const target = state.currentTarget;
+  const otherNumbers = numbers.filter(n => n !== target);
+  const assignedNumbers = [];
+
+  // Make sure at least the target number is on one mole
+  const targetPos = Math.floor(Math.random() * moleCount);
+  for (let i = 0; i < moleCount; i++) {
+    if (i === targetPos) {
+      assignedNumbers.push(target);
+    } else {
+      const r = Math.floor(Math.random() * otherNumbers.length);
+      assignedNumbers.push(otherNumbers[r]);
+    }
+  }
+
+  // Shuffle
+  for (let i = assignedNumbers.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [assignedNumbers[i], assignedNumbers[j]] = [assignedNumbers[j], assignedNumbers[i]];
+  }
+
+  // Assign to moles
+  const molesData = [];
+  for (let i = 0; i < moleCount; i++) {
+    const mole = document.getElementById('mole' + positions[i]);
+    const numBadge = document.getElementById('moleNum' + positions[i]);
+    numBadge.textContent = assignedNumbers[i];
+    numBadge.classList.remove('hidden');
+    mole.classList.add('show');
+    molesData.push({ index: positions[i], number: assignedNumbers[i] });
+  }
+
+  state.molesVisible = molesData;
+}
+
+// ==================== RENDER QUESTION ====================
+function renderQuestion() {
+  const config = levelConfig[state.level];
+  const target = Math.floor(Math.random() * 5) + 1;
+  state.currentTarget = target;
+
+  // Generate hint based on type
+  let hintText = '';
+  const hintType = config.hintType === 'mixed'
+    ? (Math.random() < 0.5 ? 'text' : 'dots')
+    : config.hintType;
+
+  if (hintType === 'text') {
+    hintText = `找数字 <span style="font-size:36px;color:#FF5722;">${target}</span>！`;
+  } else {
+    hintText = '<span class="question-dots">' + '●'.repeat(target) + '</span> 是几？';
+  }
+
+  dom.questionText.innerHTML = hintText;
+
+  // Timer
+  clearInterval(state.timerInterval);
+  if (config.timeLimit > 0) {
+    state.timeLeft = config.timeLimit;
+    dom.questionTimer.classList.remove('hidden');
+    dom.questionTimer.classList.remove('urgent');
+    dom.questionTimer.textContent = `⏱ ${state.timeLeft}秒`;
+    state.timerInterval = setInterval(() => {
+      state.timeLeft--;
+      dom.questionTimer.textContent = `⏱ ${state.timeLeft}秒`;
+      if (state.timeLeft <= 3) {
+        dom.questionTimer.classList.add('urgent');
+      }
+      if (state.timeLeft <= 0) {
+        clearInterval(state.timerInterval);
+        handleTimeout();
+      }
+    }, 1000);
+  } else {
+    dom.questionTimer.classList.add('hidden');
+    dom.questionTimer.classList.remove('urgent');
+  }
+
+  // Speak target for level 1
+  if (state.level === 1) {
+    setTimeout(() => speakNumber(target), 300);
+  }
+
+  // Show moles
+  showMoles(config);
+  state.isPlaying = true;
+
+  // Update round dots
+  updateRoundDots();
+}
+
+function updateRoundDots() {
+  const dots = dom.roundDots.children;
+  for (let i = 0; i < dots.length; i++) {
+    dots[i].className = 'round-dot';
+    if (state.roundResults.length > i) {
+      dots[i].classList.add(state.roundResults[i] ? 'done-correct' : 'done-wrong');
+    }
+    if (i === state.round - 1 && state.roundResults.length < state.round) {
+      dots[i].classList.add('current');
+    }
+  }
+  dom.roundStatus.textContent = `答对 ${state.correctCount}/${state.questionsPerLevel}`;
+}
+
+function updateProgress() {
+  const totalQuestions = state.totalLevels * state.questionsPerLevel;
+  const completedQuestions = (state.level - 1) * state.questionsPerLevel + state.round - 1;
+  const percentage = Math.round((completedQuestions / totalQuestions) * 100);
+  dom.progressFill.style.width = Math.min(percentage, 100) + '%';
+}
+
+// ==================== HANDLE ANSWER ====================
+function handleAnswer(moleIndex) {
+  if (!state.isPlaying || state.gameOver) return;
+
+  const moleData = state.molesVisible.find(m => m.index === moleIndex);
+  if (!moleData) return;
+
+  const mole = document.getElementById('mole' + moleIndex);
+  const isCorrect = moleData.number === state.currentTarget;
+
+  // Visual feedback
+  if (isCorrect) {
+    mole.classList.add('mole-hit');
+    showFeedback(true);
+    state.combo++;
+    state.comboMultiplier = Math.min(state.combo, 5);
+    state.correctCount++;
+    const points = 10 * state.comboMultiplier;
+    state.score += points;
+
+    if (state.comboMultiplier > 1) {
+      showCombo(state.comboMultiplier);
+    }
+  } else {
+    mole.classList.add('mole-wrong-hit');
+    showFeedback(false);
+    state.combo = 0;
+    state.comboMultiplier = 1;
+  }
+
+  state.isPlaying = false;
+  clearInterval(state.timerInterval);
+  state.roundResults.push(isCorrect);
+  updateUI();
+  updateProgress();
+
+  // Advance round
+  setTimeout(() => {
+    if (state.round >= state.questionsPerLevel) {
+      finishLevel();
+    } else {
+      state.round++;
+      renderQuestion();
+    }
+  }, 800);
+}
+
+function handleTimeout() {
+  if (!state.isPlaying) return;
+  state.isPlaying = false;
+  clearInterval(state.timerInterval);
+  showFeedback(false);
+  state.combo = 0;
+  state.comboMultiplier = 1;
+  state.roundResults.push(false);
+
+  // Flash correct mole
+  const correctMoleData = state.molesVisible.find(m => m.number === state.currentTarget);
+  if (correctMoleData) {
+    const mole = document.getElementById('mole' + correctMoleData.index);
+    mole.querySelector('.mole-body').style.border = '4px solid #4CAF50';
+    setTimeout(() => {
+      mole.querySelector('.mole-body').style.border = 'none';
+    }, 600);
+  }
+
+  updateUI();
+  updateProgress();
+
+  setTimeout(() => {
+    if (state.round >= state.questionsPerLevel) {
+      finishLevel();
+    } else {
+      state.round++;
+      renderQuestion();
+    }
+  }, 1000);
+}
+
+// ==================== UI UPDATES ====================
+function updateUI() {
+  dom.scoreDisplay.textContent = state.score;
+  dom.starCount.textContent = state.stars;
+  updateRoundDots();
+}
+
+// ==================== FEEDBACK ====================
+function showFeedback(isCorrect) {
+  const overlay = document.createElement('div');
+  overlay.className = 'feedback-overlay ' + (isCorrect ? 'correct' : 'wrong');
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 900);
+}
+
+function showCombo(multiplier) {
+  const combo = document.createElement('div');
+  combo.className = 'combo-indicator';
+  combo.textContent = `连击×${multiplier}！`;
+  document.body.appendChild(combo);
+  setTimeout(() => combo.remove(), 900);
+}
+
+// ==================== MODAL ====================
+function showModal(html) {
+  dom.modalContent.innerHTML = html;
+  dom.modalOverlay.classList.remove('hidden');
+}
+
+function hideModal() {
+  dom.modalOverlay.classList.add('hidden');
+}
+
+// ==================== LEVEL PROGRESSION ====================
+function finishLevel() {
+  hideAllMoles();
+  clearInterval(state.timerInterval);
+  state.isPlaying = false;
+
+  const passed = state.correctCount >= 2;
+  const config = levelConfig[state.level];
+
+  // Update level indicator
+  const levelDots = dom.levelIndicator.children;
+  levelDots[state.level - 1].classList.remove('active');
+  levelDots[state.level - 1].classList.add(passed ? 'completed' : 'failed');
+
+  if (passed) {
+    state.stars++;
+    dom.starCount.textContent = state.stars;
+  }
+
+  if (passed && state.level < state.totalLevels) {
+    // Show level complete modal
+    showModal(`
+      <div class="emoji-large">🎉</div>
+      <h2>第 ${state.level} 关通过！</h2>
+      <p>本轮答对 <b>${state.correctCount}/${state.questionsPerLevel}</b> 题</p>
+      <p class="score-highlight">🏆 ${state.score} 分</p>
+      <div class="stars">${getStarsHTML(state.stars)}</div>
+      <button class="btn btn-primary" onclick="startNextLevel()">进入第 ${state.level + 1} 关 ➡️</button>
+    `);
+  } else if (passed && state.level >= state.totalLevels) {
+    // Victory!
+    showVictory();
+  } else {
+    // Failed level
+    showModal(`
+      <div class="emoji-large">😅</div>
+      <h2>第 ${state.level} 关未通过</h2>
+      <p>本轮只答对 <b>${state.correctCount}/${state.questionsPerLevel}</b> 题</p>
+      <p>需要答对至少 2 题才能过关哦！</p>
+      <p style="color:#666;">提示：仔细看题目标数字或点子数量</p>
+      <button class="btn btn-primary" onclick="retryLevel()">🔄 重新挑战第 ${state.level} 关</button>
+      <button class="btn btn-secondary" onclick="restartGame()">🏠 重新开始</button>
+    `);
+  }
+}
+
+function getStarsHTML(count) {
+  let html = '';
+  for (let i = 0; i < 3; i++) {
+    html += i < count ? '⭐' : '<span class="star-empty">⭐</span>';
+  }
+  return html;
+}
+
+function startNextLevel() {
+  hideModal();
+  state.level++;
+  state.round = 1;
+  state.correctCount = 0;
+  state.roundResults = [];
+  state.combo = 0;
+  state.comboMultiplier = 1;
+
+  // Update level indicator
+  const levelDots = dom.levelIndicator.children;
+  for (let i = 0; i < state.totalLevels; i++) {
+    levelDots[i].classList.remove('active');
+  }
+  levelDots[state.level - 1].classList.add('active');
+
+  updateProgress();
+  updateRoundDots();
+  renderQuestion();
+}
+
+function retryLevel() {
+  hideModal();
+  state.round = 1;
+  state.correctCount = 0;
+  state.roundResults = [];
+  state.combo = 0;
+  state.comboMultiplier = 1;
+
+  // Reset level indicator dots
+  const levelDots = dom.levelIndicator.children;
+  levelDots[state.level - 1].classList.remove('failed', 'completed');
+  levelDots[state.level - 1].classList.add('active');
+
+  updateRoundDots();
+  renderQuestion();
+}
+
+// ==================== VICTORY ====================
+function showVictory() {
+  hideAllMoles();
+  clearInterval(state.timerInterval);
+  state.isPlaying = false;
+  state.gameOver = true;
+
+  const levelDots = dom.levelIndicator.children;
+  for (let i = 0; i < state.totalLevels; i++) {
+    levelDots[i].classList.add('completed');
+  }
+  dom.progressFill.style.width = '100%';
+
+  showModal(`
+    <div class="emoji-large">🏆</div>
+    <h2>全部通关！太棒了！</h2>
+    <p>你完成了全部 ${state.totalLevels} 关！</p>
+    <p class="score-highlight">🏆 ${state.score} 分</p>
+    <div class="stars">${getStarsHTML(state.stars)}</div>
+    <p style="margin-top:10px;">获得 ${state.stars} 颗星星</p>
+    <button class="btn btn-primary" onclick="enterPracticeMode()">📝 继续练习巩固</button>
+    <button class="btn btn-secondary" onclick="restartGame()">🔄 再玩一次</button>
+  `);
+}
+
+// ==================== RESTART ====================
+function restartGame() {
+  hideModal();
+  hideAllMoles();
+  clearInterval(state.timerInterval);
+
+  state.level = 1;
+  state.round = 1;
+  state.score = 0;
+  state.stars = 0;
+  state.combo = 0;
+  state.comboMultiplier = 1;
+  state.correctCount = 0;
+  state.roundResults = [];
+  state.isPlaying = false;
+  state.gameOver = false;
+  state.practiceIndex = 0;
+  state.practiceResults = [];
+  state.practiceQuestions = [];
+
+  dom.scoreDisplay.textContent = '0';
+  dom.starCount.textContent = '0';
+  dom.progressFill.style.width = '0%';
+  dom.practiceContainer.classList.add('hidden');
+
+  // Reset level dots
+  const levelDots = dom.levelIndicator.children;
+  for (let i = 0; i < state.totalLevels; i++) {
+    levelDots[i].classList.remove('active', 'completed', 'failed');
+  }
+  levelDots[0].classList.add('active');
+
+  dom.restartBtn.classList.add('hidden');
+  updateRoundDots();
+  renderQuestion();
+}
+
+// ==================== PRACTICE MODE ====================
+function enterPracticeMode() {
+  hideModal();
+  state.practiceIndex = 0;
+  state.practiceResults = [];
+  state.practiceQuestions = [];
+
+  // Collect questions based on performance
+  // If stars = 3, give level 4-5 questions; if 2, give level 2-3; if 1, give level 1-2
+  let targetLevel = state.stars >= 3 ? 4 : state.stars >= 2 ? 2 : 1;
+  let allQuestions = [];
+
+  // Add questions from target level and adjacent levels
+  for (let lvl = Math.max(1, targetLevel - 1); lvl <= Math.max(1, targetLevel); lvl++) {
+    if (practiceProblems[lvl]) {
+      allQuestions = allQuestions.concat(practiceProblems[lvl]);
+    }
+  }
+
+  // Add some harder questions if doing well
+  if (state.stars >= 3 && practiceProblems[5]) {
+    allQuestions = allQuestions.concat(practiceProblems[5]);
+  }
+
+  // Shuffle and pick up to 6 questions
+  for (let i = allQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+  }
+
+  state.practiceQuestions = allQuestions.slice(0, 6);
+  state.practiceIndex = 0;
+  state.practiceResults = new Array(state.practiceQuestions.length).fill(null);
+
+  dom.practiceContainer.classList.remove('hidden');
+  dom.restartBtn.classList.remove('hidden');
+
+  // Build practice progress dots
+  dom.practiceProgress.innerHTML = '';
+  for (let i = 0; i < state.practiceQuestions.length; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'practice-dot';
+    dot.textContent = i + 1;
+    dot.id = 'pdot' + i;
+    dom.practiceProgress.appendChild(dot);
+  }
+
+  dom.practiceNextBtn.classList.add('hidden');
+  dom.practiceSummaryBtn.classList.add('hidden');
+  dom.practiceHint.classList.add('hidden');
+
+  renderPracticeQuestion();
+}
+
+function renderPracticeQuestion() {
+  if (state.practiceIndex >= state.practiceQuestions.length) {
+    showPracticeSummary();
+    return;
+  }
+
+  const q = state.practiceQuestions[state.practiceIndex];
+  dom.practiceQText.innerHTML = q.q;
+  dom.practiceOptionsArea.innerHTML = '';
+  dom.practiceHint.classList.add('hidden');
+  dom.practiceNextBtn.classList.add('hidden');
+  dom.practiceSummaryBtn.classList.add('hidden');
+
+  if (q.type === 'choice') {
+    const optionsDiv = document.createElement('div');
+    optionsDiv.className = 'practice-options';
+
+    for (let i = 0; i < q.options.length; i++) {
+      const btn = document.createElement('div');
+      btn.className = 'practice-option';
+      btn.textContent = q.options[i];
+      btn.addEventListener('click', () => handlePracticeChoice(i));
+      optionsDiv.appendChild(btn);
+    }
+
+    dom.practiceOptionsArea.appendChild(optionsDiv);
+  } else if (q.type === 'fill') {
+    const inputWrap = document.createElement('div');
+    inputWrap.style.textAlign = 'center';
+    inputWrap.style.marginTop = '10px';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'practice-input';
+    input.placeholder = '输入答案';
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handlePracticeFill(input.value, input);
+    });
+
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'btn btn-primary';
+    submitBtn.textContent = '提交 ✓';
+    submitBtn.style.marginLeft = '10px';
+    submitBtn.addEventListener('click', () => handlePracticeFill(input.value, input));
+
+    inputWrap.appendChild(input);
+    inputWrap.appendChild(submitBtn);
+    dom.practiceOptionsArea.appendChild(inputWrap);
+  }
+
+  // Highlight current dot
+  for (let i = 0; i < state.practiceQuestions.length; i++) {
+    const dot = document.getElementById('pdot' + i);
+    if (dot) {
+      dot.style.border = i === state.practiceIndex ? '3px solid #FFC107' : 'none';
+    }
+  }
+}
+
+function handlePracticeChoice(index) {
+  const q = state.practiceQuestions[state.practiceIndex];
+  const isCorrect = index === q.answer;
+  state.practiceResults[state.practiceIndex] = isCorrect;
+
+  // Update dot
+  const dot = document.getElementById('pdot' + state.practiceIndex);
+  if (dot) {
+    dot.classList.add(isCorrect ? 'correct' : 'wrong');
+  }
+
+  // Highlight options
+  const options = dom.practiceOptionsArea.querySelectorAll('.practice-option');
+  options.forEach((opt, i) => {
+    opt.style.pointerEvents = 'none';
+    if (i === q.answer) opt.classList.add('correct-answer');
+    if (i === index && !isCorrect) opt.classList.add('wrong-answer');
+  });
+
+  // Show hint
+  dom.practiceHint.classList.remove('hidden');
+  dom.practiceHint.innerHTML = (isCorrect ? '✅ 正确！' : '❌ 不对哦！') + '<br>' + q.hint;
+
+  // Show next button
+  if (state.practiceIndex < state.practiceQuestions.length - 1) {
+    dom.practiceNextBtn.classList.remove('hidden');
+  } else {
+    dom.practiceSummaryBtn.classList.remove('hidden');
+  }
+}
+
+function handlePracticeFill(value, input) {
+  const q = state.practiceQuestions[state.practiceIndex];
+  const trimmedValue = value.trim().replace(/，/g, ',');
+  const trimmedAnswer = q.answer.trim().replace(/，/g, ',');
+  const isCorrect = trimmedValue === trimmedAnswer;
+  state.practiceResults[state.practiceIndex] = isCorrect;
+
+  // Update dot
+  const dot = document.getElementById('pdot' + state.practiceIndex);
+  if (dot) {
+    dot.classList.add(isCorrect ? 'correct' : 'wrong');
+  }
+
+  // Style input
+  input.style.borderColor = isCorrect ? '#4CAF50' : '#F44336';
+  input.style.background = isCorrect ? '#E8F5E9' : '#FFEBEE';
+  input.disabled = true;
+
+  // Show hint
+  dom.practiceHint.classList.remove('hidden');
+  dom.practiceHint.innerHTML = (isCorrect ? '✅ 正确！' : '❌ 不对哦！正确的答案是：' + trimmedAnswer) + '<br>' + q.hint;
+
+  if (state.practiceIndex < state.practiceQuestions.length - 1) {
+    dom.practiceNextBtn.classList.remove('hidden');
+  } else {
+    dom.practiceSummaryBtn.classList.remove('hidden');
+  }
+}
+
+function showNextPracticeQuestion() {
+  state.practiceIndex++;
+  renderPracticeQuestion();
+}
+
+function showPracticeSummary() {
+  dom.practiceOptionsArea.innerHTML = '';
+  dom.practiceHint.classList.add('hidden');
+  dom.practiceNextBtn.classList.add('hidden');
+
+  const total = state.practiceResults.length;
+  const correct = state.practiceResults.filter(r => r === true).length;
+  const ratio = total > 0 ? correct / total : 0;
+  let starHtml = '';
+  for (let i = 0; i < 5; i++) {
+    starHtml += i < Math.ceil(ratio * 5) ? '⭐' : '<span class="star-empty">⭐</span>';
+  }
+
+  dom.practiceProgress.innerHTML = '';
+  dom.practiceProgress.style.marginBottom = '16px';
+
+  dom.practiceQText.innerHTML = `
+    <div style="font-size:24px;margin-bottom:10px;">📊 练习总结</div>
+    <div class="result-stars" style="text-align:center;">${starHtml}</div>
+    <div class="stats-row">正确: ${correct}/${total} 题</div>
+    <div class="stats-row">准确率: ${total > 0 ? Math.round(ratio * 100) : 0}%</div>
+    <div style="margin-top:14px;font-size:14px;color:#666;">继续加油哦！💪</div>
+  `;
+
+  // Remove practice options area
+  dom.practiceOptionsArea.innerHTML = '';
+
+  // Show summary actions
+  dom.practiceBtnRow.innerHTML = `
+    <button class="btn btn-primary" onclick="restartPractice()">🔄 再来一组</button>
+    <button class="btn btn-secondary" onclick="restartGame()">🏠 重新开始游戏</button>
+  `;
+  dom.practiceBtnRow.classList.remove('hidden');
+}
+
+function restartPractice() {
+  dom.practiceBtnRow.innerHTML = `
+    <button class="btn btn-primary hidden" id="practiceNextBtn" onclick="showNextPracticeQuestion()">下一题 ➡️</button>
+    <button class="btn btn-secondary hidden" id="practiceSummaryBtn" onclick="showPracticeSummary()">查看总结 📊</button>
+  `;
+  // Re-bind DOM references
+  dom.practiceNextBtn = $('practiceNextBtn');
+  dom.practiceSummaryBtn = $('practiceSummaryBtn');
+  enterPracticeMode();
+}
+
+// ==================== MOLE CLICK HANDLERS ====================
+function setupMoleClickHandlers() {
+  for (let i = 0; i < 5; i++) {
+    const mole = document.getElementById('mole' + i);
+    mole.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (state.isPlaying) {
+        handleAnswer(i);
+      }
+    });
+    // Touch support
+    mole.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (state.isPlaying) {
+        handleAnswer(i);
+      }
+    });
+  }
+}
+
+// ==================== INITIALIZATION ====================
+function init() {
+  setupMoleClickHandlers();
+  updateUI();
+  updateRoundDots();
+  updateProgress();
+
+  // Activate level 1 dot
+  const levelDots = dom.levelIndicator.children;
+  levelDots[0].classList.add('active');
+
+  // Start first round
+  setTimeout(() => renderQuestion(), 500);
+}
+
+// ==================== CLOSE MODAL ON CLICK ====================
+dom.modalOverlay.addEventListener('click', function(e) {
+  if (e.target === dom.modalOverlay) {
+    // Don't close - user must click buttons
+  }
+});
+
+// ==================== START ====================
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
