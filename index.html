@@ -12,7 +12,7 @@
   --font:"Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent;display:flex;flex-wrap:wrap}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent}
 
 /* ===== Right Sidebar ===== */
 .right-sidebar{
@@ -68,10 +68,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* Main content */
 .main-content{flex:1;min-width:0;padding:0 20px}
 
+/* Page body wrapper: center content + sidebar */
+.page-body{
+  display:flex;justify-content:center;gap:0;
+  max-width:1320px;margin:0 auto;padding:0 20px;
+}
+
 /* Mobile */
 @media(max-width:900px){
   .right-sidebar{display:none}
-  .main-content{min-width:100%}
+  .page-body{padding:0 20px}
 }
 
 /* Tree */
@@ -112,7 +118,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .hero{
   background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 50%,#A21CAF 100%);
   color:#fff;text-align:center;padding:48px 20px 40px;position:relative;overflow:hidden;
-  flex-basis:100%;
 }
 .hero::before{content:'';position:absolute;top:-100px;right:-80px;width:300px;height:300px;background:rgba(255,255,255,0.05);border-radius:50%}
 .hero::after{content:'';position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;background:rgba(255,255,255,0.04);border-radius:50%}
@@ -278,12 +283,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 <!-- ===== Hero ===== -->
 <div class="hero">
-  <div class="hero-badge">📐 新课标 2022 版 · 人教版配套</div>
   <h1>小学数学互动游戏中心</h1>
   <p class="sub">玩中学数学 · 5 大玩法族系 · 自适应练习系统 · 每个知识点 5 款游戏</p>
 </div>
 
 <!-- ===== Main Content ===== -->
+<div class="page-body">
 <div class="main-content">
 
 <!-- ===== Stats ===== -->
@@ -472,6 +477,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div class="tree" id="skillTree2" style="margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0"></div>
   </div>
 </aside>
+</div><!-- /.page-body -->
 
 <!-- ===== Game Modal ===== -->
 <div class="modal-overlay" id="gameModal" style="display:none" onclick="closeGameOverlay(event)">
