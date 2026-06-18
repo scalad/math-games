@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面积大富翁 - 公顷和平方千米</title>
+<style>
+/* ============================================
+   Math Game Prototype Base Styles
+   Kid-friendly, responsive, touch-optimized
+   ============================================ */
+
+:root {
+  --color-primary: #4A90D9;
+  --color-primary-light: #7AB3E8;
+  --color-primary-dark: #2E6AB0;
+  --color-success: #52C41A;
+  --color-success-light: #D9F7BE;
+  --color-error: #FF4D4F;
+  --color-error-light: #FFF1F0;
+  --color-warning: #FAAD14;
+  --color-warning-light: #FFFBE6;
+  --color-bg: #F0F5FF;
+  --color-card: #FFFFFF;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-border: #E8E8E8;
+
+  /* Board cell colors */
+  --cell-quiz: #5B9BD5;
+  --cell-property: #D4A843;
+  --cell-lucky: #60B85A;
+  --cell-event: #E05555;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-button: 0 4px 12px rgba(0,0,0,0.15);
+
+  --font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-number: "Consolas", "Courier New", monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* --- Game Container --- */
+.game-container {
+  width: 100%;
+  max-width: 960px;
+  background: var(--color-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 600px;
+  position: relative;
+}
+
+/* --- Header Bar --- */
+.game-header {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: white;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.game-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.game-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-icon { font-size: 16px; }
+.stat-value { font-weight: 700; font-family: var(--font-number); }
+
+/* --- Main Content Layout --- */
+.game-main {
+  display: flex;
+  flex: 1;
+  padding: 16px;
+  gap: 16px;
+}
+
+/* --- Board Area --- */
+.board-area {
+  flex: 1;
+  min-width: 0;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 4px;
+  aspect-ratio: 1;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.board-cell {
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+  padding: 4px;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: default;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.board-cell .cell-icon {
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+
+.board-cell .cell-label {
+  font-size: 10px;
+  line-height: 1.2;
+  word-break: break-all;
+}
+
+.board-cell .cell-owner {
+  font-size: 9px;
+  margin-top: 2px;
+  opacity: 0.9;
+}
+
+/* Cell colors */
+.cell-start { background: linear-gradient(135deg, #9B59B6, #8E44AD); }
+.cell-quiz { background: linear-gradient(135deg, var(--cell-quiz), #4A8AC7); }
+.cell-property { background: linear-gradient(135deg, var(--cell-property), #C09936); }
+.cell-lucky { background: linear-gradient(135deg, var(--cell-lucky), #4DA347); }
+.cell-event { background: linear-gradient(135deg, var(--cell-event), #C94444); }
+
+/* Player marker */
+.board-cell .player-marker {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.marker-player { background: #FF6B6B; }
+.marker-ai { background: #4ECDC4; }
+.marker-both {
+  background: linear-gradient(135deg, #FF6B6B 50%, #4ECDC4 50%);
+}
+
+.board-cell.current-player {
+  box-shadow: 0 0 0 3px #FFD700, 0 0 16px rgba(255,215,0,0.5);
+  transform: scale(1.05);
+  z-index: 2;
+  animation: pulse-current 1.5s ease-in-out infinite;
+}
+
+.board-cell.current-ai {
+  box-shadow: 0 0 0 3px #4ECDC4, 0 0 16px rgba(78,205,196,0.5);
+  transform: scale(1.05);
+  z-index: 2;
+  animation: pulse-current 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-current {
+  0%, 100% { box-shadow: 0 0 0 3px currentColor, 0 0 16px currentColor; }
+  50% { box-shadow: 0 0 0 5px currentColor, 0 0 24px currentColor; }
+}
+
+.board-cell.current-player { color: #FFD700; }
+.board-cell.current-ai { color: #4ECDC4; }
+
+/* Center cell (info) */
+.board-cell.cell-center {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  grid-area: 3 / 3 / 4 / 4;
+  font-size: 14px;
+  cursor: default;
+}
+
+.board-cell.inner-cell {
+  background: rgba(0,0,0,0.03);
+  color: var(--color-text-light);
+  cursor: default;
+}
+
+/* Owned property highlight */
+.board-cell.owned-player { box-shadow: inset 0 0 0 3px #FF6B6B; }
+.board-cell.owned-ai { box-shadow: inset 0 0 0 3px #4ECDC4; }
+
+/* --- Side Panel --- */
+.side-panel {
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.panel-card {
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+}
+
+.panel-card h3 {
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-card .stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 3px 0;
+  color: var(--color-text-light);
+}
+
+.panel-card .stat-row .val {
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: var(--font-number);
+}
+
+.player-panel { border-left: 3px solid #FF6B6B; }
+.ai-panel { border-left: 3px solid #4ECDC4; }
+
+.property-list {
+  font-size: 12px;
+  color: var(--color-text-light);
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.property-list .prop-item {
+  padding: 2px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.property-list .empty {
+  font-style: italic;
+  opacity: 0.5;
+}
+
+/* --- Bottom Controls --- */
+.game-footer-area {
+  border-top: 1px solid var(--color-border);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dice-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dice-btn {
+  width: 64px;
+  height: 64px;
+  background: var(--color-warning);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 32px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-button);
+}
+
+.dice-btn:hover:not(:disabled) {
+  transform: scale(1.1);
+  background: #FFC107;
+}
+
+.dice-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dice-btn.rolling {
+  animation: dice-roll 0.5s ease;
+}
+
+@keyframes dice-roll {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(90deg) scale(1.2); }
+  50% { transform: rotate(180deg) scale(1); }
+  75% { transform: rotate(270deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.dice-result {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-number);
+  min-width: 80px;
+}
+
+.current-turn {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.restart-btn {
+  padding: 8px 20px;
+  font-size: 14px;
+  color: var(--color-text-light);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.restart-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* --- Modal Overlay --- */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-box {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  animation: scaleIn 0.3s ease;
+}
+
+.modal-box h2 {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.modal-box .modal-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.modal-box .modal-desc {
+  font-size: 14px;
+  color: var(--color-text-light);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.modal-box .modal-question {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--color-text);
+}
+
+/* Quiz options in modal */
+.modal-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.modal-option {
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--font-number);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-option:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg);
+}
+
+.modal-option.correct {
+  border-color: var(--color-success);
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.modal-option.wrong {
+  border-color: var(--color-error);
+  background: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.modal-input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.modal-input {
+  flex: 1;
+  padding: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-number);
+  text-align: center;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
+.modal-input:focus {
+  border-color: var(--color-primary);
+}
+
+.modal-btn {
+  padding: 10px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  color: white;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 4px;
+}
+
+.modal-btn:hover {
+  background: var(--color-primary-dark);
+}
+
+.modal-btn.success { background: var(--color-success); }
+.modal-btn.warning { background: var(--color-warning); }
+.modal-btn.danger { background: var(--color-error); }
+
+.modal-result {
+  font-size: 14px;
+  margin: 8px 0;
+  min-height: 20px;
+}
+
+.modal-result.correct { color: var(--color-success); }
+.modal-result.wrong { color: var(--color-error); }
+
+/* Victory/End screen */
+.victory-container {
+  text-align: center;
+  padding: 20px;
+}
+
+.victory-icon { font-size: 72px; margin-bottom: 12px; animation: bounce 0.6s ease infinite alternate; }
+
+.victory-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.victory-stats {
+  font-size: 15px;
+  color: var(--color-text-light);
+  margin-bottom: 20px;
+  line-height: 1.8;
+}
+
+.victory-btn {
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  margin: 0 6px;
+  transition: background 0.2s;
+}
+
+.victory-btn:hover { background: var(--color-primary-dark); }
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-12px); }
+}
+
+@keyframes popIn {
+  0% { transform: scale(0); opacity: 0; }
+  80% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Toast notification */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 10px 24px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  z-index: 200;
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Hidden */
+.hidden { display: none !important; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .game-main {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .board-grid {
+    max-width: 360px;
+  }
+
+  .board-cell {
+    font-size: 9px;
+  }
+
+  .board-cell .cell-icon {
+    font-size: 14px;
+  }
+
+  .board-cell .cell-label {
+    font-size: 8px;
+  }
+
+  .side-panel {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .panel-card {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .game-container {
+    max-width: 480px;
+  }
+}
+
+@media (max-width: 360px) {
+  .board-grid {
+    max-width: 300px;
+    gap: 2px;
+  }
+
+  .board-cell {
+    font-size: 7px;
+    padding: 2px;
+  }
+
+  .board-cell .cell-icon { font-size: 12px; }
+  .board-cell .cell-label { font-size: 6px; }
+  .dice-btn { width: 52px; height: 52px; font-size: 26px; }
+}
+</style>
+</head>
+<body>
+
+<div class="game-container">
+  <!-- Header -->
+  <div class="game-header">
+    <div class="game-title">🏠 面积大富翁</div>
+    <div class="game-stats">
+      <div class="stat-item">
+        <span class="stat-icon">🎲</span>
+        <span class="stat-value" id="roundDisplay">1/20</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Area -->
+  <div class="game-main">
+    <!-- Board -->
+    <div class="board-area">
+      <div class="board-grid" id="boardGrid"></div>
+    </div>
+
+    <!-- Side Panel -->
+    <div class="side-panel">
+      <div class="panel-card player-panel">
+        <h3>👤 玩家</h3>
+        <div class="stat-row"><span>💰 金币</span><span class="val" id="playerGold">500</span></div>
+        <div class="stat-row"><span>🏠 资产总价值</span><span class="val" id="playerAssets">500</span></div>
+        <div class="stat-row"><span>⏭ 免答权</span><span class="val" id="playerFreePass">0</span></div>
+        <div style="margin-top:6px;font-size:12px;color:var(--color-text-light);">🏘 地产：</div>
+        <div class="property-list" id="playerProperties"><span class="empty">暂无地产</span></div>
+      </div>
+
+      <div class="panel-card ai-panel">
+        <h3>🤖 AI对手</h3>
+        <div class="stat-row"><span>💰 金币</span><span class="val" id="aiGold">400</span></div>
+        <div class="stat-row"><span>🏠 资产总价值</span><span class="val" id="aiAssets">400</span></div>
+        <div style="margin-top:6px;font-size:12px;color:var(--color-text-light);">🏘 地产：</div>
+        <div class="property-list" id="aiProperties"><span class="empty">暂无地产</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Controls -->
+  <div class="game-footer-area">
+    <button class="restart-btn" id="restartBtn">🔄 重新开始</button>
+    <div class="dice-container">
+      <button class="dice-btn" id="diceBtn" title="掷骰子">🎲</button>
+      <div class="dice-result" id="diceResult">等待掷骰子...</div>
+    </div>
+    <div class="current-turn" id="currentTurn">👤 玩家回合</div>
+  </div>
+</div>
+
+<!-- Modal (hidden) -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<script>
+// ============================================
+// DOM References
+// ============================================
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+const boardGrid = $('#boardGrid');
+const playerGoldEl = $('#playerGold');
+const playerAssetsEl = $('#playerAssets');
+const playerFreePassEl = $('#playerFreePass');
+const playerPropertiesEl = $('#playerProperties');
+const aiGoldEl = $('#aiGold');
+const aiAssetsEl = $('#aiAssets');
+const aiPropertiesEl = $('#aiProperties');
+const diceBtn = $('#diceBtn');
+const diceResultEl = $('#diceResult');
+const currentTurnEl = $('#currentTurn');
+const roundDisplay = $('#roundDisplay');
+const restartBtn = $('#restartBtn');
+const modalOverlay = $('#modalOverlay');
+const modalBox = $('#modalBox');
+
+// ============================================
+// Board Layout (5x5 grid, 16 outer cells clockwise)
+// ============================================
+const BOARD_SIZE = 16;
+const TOTAL_ROUNDS = 20;
+
+// Cell positions on 5x5 grid: [row, col, label]
+const cellLayout = [
+  /*  0 */ { row: 0, col: 0, type: 'start',  label: '🚩起点', icon: '🚩' },
+  /*  1 */ { row: 0, col: 1, type: 'quiz',   label: '换算题', icon: '📝' },
+  /*  2 */ { row: 0, col: 2, type: 'property', label: '地产格', icon: '🏠' },
+  /*  3 */ { row: 0, col: 3, type: 'lucky',  label: '幸运格', icon: '🍀' },
+  /*  4 */ { row: 0, col: 4, type: 'quiz',   label: '换算题', icon: '📝' },
+  /*  5 */ { row: 1, col: 4, type: 'property', label: '地产格', icon: '🏠' },
+  /*  6 */ { row: 2, col: 4, type: 'event',  label: '事件格', icon: '⚡' },
+  /*  7 */ { row: 3, col: 4, type: 'quiz',   label: '换算题', icon: '📝' },
+  /*  8 */ { row: 4, col: 4, type: 'lucky',  label: '幸运格', icon: '🍀' },
+  /*  9 */ { row: 4, col: 3, type: 'quiz',   label: '换算题', icon: '📝' },
+  /* 10 */ { row: 4, col: 2, type: 'property', label: '地产格', icon: '🏠' },
+  /* 11 */ { row: 4, col: 1, type: 'quiz',   label: '换算题', icon: '📝' },
+  /* 12 */ { row: 4, col: 0, type: 'event',  label: '事件格', icon: '⚡' },
+  /* 13 */ { row: 3, col: 0, type: 'quiz',   label: '换算题', icon: '📝' },
+  /* 14 */ { row: 2, col: 0, type: 'property', label: '地产格', icon: '🏠' },
+  /* 15 */ { row: 1, col: 0, type: 'event',  label: '事件格', icon: '⚡' },
+];
+
+// ============================================
+// Properties data
+// ============================================
+const properties = [
+  { name: '2公顷农场', area: 2, unit: 'ha', toUnit: 'm²', answer: 20000, price: 200, value: 250 },
+  { name: '30000平方米果园', area: 30000, unit: 'm²', toUnit: 'ha', answer: 3, price: 250, value: 300 },
+  { name: '0.5平方千米庄园', area: 0.5, unit: 'km²', toUnit: 'ha', answer: 50, price: 350, value: 400 },
+  { name: '500公顷牧场', area: 500, unit: 'ha', toUnit: 'km²', answer: 5, price: 400, value: 500 },
+];
+
+// ============================================
+// Game State
+// ============================================
+const state = {
+  player: { position: 0, gold: 500, properties: [], freePass: 0 },
+  ai: { position: 0, gold: 400, properties: [], freePass: 0 },
+  currentRound: 1,
+  currentPlayer: 'player', // 'player' | 'ai'
+  diceValue: 0,
+  gameOver: false,
+  isProcessing: false,
+};
+
+// Track property ownership [propertyIndex]: null | 'player' | 'ai'
+const propertyOwner = [null, null, null, null];
+
+// Map cell index to property index (for property cells)
+const cellToProperty = { 2: 0, 5: 1, 10: 2, 14: 3 };
+
+// ============================================
+// Question Generation
+// ============================================
+
+// Generate a random quiz question
+function generateQuizQuestion() {
+  const type = Math.floor(Math.random() * 4); // 0=ha↔m², 1=km²↔ha, 2=compare, 3=area calc
+
+  switch (type) {
+    case 0: { // ha ↔ m²
+      const ha = [2, 3, 4, 5, 8, 10, 15, 20, 25, 50][Math.floor(Math.random() * 10)];
+      if (Math.random() > 0.5) {
+        return {
+          question: `${ha}公顷 = ?平方米`,
+          answer: ha * 10000,
+          type: 'number',
+          hint: '1公顷 = 10000平方米，想想乘以多少！'
+        };
+      } else {
+        const m2 = ha * 10000;
+        return {
+          question: `${m2}平方米 = ?公顷`,
+          answer: ha,
+          type: 'number',
+          hint: '1公顷 = 10000平方米，想想除以多少！'
+        };
+      }
+    }
+    case 1: { // km² ↔ ha
+      const km2 = [1, 2, 3, 4, 5, 8, 10][Math.floor(Math.random() * 7)];
+      if (Math.random() > 0.5) {
+        return {
+          question: `${km2}平方千米 = ?公顷`,
+          answer: km2 * 100,
+          type: 'number',
+          hint: '1平方千米 = 100公顷，想想乘以多少！'
+        };
+      } else {
+        const ha = km2 * 100;
+        return {
+          question: `${ha}公顷 = ?平方千米`,
+          answer: km2,
+          type: 'number',
+          hint: '1平方千米 = 100公顷，想想除以多少！'
+        };
+      }
+    }
+    case 2: { // 比较大小
+      const a = [20000, 30000, 50000, 80000, 100000, 2, 3, 4, 5, 8][Math.floor(Math.random() * 10)];
+      const b = a <= 100 ? a * 10000 + Math.floor(Math.random() * 5000) : a / 10000 + Math.random() * 0.5;
+      const aStr = a <= 100 ? `${a}公顷` : `${a}平方米`;
+      const bStr = b <= 100 ? `${b.toFixed(0)}公顷` : `${Math.round(b)}平方米`;
+      const options = ['>', '<', '='];
+      let answerIdx;
+      if (a > b) answerIdx = 0;
+      else if (a < b) answerIdx = 1;
+      else answerIdx = 2;
+      return {
+        question: `比较大小：${aStr} ___ ${bStr}`,
+        answer: options[answerIdx],
+        options: ['>', '<', '='],
+        type: 'choice',
+        hint: '先统一单位再比较！'
+      };
+    }
+    case 3: { // 面积计算
+      const w = [100, 200, 300, 400, 500][Math.floor(Math.random() * 5)];
+      const h = [100, 200, 300, 400, 500][Math.floor(Math.random() * 5)];
+      const areaM2 = w * h;
+      const areaHa = areaM2 / 10000;
+      return {
+        question: `一块地长${w}米宽${h}米，面积是多少公顷？`,
+        answer: areaHa,
+        type: 'number',
+        hint: '先算平方米，再转换成公顷（除以10000）'
+      };
+    }
+  }
+}
+
+// Generate property purchase question
+function generatePropertyQuestion(prop) {
+  return {
+    question: `购买前请换算："${prop.name}"占地${prop.area}${prop.unit} = ?${prop.toUnit}`,
+    answer: prop.answer,
+    type: 'number',
+    hint: `答对才能购买！价格${prop.price}金币`,
+  };
+}
+
+// Generate event question
+function generateEventQuestion(type) {
+  switch (type) {
+    case 'requisition': {
+      const ha = [2, 4, 6, 8, 10][Math.floor(Math.random() * 5)];
+      const half = ha / 2;
+      return {
+        question: `政府征地一半！原来${ha}公顷，还剩 ? 平方米`,
+        answer: half * 10000,
+        type: 'number',
+        message: `答对不受损失！答错再损失${Math.round(ha * 10000 * 0.1)}平方米`,
+        penalty: Math.round(ha * 10000 * 0.1),
+      };
+    }
+    case 'storm': {
+      const loss = [1, 2, 3][Math.floor(Math.random() * 3)];
+      return {
+        question: `暴风雨来了！损坏了${loss}公顷庄稼。`,
+        type: 'info',
+        message: `直接损失${loss * 10000}平方米庄稼，扣除${loss * 50}金币`,
+        penalty: loss * 50,
+      };
+    }
+    case 'priceRise': {
+      return {
+        question: '好消息！你的地价上涨了！',
+        type: 'info',
+        message: '获得+100金币奖励！',
+        reward: 100,
+      };
+    }
+  }
+}
+
+// ============================================
+// Board Rendering
+// ============================================
+function renderBoard() {
+  const grid = Array.from({ length: 25 }, (_, i) => {
+    const row = Math.floor(i / 5);
+    const col = i % 5;
+    return { row, col, cell: null };
+  });
+
+  // Place board cells
+  cellLayout.forEach((cell, idx) => {
+    const pos = cell.row * 5 + cell.col;
+    grid[pos].cell = { ...cell, idx };
+  });
+
+  boardGrid.innerHTML = '';
+
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 5; c++) {
+      const pos = r * 5 + c;
+      const entry = grid[pos];
+      const div = document.createElement('div');
+      div.className = 'board-cell';
+
+      if (entry.cell) {
+        const cell = entry.cell;
+        div.classList.add(`cell-${cell.type}`);
+        div.innerHTML = `
+          <span class="cell-icon">${cell.icon}</span>
+          <span class="cell-label">${cell.label}</span>
+        `;
+
+        // Property ownership
+        const propIdx = cellToProperty[cell.idx];
+        if (propIdx !== undefined && propertyOwner[propIdx]) {
+          div.classList.add(propertyOwner[propIdx] === 'player' ? 'owned-player' : 'owned-ai');
+          div.innerHTML += `<span class="cell-owner">${propertyOwner[propIdx] === 'player' ? '👤' : '🤖'}</span>`;
+        }
+
+        // Player/AI markers
+        const markers = [];
+        if (state.player.position === cell.idx) markers.push('marker-player');
+        if (state.ai.position === cell.idx) markers.push('marker-ai');
+
+        if (markers.length === 2) {
+          div.innerHTML += '<div class="player-marker marker-both"></div>';
+        } else if (markers.length === 1) {
+          div.innerHTML += `<div class="player-marker ${markers[0]}"></div>`;
+        }
+
+        // Current player highlight
+        if (state.currentPlayer === 'player' && state.player.position === cell.idx && !state.gameOver) {
+          div.classList.add('current-player');
+        } else if (state.currentPlayer === 'ai' && state.ai.position === cell.idx && !state.gameOver) {
+          div.classList.add('current-ai');
+        }
+      } else {
+        // Inner cells (empty or center)
+        if (r === 2 && c === 2) {
+          div.classList.add('cell-center');
+          div.innerHTML = '<span style="font-size:24px;">🏠</span><span>面积<br>大富翁</span>';
+        } else {
+          div.classList.add('inner-cell');
+          div.innerHTML = '';
+        }
+      }
+
+      boardGrid.appendChild(div);
+    }
+  }
+}
+
+// ============================================
+// UI Updates
+// ============================================
+function updatePanels() {
+  const p = state.player;
+  const a = state.ai;
+
+  const pAssets = p.gold + p.properties.reduce((sum, pi) => sum + properties[pi].value, 0);
+  const aAssets = a.gold + a.properties.reduce((sum, pi) => sum + properties[pi].value, 0);
+
+  playerGoldEl.textContent = p.gold;
+  playerAssetsEl.textContent = pAssets;
+  playerFreePassEl.textContent = p.freePass;
+  playerPropertiesEl.innerHTML = p.properties.length
+    ? p.properties.map(i => `<div class="prop-item"><span>${properties[i].name}</span><span>${properties[i].value}💰</span></div>`).join('')
+    : '<span class="empty">暂无地产</span>';
+
+  aiGoldEl.textContent = a.gold;
+  aiAssetsEl.textContent = aAssets;
+  aiPropertiesEl.innerHTML = a.properties.length
+    ? a.properties.map(i => `<div class="prop-item"><span>${properties[i].name}</span><span>${properties[i].value}💰</span></div>`).join('')
+    : '<span class="empty">暂无地产</span>';
+
+  roundDisplay.textContent = `${state.currentRound}/${TOTAL_ROUNDS}`;
+  currentTurnEl.textContent = state.currentPlayer === 'player' ? '👤 玩家回合' : '🤖 AI回合';
+}
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2200);
+}
+
+// ============================================
+// Modal System
+// ============================================
+function showModal(html) {
+  modalBox.innerHTML = html;
+  modalOverlay.classList.remove('hidden');
+}
+
+function hideModal() {
+  modalOverlay.classList.add('hidden');
+}
+
+// ============================================
+// Cell Actions
+// ============================================
+function movePlayer(who, steps) {
+  const pos = (state[who].position + steps) % BOARD_SIZE;
+  state[who].position = pos;
+  return pos;
+}
+
+function handleCellLanding(who) {
+  const pos = state[who].position;
+  const cell = cellLayout[pos];
+
+  if (who === 'player') {
+    handlePlayerCell(cell, pos);
+  } else {
+    handleAICell(cell, pos);
+  }
+}
+
+// ============================================
+// Player Cell Handler
+// ============================================
+function handlePlayerCell(cell, pos) {
+  switch (cell.type) {
+    case 'start':
+      showModal(`
+        <div class="modal-icon">🚩</div>
+        <h2>到达起点！</h2>
+        <div class="modal-desc">经过起点，获得 +50 金币奖励！</div>
+        <button class="modal-btn success" id="modalActionBtn">太好了！</button>
+      `);
+      state.player.gold += 50;
+      document.getElementById('modalActionBtn').addEventListener('click', () => {
+        hideModal();
+        afterCellAction();
+      });
+      break;
+
+    case 'quiz':
+      showQuizModal(who, () => afterCellAction());
+      break;
+
+    case 'property':
+      handlePropertyCell(who, pos, () => afterCellAction());
+      break;
+
+    case 'lucky':
+      handleLuckyCell(who, () => afterCellAction());
+      break;
+
+    case 'event':
+      handleEventCell(who, () => afterCellAction());
+      break;
+  }
+}
+
+// Quiz Modal
+function showQuizModal(who, callback) {
+  const q = generateQuizQuestion();
+  let answered = false;
+
+  let html = `
+    <div class="modal-icon">📝</div>
+    <h2>${who === 'player' ? '答题挑战!' : 'AI答题中...'}</h2>
+    <div class="modal-desc">${q.hint}</div>
+    <div class="modal-question">${q.question}</div>
+  `;
+
+  if (q.type === 'choice') {
+    html += '<div class="modal-options">';
+    q.options.forEach((opt, i) => {
+      html += `<button class="modal-option" data-idx="${i}">${opt}</button>`;
+    });
+    html += '</div>';
+  } else {
+    html += `
+      <div class="modal-input-group">
+        <input type="number" class="modal-input" id="modalInput" placeholder="输入答案" autofocus>
+        <button class="modal-btn" id="modalSubmitBtn">提交</button>
+      </div>
+    `;
+  }
+  html += '<div class="modal-result" id="modalResult"></div>';
+
+  if (who === 'player') {
+    showModal(html);
+
+    if (q.type === 'choice') {
+      const optionBtns = modalBox.querySelectorAll('.modal-option');
+      optionBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          if (answered) return;
+          answered = true;
+          const idx = parseInt(this.dataset.idx);
+          const correct = q.options[idx] === q.answer;
+          optionBtns.forEach(b => b.disabled = true);
+
+          if (correct) {
+            this.classList.add('correct');
+            document.getElementById('modalResult').innerHTML = '<span class="correct">✅ 正确！+100金币</span>';
+            state.player.gold += 100;
+          } else {
+            this.classList.add('wrong');
+            optionBtns[q.options.indexOf(q.answer)].classList.add('correct');
+            document.getElementById('modalResult').innerHTML = '<span class="wrong">❌ 错误！-50金币</span>';
+            state.player.gold -= 50;
+          }
+
+          setTimeout(() => {
+            hideModal();
+            callback();
+          }, 1200);
+        });
+      });
+    } else {
+      const input = document.getElementById('modalInput');
+      const submitBtn = document.getElementById('modalSubmitBtn');
+      input.focus();
+      submitBtn.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        const userAnswer = parseFloat(input.value);
+        const correct = Math.abs(userAnswer - q.answer) < 0.01;
+
+        if (correct) {
+          document.getElementById('modalResult').innerHTML = `<span class="correct">✅ 正确！答案是 ${q.answer}。+100金币</span>`;
+          state.player.gold += 100;
+        } else {
+          document.getElementById('modalResult').innerHTML = `<span class="wrong">❌ 错误！正确答案是 ${q.answer}。-50金币</span>`;
+          state.player.gold -= 50;
+        }
+
+        setTimeout(() => {
+          hideModal();
+          callback();
+        }, 1200);
+      });
+    }
+  } else {
+    // AI quiz - simplified display
+    const success = Math.random() < 0.6;
+    if (success) {
+      html += '<div class="modal-result correct">✅ AI答对了！+100金币</div>';
+      state.ai.gold += 100;
+    } else {
+      html += '<div class="modal-result wrong">❌ AI答错了！-50金币</div>';
+      state.ai.gold -= 50;
+    }
+    html += `<button class="modal-btn" id="modalContinueBtn">继续</button>`;
+    showModal(html);
+    document.getElementById('modalContinueBtn').addEventListener('click', () => {
+      hideModal();
+      callback();
+    });
+  }
+}
+
+// Property Cell
+function handlePropertyCell(who, pos, callback) {
+  const propIdx = cellToProperty[pos];
+  const prop = properties[propIdx];
+
+  if (propertyOwner[propIdx]) {
+    showToast(`${propertyOwner[propIdx] === 'player' ? '玩家' : 'AI'}已拥有此地产`);
+    callback();
+    return;
+  }
+
+  if (who === 'player') {
+    if (state.player.gold < prop.price) {
+      showModal(`
+        <div class="modal-icon">🏠</div>
+        <h2>${prop.name}</h2>
+        <div class="modal-desc">价格：${prop.price}金币，但你的金币不足！</div>
+        <button class="modal-btn" id="modalActionBtn">知道了</button>
+      `);
+      document.getElementById('modalActionBtn').addEventListener('click', () => {
+        hideModal();
+        callback();
+      });
+      return;
+    }
+
+    const q = generatePropertyQuestion(prop);
+    let answered = false;
+
+    showModal(`
+      <div class="modal-icon">🏠</div>
+      <h2>购买 ${prop.name}</h2>
+      <div class="modal-desc">价格：${prop.price}金币 | 价值：${prop.value}金币</div>
+      <div class="modal-desc">${q.hint}</div>
+      <div class="modal-question">${q.question}</div>
+      <div class="modal-input-group">
+        <input type="number" class="modal-input" id="modalInput" placeholder="输入答案" autofocus>
+        <button class="modal-btn" id="modalSubmitBtn">提交</button>
+      </div>
+      <div class="modal-result" id="modalResult"></div>
+    `);
+
+    const input = document.getElementById('modalInput');
+    const submitBtn = document.getElementById('modalSubmitBtn');
+    input.focus();
+
+    submitBtn.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      const userAnswer = parseFloat(input.value);
+      const correct = Math.abs(userAnswer - q.answer) < 0.01;
+
+      if (correct) {
+        document.getElementById('modalResult').innerHTML = '<span class="correct">✅ 换算正确！成功购买！</span>';
+        state.player.gold -= prop.price;
+        state.player.properties.push(propIdx);
+        propertyOwner[propIdx] = 'player';
+      } else {
+        document.getElementById('modalResult').innerHTML = `<span class="wrong">❌ 错误！正确答案是 ${q.answer}。购买失败！</span>`;
+      }
+
+      setTimeout(() => {
+        hideModal();
+        callback();
+      }, 1200);
+    });
+  } else {
+    // AI property purchase
+    const success = Math.random() < 0.6;
+    if (success && state.ai.gold >= prop.price) {
+      state.ai.gold -= prop.price;
+      state.ai.properties.push(propIdx);
+      propertyOwner[propIdx] = 'ai';
+      showToast(`🤖 AI 成功购买了 ${prop.name}`);
+    } else {
+      showToast(`🤖 AI ${state.ai.gold < prop.price ? '金币不足' : '换算失败'}，未购买 ${prop.name}`);
+    }
+    callback();
+  }
+}
+
+// Lucky Cell
+function handleLuckyCell(who, callback) {
+  const rewards = [
+    { type: 'gold', value: 50, msg: '+50金币' },
+    { type: 'advance', value: 2, msg: '前进2步' },
+    { type: 'freePass', value: 1, msg: '获得1次免答权' },
+  ];
+  const reward = rewards[Math.floor(Math.random() * rewards.length)];
+
+  if (who === 'player') {
+    if (reward.type === 'gold') {
+      state.player.gold += reward.value;
+      showModal(`
+        <div class="modal-icon">🍀</div>
+        <h2>幸运降临！</h2>
+        <div class="modal-desc">${reward.msg}</div>
+        <button class="modal-btn success" id="modalActionBtn">太好了！</button>
+      `);
+      document.getElementById('modalActionBtn').addEventListener('click', () => {
+        hideModal();
+        callback();
+      });
+    } else if (reward.type === 'advance') {
+      showModal(`
+        <div class="modal-icon">🍀</div>
+        <h2>幸运降临！</h2>
+        <div class="modal-desc">${reward.msg}</div>
+        <button class="modal-btn success" id="modalActionBtn">前进！</button>
+      `);
+      document.getElementById('modalActionBtn').addEventListener('click', () => {
+        hideModal();
+        const pos = movePlayer('player', reward.value);
+        renderBoard();
+        updatePanels();
+        handleCellLanding('player'); // Chain to new cell
+        return; // Don't call callback yet
+      });
+      return;
+    } else if (reward.type === 'freePass') {
+      state.player.freePass += reward.value;
+      showModal(`
+        <div class="modal-icon">🍀</div>
+        <h2>幸运降临！</h2>
+        <div class="modal-desc">${reward.msg}</div>
+        <button class="modal-btn success" id="modalActionBtn">太好了！</button>
+      `);
+      document.getElementById('modalActionBtn').addEventListener('click', () => {
+        hideModal();
+        callback();
+      });
+    }
+  } else {
+    // AI lucky
+    if (reward.type === 'gold') {
+      state.ai.gold += reward.value;
+    } else if (reward.type === 'advance') {
+      movePlayer('ai', reward.value);
+    } else if (reward.type === 'freePass') {
+      state.ai.freePass += reward.value;
+    }
+    showToast(`🤖 AI 触发幸运：${reward.msg}`);
+    callback();
+  }
+}
+
+// Event Cell
+function handleEventCell(who, callback) {
+  const eventTypes = ['requisition', 'storm', 'priceRise'];
+  const eType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+
+  if (who === 'player') {
+    if (eType === 'requisition') {
+      const q = generateEventQuestion('requisition');
+      let answered = false;
+
+      showModal(`
+        <div class="modal-icon">⚡</div>
+        <h2>随机事件！</h2>
+        <div class="modal-desc">${q.message}</div>
+        <div class="modal-question">${q.question}</div>
+        <div class="modal-input-group">
+          <input type="number" class="modal-input" id="modalInput" placeholder="输入平方米数" autofocus>
+          <button class="modal-btn" id="modalSubmitBtn">提交</button>
+        </div>
+        <div class="modal-result" id="modalResult"></div>
+      `);
+
+      const input = document.getElementById('modalInput');
+      input.focus();
+      document.getElementById('modalSubmitBtn').addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        const userAnswer = parseFloat(input.value);
+        const correct = Math.abs(userAnswer - q.answer) < 0.01;
+
+        if (correct) {
+          document.getElementById('modalResult').innerHTML = '<span class="correct">✅ 回答正确！免受损失！</span>';
+        } else {
+          document.getElementById('modalResult').innerHTML = `<span class="wrong">❌ 错误！正确答案是 ${q.answer}。扣除${Math.round(q.penalty / 10000 * 50)}金币！</span>`;
+          state.player.gold -= Math.round(q.penalty / 10000 * 50);
+        }
+
+        setTimeout(() => {
+          hideModal();
+          callback();
+        }, 1200);
+      });
+    } else if (eType === 'storm') {
+      state.player.gold -= 50;
+      showModal(`
+        <div class="modal-icon">⚡</div>
+        <h2>暴风雨来袭！</h2>
+        <div class="modal-desc">损坏了庄稼，扣除50金币！</div>
+        <button class="modal-btn" id="modalActionBtn">知道了</button>
+      `);
+      document.getElementById('modalActionBtn').addEventListener('click', () => {
+        hideModal();
+        callback();
+      });
+    } else if (eType === 'priceRise') {
+      state.player.gold += 100;
+      showModal(`
+        <div class="modal-icon">⚡</div>
+        <h2>地价上涨！</h2>
+        <div class="modal-desc">获得+100金币！</div>
+        <button class="modal-btn success" id="modalActionBtn">太好了！</button>
+      `);
+      document.getElementById('modalActionBtn').addEventListener('click', () => {
+        hideModal();
+        callback();
+      });
+    }
+  } else {
+    // AI event
+    if (eType === 'requisition') {
+      if (Math.random() < 0.5) state.ai.gold -= 30;
+      showToast('🤖 AI 遇到征地事件');
+    } else if (eType === 'storm') {
+      state.ai.gold -= 50;
+      showToast('🤖 AI 遭遇暴风雨，-50金币');
+    } else if (eType === 'priceRise') {
+      state.ai.gold += 100;
+      showToast('🤖 AI 地价上涨，+100金币');
+    }
+    callback();
+  }
+}
+
+// AI cell handler
+function handleAICell(cell, pos) {
+  switch (cell.type) {
+    case 'start':
+      state.ai.gold += 50;
+      showToast('🤖 AI经过起点，+50金币');
+      afterCellAction();
+      break;
+    case 'quiz':
+      showQuizModal('ai', () => afterCellAction());
+      break;
+    case 'property':
+      handlePropertyCell('ai', pos, () => afterCellAction());
+      break;
+    case 'lucky':
+      handleLuckyCell('ai', () => afterCellAction());
+      break;
+    case 'event':
+      handleEventCell('ai', () => afterCellAction());
+      break;
+  }
+}
+
+// After cell action completes, switch turns or end round
+function afterCellAction() {
+  if (state.gameOver) return;
+
+  renderBoard();
+  updatePanels();
+
+  if (state.currentPlayer === 'player') {
+    // Switch to AI
+    state.currentPlayer = 'ai';
+    diceResultEl.textContent = 'AI掷骰子...';
+    diceBtn.disabled = true;
+
+    setTimeout(() => {
+      aiTurn();
+    }, 800);
+  } else {
+    // Round complete
+    state.currentRound++;
+    state.currentPlayer = 'player';
+    diceBtn.disabled = false;
+
+    if (state.currentRound > TOTAL_ROUNDS) {
+      endGame();
+      return;
+    }
+
+    diceResultEl.textContent = '等待掷骰子...';
+    renderBoard();
+    updatePanels();
+  }
+}
+
+// ============================================
+// AI Turn
+// ============================================
+function aiTurn() {
+  if (state.gameOver) return;
+
+  state.isProcessing = true;
+  const dice = Math.floor(Math.random() * 6) + 1;
+  state.diceValue = dice;
+
+  // Dice rolling animation
+  let rollCount = 0;
+  const maxRolls = 6;
+  const rollInterval = setInterval(() => {
+    const tempVal = Math.floor(Math.random() * 6) + 1;
+    diceResultEl.textContent = `🎲 AI: ${['⚀','⚁','⚂','⚃','⚄','⚅'][tempVal-1]}`;
+    rollCount++;
+    if (rollCount >= maxRolls) {
+      clearInterval(rollInterval);
+      diceResultEl.textContent = `🎲 AI: ${['⚀','⚁','⚂','⚃','⚄','⚅'][dice-1]} (${dice}步)`;
+      renderBoard();
+      updatePanels();
+
+      setTimeout(() => {
+        movePlayer('ai', dice);
+        renderBoard();
+        updatePanels();
+        handleCellLanding('ai');
+        state.isProcessing = false;
+      }, 400);
+    }
+  }, 120);
+}
+
+// ============================================
+// End Game
+// ============================================
+function endGame() {
+  state.gameOver = true;
+  const pAssets = state.player.gold + state.player.properties.reduce((sum, pi) => sum + properties[pi].value, 0);
+  const aAssets = state.ai.gold + state.ai.properties.reduce((sum, pi) => sum + properties[pi].value, 0);
+
+  const win = pAssets > aAssets ? 'player' : pAssets < aAssets ? 'ai' : 'draw';
+
+  let title, icon, color;
+  if (win === 'player') {
+    title = '🎉 你赢了！';
+    icon = '🏆';
+    color = 'var(--color-success)';
+  } else if (win === 'ai') {
+    title = '😔 AI赢了';
+    icon = '🤖';
+    color = 'var(--color-error)';
+  } else {
+    title = '🤝 平局！';
+    icon = '🤝';
+    color = 'var(--color-warning)';
+  }
+
+  boardGrid.innerHTML = `
+    <div class="victory-container" style="grid-column: 1 / -1; grid-row: 1 / -1;">
+      <div class="victory-icon">${icon}</div>
+      <div class="victory-title" style="color:${color}">${title}</div>
+      <div class="victory-stats">
+        <div>👤 玩家总资产：${pAssets} 金币（现金${state.player.gold} + 地产${pAssets - state.player.gold}）</div>
+        <div>🤖 AI总资产：${aAssets} 金币（现金${state.ai.gold} + 地产${aAssets - state.ai.gold}）</div>
+        <div>📊 完成轮数：${TOTAL_ROUNDS}轮</div>
+      </div>
+      <button class="victory-btn" onclick="restartGame()">🔄 再玩一次</button>
+    </div>
+  `;
+
+  diceBtn.disabled = true;
+  diceResultEl.textContent = '游戏结束';
+  currentTurnEl.textContent = win === 'player' ? '🏆 玩家胜利！' : win === 'ai' ? '🤖 AI胜利！' : '🤝 平局！';
+}
+
+// ============================================
+// Player Turn
+// ============================================
+function playerTurn() {
+  if (state.gameOver || state.isProcessing || state.currentPlayer !== 'player') return;
+
+  state.isProcessing = true;
+
+  // Dice roll animation
+  let rollCount = 0;
+  const maxRolls = 8;
+  const rollInterval = setInterval(() => {
+    const tempVal = Math.floor(Math.random() * 6) + 1;
+    diceResultEl.textContent = `🎲 ${['⚀','⚁','⚂','⚃','⚄','⚅'][tempVal-1]}`;
+    rollCount++;
+    if (rollCount >= maxRolls) {
+      clearInterval(rollInterval);
+      const dice = Math.floor(Math.random() * 6) + 1;
+      state.diceValue = dice;
+      diceResultEl.textContent = `🎲 ${['⚀','⚁','⚂','⚃','⚄','⚅'][dice-1]} (${dice}步)`;
+      diceBtn.disabled = true;
+
+      setTimeout(() => {
+        movePlayer('player', dice);
+        renderBoard();
+        updatePanels();
+        handleCellLanding('player');
+        state.isProcessing = false;
+        if (!state.gameOver) {
+          diceBtn.disabled = state.currentPlayer !== 'player';
+        }
+      }, 300);
+    }
+  }, 100);
+}
+
+// ============================================
+// Restart
+// ============================================
+function restartGame() {
+  state.player = { position: 0, gold: 500, properties: [], freePass: 0 };
+  state.ai = { position: 0, gold: 400, properties: [], freePass: 0 };
+  state.currentRound = 1;
+  state.currentPlayer = 'player';
+  state.diceValue = 0;
+  state.gameOver = false;
+  state.isProcessing = false;
+
+  propertyOwner.fill(null);
+
+  diceBtn.disabled = false;
+  diceResultEl.textContent = '等待掷骰子...';
+  currentTurnEl.textContent = '👤 玩家回合';
+  hideModal();
+  renderBoard();
+  updatePanels();
+}
+
+// ============================================
+// Event Listeners
+// ============================================
+diceBtn.addEventListener('click', playerTurn);
+restartBtn.addEventListener('click', restartGame);
+
+// Close modal on overlay click
+modalOverlay.addEventListener('click', (e) => {
+  if (e.target === modalOverlay && !state.isProcessing) {
+    hideModal();
+  }
+});
+
+// Keyboard: Enter to submit in modal input
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !modalOverlay.classList.contains('hidden')) {
+    const submitBtn = document.getElementById('modalSubmitBtn');
+    if (submitBtn) submitBtn.click();
+  }
+  if (e.key === ' ' && !state.gameOver && state.currentPlayer === 'player' && !state.isProcessing) {
+    e.preventDefault();
+    playerTurn();
+  }
+});
+
+// ============================================
+// Initialize
+// ============================================
+renderBoard();
+updatePanels();
+</script>
+
+</body>
+</html>

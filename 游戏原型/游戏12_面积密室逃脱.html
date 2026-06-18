@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面积密室逃脱 - 公顷和平方千米</title>
+<style>
+/* ============================================
+   面积密室逃脱 - 基于 Math Game Template
+   暗色调密室主题
+   ============================================ */
+
+:root {
+  /* --- Dark Escape Room Palette --- */
+  --color-primary: #7C5CFC;
+  --color-primary-light: #A78BFA;
+  --color-primary-dark: #5B3CC4;
+  --color-success: #10B981;
+  --color-success-light: #064E3B;
+  --color-error: #EF4444;
+  --color-error-light: #450A0A;
+  --color-warning: #F59E0B;
+  --color-warning-light: #451A03;
+  --color-bg: #0D0D1A;
+  --color-card: #1A1A3E;
+  --color-card-alt: #16213E;
+  --color-text: #E2E8F0;
+  --color-text-light: #94A3B8;
+  --color-text-dim: #64748B;
+  --color-border: #2D2D5E;
+  --color-glow: rgba(124, 92, 252, 0.3);
+
+  /* --- Sizing --- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+  --shadow-button: 0 4px 16px rgba(124, 92, 252, 0.25);
+
+  /* --- Typography --- */
+  --font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-number: "Consolas", "Courier New", monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background: linear-gradient(135deg, #0D0D1A 0%, #1A1040 40%, #0D1A2D 100%);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow-y: auto;
+}
+
+/* --- Animated Background Particles --- */
+.bg-particles {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  opacity: 0;
+  animation: floatUp 8s infinite;
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 0.4; }
+  50% { opacity: 0.2; }
+  90% { opacity: 0.4; }
+  100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+}
+
+/* --- Game Container --- */
+.game-container {
+  width: 100%;
+  max-width: 480px;
+  background: var(--color-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card), 0 0 60px var(--color-glow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 600px;
+  position: relative;
+  z-index: 1;
+  border: 1px solid var(--color-border);
+}
+
+/* --- Header Bar --- */
+.game-header {
+  background: linear-gradient(135deg, #1E1040, #2D1B69);
+  color: white;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.game-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.game-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-icon {
+  font-size: 16px;
+}
+
+.stat-value {
+  font-weight: 700;
+  font-family: var(--font-number);
+  color: var(--color-warning);
+}
+
+/* --- Room Progress Dots --- */
+.room-progress {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 12px 20px;
+  position: relative;
+}
+
+.room-progress::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50px;
+  right: 50px;
+  height: 2px;
+  background: var(--color-border);
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.room-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--color-card-alt);
+  border: 2px solid var(--color-border);
+  color: var(--color-text-dim);
+  position: relative;
+  z-index: 1;
+  transition: all 0.4s ease;
+}
+
+.room-dot.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-dark);
+  color: white;
+  box-shadow: 0 0 16px var(--color-glow);
+  animation: pulse-glow 2s ease infinite;
+}
+
+.room-dot.completed {
+  border-color: var(--color-success);
+  background: var(--color-success);
+  color: white;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 12px var(--color-glow); }
+  50% { box-shadow: 0 0 24px rgba(124, 92, 252, 0.6); }
+}
+
+/* --- Scene Area --- */
+.scene-area {
+  padding: 16px 20px 8px;
+  text-align: center;
+}
+
+.scene-emoji {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 8px;
+  animation: floatSlow 3s ease-in-out infinite;
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.scene-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-primary-light);
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.scene-desc {
+  font-size: 14px;
+  color: var(--color-text-light);
+  line-height: 1.6;
+  margin: 0 auto;
+  max-width: 360px;
+}
+
+/* --- Password Display --- */
+.password-display {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 20px;
+}
+
+.password-digit {
+  width: 44px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  background: var(--color-card-alt);
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  font-family: var(--font-number);
+  color: var(--color-text);
+  transition: all 0.2s ease;
+}
+
+.password-digit.filled {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 8px var(--color-glow);
+}
+
+.password-digit.shake {
+  animation: shake 0.4s ease;
+  border-color: var(--color-error);
+}
+
+.password-digit.unlocked {
+  border-color: var(--color-success);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+/* --- Game Area --- */
+.game-area {
+  flex: 1;
+  padding: 8px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --- Number Pad --- */
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.numpad-btn {
+  padding: 16px 8px;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--font-number);
+  color: var(--color-text);
+  background: var(--color-card-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.numpad-btn:hover {
+  border-color: var(--color-primary);
+  background: #1E1650;
+  transform: translateY(-1px);
+}
+
+.numpad-btn:active {
+  transform: scale(0.95);
+  background: var(--color-primary-dark);
+}
+
+.numpad-btn.function {
+  font-size: 14px;
+  color: var(--color-primary-light);
+}
+
+.numpad-btn.clear {
+  color: var(--color-error);
+}
+
+.numpad-btn.submit {
+  color: var(--color-success);
+  font-size: 20px;
+}
+
+/* --- Unit Key Selector (Room 3b) --- */
+.unit-keys {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+}
+
+.unit-key {
+  padding: 14px 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-card-alt);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.unit-key:hover {
+  border-color: var(--color-primary);
+  background: #1E1650;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-button);
+}
+
+.unit-key:active {
+  transform: scale(0.97);
+}
+
+.unit-key.correct {
+  border-color: var(--color-success);
+  background: var(--color-success-light);
+  color: var(--color-success);
+  animation: pulse-success 0.5s ease;
+}
+
+.unit-key.incorrect {
+  border-color: var(--color-error);
+  background: var(--color-error-light);
+  color: var(--color-error);
+  animation: shake 0.4s ease;
+}
+
+@keyframes pulse-success {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* --- Hint Button --- */
+.hint-area {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.hint-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-warning);
+  background: transparent;
+  border: 1px dashed var(--color-warning);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hint-btn:hover {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.hint-btn.used {
+  color: var(--color-text-dim);
+  border-color: var(--color-text-dim);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.hint-text {
+  font-size: 13px;
+  color: var(--color-warning);
+  text-align: center;
+  padding: 8px 16px;
+  background: var(--color-warning-light);
+  border-radius: var(--radius-sm);
+  animation: fadeIn 0.3s ease;
+  line-height: 1.5;
+  max-width: 360px;
+}
+
+/* --- Feedback Overlay --- */
+.feedback-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+
+.feedback-modal {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  animation: scaleIn 0.3s ease;
+  border: 1px solid var(--color-border);
+}
+
+.feedback-icon {
+  font-size: 56px;
+  margin-bottom: 12px;
+}
+
+.feedback-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.feedback-message {
+  font-size: 15px;
+  color: var(--color-text-light);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.feedback-btn {
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.feedback-btn:hover {
+  background: var(--color-primary-dark);
+}
+
+/* --- Victory Screen --- */
+.victory-container {
+  text-align: center;
+  padding: 20px;
+  width: 100%;
+}
+
+.victory-icon {
+  font-size: 72px;
+  margin-bottom: 12px;
+  animation: victory-bounce 0.6s ease infinite alternate;
+}
+
+@keyframes victory-bounce {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-16px) scale(1.08); }
+}
+
+.victory-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-warning);
+  margin-bottom: 8px;
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}
+
+.victory-stats {
+  font-size: 15px;
+  color: var(--color-text-light);
+  margin-bottom: 20px;
+  line-height: 2;
+}
+
+.victory-stats .time-highlight {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-success);
+  font-family: var(--font-number);
+}
+
+.victory-stars {
+  font-size: 36px;
+  margin-bottom: 8px;
+  animation: popIn 0.6s ease;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+  80% { transform: scale(1.2) rotate(3deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.victory-btn {
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  margin: 0 6px;
+  transition: all 0.2s;
+}
+
+.victory-btn:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-button);
+}
+
+/* --- Confetti --- */
+.confetti-container {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 200;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  top: -10px;
+  animation: confetti-fall linear forwards;
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(720deg) scale(0.3); opacity: 0; }
+}
+
+/* --- Footer --- */
+.game-footer {
+  padding: 10px 20px 14px;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--color-border);
+}
+
+.restart-btn {
+  padding: 8px 20px;
+  font-size: 14px;
+  color: var(--color-text-light);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.restart-btn:hover {
+  color: var(--color-primary-light);
+  border-color: var(--color-primary);
+}
+
+/* --- Room Transition --- */
+@keyframes roomSlideOut {
+  0% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(-40px); opacity: 0; }
+}
+
+@keyframes roomSlideIn {
+  0% { transform: translateX(40px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.room-transition-out {
+  animation: roomSlideOut 0.3s ease forwards;
+}
+
+.room-transition-in {
+  animation: roomSlideIn 0.4s ease forwards;
+}
+
+/* --- Utility --- */
+.hidden {
+  display: none !important;
+}
+
+/* --- Responsive --- */
+@media (max-width: 360px) {
+  .game-container {
+    min-height: 520px;
+  }
+  .game-header {
+    padding: 12px 16px;
+  }
+  .game-title {
+    font-size: 15px;
+  }
+  .scene-emoji {
+    font-size: 36px;
+  }
+  .scene-desc {
+    font-size: 13px;
+  }
+  .numpad-btn {
+    font-size: 20px;
+    padding: 14px 6px;
+  }
+  .password-digit {
+    width: 38px;
+    height: 46px;
+    font-size: 20px;
+  }
+  .unit-key {
+    font-size: 13px;
+    padding: 12px 8px;
+  }
+}
+
+@media (min-width: 768px) {
+  .game-container {
+    max-width: 500px;
+    min-height: 700px;
+  }
+  .numpad {
+    max-width: 340px;
+  }
+  .numpad-btn {
+    padding: 18px;
+  }
+  .scene-emoji {
+    font-size: 56px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Background Particles -->
+<div class="bg-particles" id="bgParticles"></div>
+
+<!-- Game Container -->
+<div class="game-container" id="gameContainer">
+  <!-- Header -->
+  <div class="game-header">
+    <div class="game-title" id="gameTitle">🏛️ 面积密室逃脱</div>
+    <div class="game-stats">
+      <div class="stat-item">
+        <span class="stat-icon">⏱️</span>
+        <span class="stat-value" id="timerDisplay">00:00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Room Progress -->
+  <div class="room-progress" id="roomProgress">
+    <div class="room-dot active" id="roomDot1">1</div>
+    <div class="room-dot" id="roomDot2">2</div>
+    <div class="room-dot" id="roomDot3">3</div>
+  </div>
+
+  <!-- Scene Area -->
+  <div class="scene-area" id="sceneArea">
+    <span class="scene-emoji" id="sceneEmoji">🏛️</span>
+    <div class="scene-title" id="sceneTitle">密室 1 - 公顷展厅</div>
+    <div class="scene-desc" id="sceneDesc">加载中...</div>
+  </div>
+
+  <!-- Password Display -->
+  <div class="password-display" id="passwordDisplay"></div>
+
+  <!-- Hint Text -->
+  <div id="hintTextContainer" style="text-align:center; min-height:20px;"></div>
+
+  <!-- Game Area -->
+  <div class="game-area" id="gameArea"></div>
+
+  <!-- Hint Button -->
+  <div class="hint-area" id="hintArea">
+    <button class="hint-btn" id="hintBtn">💡 获取提示（免费）</button>
+  </div>
+
+  <!-- Footer -->
+  <div class="game-footer">
+    <button class="restart-btn" id="restartBtn">🔄 重新开始</button>
+  </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="feedback-overlay hidden" id="feedbackOverlay">
+  <div class="feedback-modal">
+    <div class="feedback-icon" id="feedbackIcon">✅</div>
+    <div class="feedback-title" id="feedbackTitle">密码正确！</div>
+    <div class="feedback-message" id="feedbackMessage">门锁打开了！</div>
+    <button class="feedback-btn" id="feedbackBtn">继续前进 →</button>
+  </div>
+</div>
+
+<!-- Confetti Container -->
+<div class="confetti-container hidden" id="confettiContainer"></div>
+
+<script>
+// ============================================
+// DOM References
+// ============================================
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+const gameTitle = $('#gameTitle');
+const timerDisplay = $('#timerDisplay');
+const sceneEmoji = $('#sceneEmoji');
+const sceneTitle = $('#sceneTitle');
+const sceneDesc = $('#sceneDesc');
+const passwordDisplay = $('#passwordDisplay');
+const gameArea = $('#gameArea');
+const hintBtn = $('#hintBtn');
+const hintTextContainer = $('#hintTextContainer');
+const restartBtn = $('#restartBtn');
+const feedbackOverlay = $('#feedbackOverlay');
+const feedbackIcon = $('#feedbackIcon');
+const feedbackTitle = $('#feedbackTitle');
+const feedbackMessage = $('#feedbackMessage');
+const feedbackBtn = $('#feedbackBtn');
+const confettiContainer = $('#confettiContainer');
+const roomDot1 = $('#roomDot1');
+const roomDot2 = $('#roomDot2');
+const roomDot3 = $('#roomDot3');
+const roomProgress = $('#roomProgress');
+
+// ============================================
+// Game State
+// ============================================
+const state = {
+  currentRoom: 1,       // 1, 2, 3
+  currentStep: 1,       // For room 3: 1 or 2
+  currentInput: '',
+  hintUsed: false,
+  timerSeconds: 0,
+  timerInterval: null,
+  isLocked: false,
+  totalRooms: 3,
+};
+
+// ============================================
+// Room Definitions
+// ============================================
+const rooms = {
+  1: {
+    emoji: '🏛️',
+    title: '密室 1 - 公顷展厅',
+    desc: '你走进了一个边长 100 米的正方形展厅。<br>墙上刻着一行字：<br><br><strong>"本展厅的面积 = 1 公顷 = ? 平方米"</strong><br><br>请输入 4 位密码解开大门！',
+    password: '10000',
+    passwordLength: 5,
+    hint: '边长 100 米的正方形，面积 = 100 × 100',
+  },
+  2: {
+    emoji: '🔭',
+    title: '密室 2 - 天台观景台',
+    desc: '你来到天台观景台，俯瞰整片大地。<br>望远镜上刻着谜题：<br><br><strong>"1 平方千米的土地<br>包含多少个这样的公顷展厅？"</strong><br><br>请输入 3 位密码！',
+    password: '100',
+    passwordLength: 3,
+    hint: '想想 10×10 的棋盘，每格 1 公顷',
+  },
+  3: {
+    emoji: '🗝️',
+    title: '密室 3 - 终极密室',
+    steps: {
+      1: {
+        desc: '终极密室有两道锁！<br>先解开第一道：<br><br><strong>"一个长方形公园长 800 米、宽 500 米，<br>面积是多少公顷？"</strong><br><br>请输入密码！',
+        password: '40',
+        passwordLength: 2,
+        hint: '800 × 500 = 400000 平方米，再换算成公顷',
+        type: 'numpad',
+      },
+      2: {
+        desc: '最后一道锁！选择正确的 <strong>面积单位钥匙</strong>：<br><br><strong>"中国香港面积约 1100( &nbsp;&nbsp; )"</strong><br><br>请点击正确的单位钥匙打开大门！',
+        options: ['平方米', '公顷', '平方千米', '平方分米'],
+        correctIndex: 2,
+        hint: '一个城市那么大，应该用什么单位？',
+        type: 'unitkeys',
+      },
+    },
+  },
+};
+
+// ============================================
+// Particle Background
+// ============================================
+function createParticles() {
+  const container = $('#bgParticles');
+  container.innerHTML = '';
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 3 + 1;
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDelay = Math.random() * 8 + 's';
+    p.style.animationDuration = (Math.random() * 6 + 6) + 's';
+    container.appendChild(p);
+  }
+}
+
+// ============================================
+// Timer
+// ============================================
+function startTimer() {
+  state.timerSeconds = 0;
+  updateTimerDisplay();
+  state.timerInterval = setInterval(() => {
+    state.timerSeconds++;
+    updateTimerDisplay();
+  }, 1000);
+}
+
+function stopTimer() {
+  if (state.timerInterval) {
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+  }
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(state.timerSeconds / 60);
+  const s = state.timerSeconds % 60;
+  timerDisplay.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function getTimeString() {
+  const m = Math.floor(state.timerSeconds / 60);
+  const s = state.timerSeconds % 60;
+  if (m > 0) {
+    return m + ' 分 ' + s + ' 秒';
+  }
+  return s + ' 秒';
+}
+
+// ============================================
+// Room Progress Dots
+// ============================================
+function updateRoomProgress() {
+  roomDot1.className = 'room-dot';
+  roomDot2.className = 'room-dot';
+  roomDot3.className = 'room-dot';
+
+  if (state.currentRoom === 1) {
+    roomDot1.classList.add('active');
+  } else if (state.currentRoom === 2) {
+    roomDot1.classList.add('completed');
+    roomDot2.classList.add('active');
+  } else if (state.currentRoom === 3) {
+    roomDot1.classList.add('completed');
+    roomDot2.classList.add('completed');
+    roomDot3.classList.add('active');
+  }
+}
+
+// ============================================
+// Password Display
+// ============================================
+function renderPasswordDisplay(length) {
+  passwordDisplay.innerHTML = '';
+  for (let i = 0; i < length; i++) {
+    const digit = document.createElement('div');
+    digit.className = 'password-digit';
+    digit.textContent = '';
+    passwordDisplay.appendChild(digit);
+  }
+  state.currentInput = '';
+  updatePasswordDigits();
+}
+
+function updatePasswordDigits() {
+  const digits = passwordDisplay.querySelectorAll('.password-digit');
+  digits.forEach((d, i) => {
+    if (i < state.currentInput.length) {
+      d.textContent = state.currentInput[i];
+      d.classList.add('filled');
+    } else {
+      d.textContent = '';
+      d.classList.remove('filled');
+    }
+  });
+}
+
+function shakePasswordDisplay() {
+  const digits = passwordDisplay.querySelectorAll('.password-digit');
+  digits.forEach(d => {
+    d.classList.add('shake');
+    setTimeout(() => d.classList.remove('shake'), 400);
+  });
+}
+
+// ============================================
+// Number Pad
+// ============================================
+function renderNumpad(maxLength) {
+  gameArea.innerHTML = '<div class="numpad" id="numpad"></div>';
+  const numpad = $('#numpad');
+
+  const buttons = [
+    ['1', ''], ['2', ''], ['3', ''],
+    ['4', ''], ['5', ''], ['6', ''],
+    ['7', ''], ['8', ''], ['9', ''],
+    ['⌫', 'clear'], ['0', ''], ['✓', 'submit'],
+  ];
+
+  buttons.forEach(([label, cls]) => {
+    const btn = document.createElement('button');
+    btn.className = 'numpad-btn';
+    if (cls === 'clear') btn.classList.add('clear');
+    if (cls === 'submit') btn.classList.add('submit');
+    btn.textContent = label;
+    btn.addEventListener('click', () => handleNumpadPress(label, maxLength));
+    numpad.appendChild(btn);
+  });
+}
+
+function handleNumpadPress(label, maxLength) {
+  if (state.isLocked) return;
+
+  if (label === '⌫') {
+    if (state.currentInput.length > 0) {
+      state.currentInput = state.currentInput.slice(0, -1);
+      updatePasswordDigits();
+    }
+  } else if (label === '✓') {
+    checkPassword();
+  } else {
+    if (state.currentInput.length < maxLength) {
+      state.currentInput += label;
+      updatePasswordDigits();
+    }
+  }
+}
+
+// ============================================
+// Unit Key Selector
+// ============================================
+function renderUnitKeys(options) {
+  gameArea.innerHTML = '<div class="unit-keys" id="unitKeys"></div>';
+  const container = $('#unitKeys');
+
+  const icons = ['📏', '🏟️', '🗺️', '📐'];
+  options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'unit-key';
+    btn.innerHTML = icons[idx] + ' ' + opt;
+    btn.addEventListener('click', () => handleUnitKeyPress(idx, options));
+    container.appendChild(btn);
+  });
+}
+
+function handleUnitKeyPress(selected, options) {
+  if (state.isLocked) return;
+
+  const roomData = rooms[state.currentRoom];
+  const stepData = roomData.steps[state.currentStep];
+  const correctIndex = stepData.correctIndex;
+  const buttons = gameArea.querySelectorAll('.unit-key');
+
+  state.isLocked = true;
+
+  if (selected === correctIndex) {
+    buttons[selected].classList.add('correct');
+    setTimeout(() => {
+      if (state.currentStep < 2) {
+        state.currentStep++;
+        resetRoomState();
+        renderCurrentRoom();
+      } else {
+        // Room 3 complete!
+        unlockRoom3();
+      }
+    }, 600);
+  } else {
+    buttons[selected].classList.add('incorrect');
+    buttons.forEach((b, i) => {
+      if (i === correctIndex) b.classList.add('correct');
+    });
+    const correctUnit = options[correctIndex];
+    setTimeout(() => {
+      showFeedback(
+        'wrong',
+        '单位不对！',
+        '中国香港是一个城市，面积应该用 <strong style="color:#10B981">平方千米</strong> 来度量。记住这个知识点！',
+        () => {
+          state.isLocked = false;
+          renderCurrentRoom();
+        }
+      );
+    }, 500);
+  }
+}
+
+// ============================================
+// Password Check
+// ============================================
+function checkPassword() {
+  if (state.isLocked) return;
+
+  let correctPassword;
+  if (state.currentRoom === 3) {
+    correctPassword = rooms[state.currentRoom].steps[state.currentStep].password;
+  } else {
+    correctPassword = rooms[state.currentRoom].password;
+  }
+
+  if (state.currentInput === correctPassword) {
+    // Correct!
+    state.isLocked = true;
+    const digits = passwordDisplay.querySelectorAll('.password-digit');
+    digits.forEach(d => d.classList.add('unlocked'));
+
+    setTimeout(() => {
+      showFeedback(
+        'correct',
+        '密码正确！🔓',
+        getCorrectMessage(),
+        () => {
+          advanceRoom();
+        }
+      );
+    }, 400);
+  } else {
+    // Wrong
+    shakePasswordDisplay();
+    state.isLocked = true;
+    setTimeout(() => {
+      state.isLocked = false;
+    }, 500);
+  }
+}
+
+function getCorrectMessage() {
+  if (state.currentRoom === 1) {
+    return '1公顷 = 10000平方米！大门打开了，快走吧！';
+  } else if (state.currentRoom === 2) {
+    return '1平方千米 = 100公顷！望远镜指向了下一个密室...';
+  } else if (state.currentRoom === 3) {
+    if (state.currentStep === 1) {
+      return '40公顷！第一道锁打开了，还剩最后一道！';
+    }
+  }
+  return '';
+}
+
+function advanceRoom() {
+  if (state.currentRoom === 3) {
+    if (state.currentStep === 1) {
+      // Advance to step 2 of room 3
+      state.currentStep = 2;
+      resetRoomState();
+      renderCurrentRoom();
+      return;
+    }
+    // Room 3 fully complete
+    unlockRoom3();
+  } else {
+    state.currentRoom++;
+    resetRoomState();
+    renderCurrentRoom();
+  }
+}
+
+function unlockRoom3() {
+  stopTimer();
+  updateRoomProgress();
+  roomDot1.classList.add('completed');
+  roomDot2.classList.add('completed');
+  roomDot3.classList.add('completed');
+  roomDot3.classList.remove('active');
+  showVictory();
+}
+
+function resetRoomState() {
+  state.currentInput = '';
+  state.hintUsed = false;
+  state.isLocked = false;
+  hintBtn.classList.remove('used');
+  hintBtn.innerHTML = '💡 获取提示（免费）';
+  hintBtn.disabled = false;
+  hintTextContainer.innerHTML = '';
+}
+
+// ============================================
+// Render Current Room
+// ============================================
+function renderCurrentRoom() {
+  updateRoomProgress();
+
+  if (state.currentRoom === 3) {
+    renderRoom3();
+  } else {
+    renderRoom12();
+  }
+}
+
+function renderRoom12() {
+  const room = rooms[state.currentRoom];
+
+  sceneEmoji.textContent = room.emoji;
+  sceneTitle.textContent = room.title;
+  sceneDesc.innerHTML = room.desc;
+
+  renderPasswordDisplay(room.passwordLength);
+  renderNumpad(room.passwordLength);
+  state.isLocked = false;
+
+  // Scroll scene into view
+  sceneArea.scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderRoom3() {
+  const room = rooms[state.currentRoom];
+  const step = room.steps[state.currentStep];
+
+  sceneEmoji.textContent = room.emoji;
+  sceneTitle.textContent = room.title + '（第 ' + state.currentStep + ' 道锁）';
+  sceneDesc.innerHTML = step.desc;
+
+  hintTextContainer.innerHTML = '';
+
+  if (step.type === 'numpad') {
+    renderPasswordDisplay(step.passwordLength);
+    renderNumpad(step.passwordLength);
+  } else if (step.type === 'unitkeys') {
+    // Hide password display for unit key selection
+    passwordDisplay.innerHTML = '';
+    renderUnitKeys(step.options);
+  }
+
+  state.isLocked = false;
+}
+
+// ============================================
+// Hint System
+// ============================================
+function getCurrentHint() {
+  if (state.currentRoom === 3) {
+    return rooms[state.currentRoom].steps[state.currentStep].hint;
+  }
+  return rooms[state.currentRoom].hint;
+}
+
+hintBtn.addEventListener('click', () => {
+  if (state.hintUsed) return;
+  state.hintUsed = true;
+
+  const hint = getCurrentHint();
+  hintTextContainer.innerHTML = '<div class="hint-text">💡 ' + hint + '</div>';
+
+  hintBtn.classList.add('used');
+  hintBtn.innerHTML = '🔒 提示已使用';
+  hintBtn.disabled = true;
+});
+
+// ============================================
+// Feedback Modal
+// ============================================
+function showFeedback(type, title, message, onContinue) {
+  feedbackIcon.textContent = type === 'correct' ? '✅' : type === 'wrong' ? '❌' : '💡';
+  feedbackTitle.textContent = title;
+  feedbackTitle.style.color = type === 'correct'
+    ? 'var(--color-success)'
+    : type === 'wrong'
+      ? 'var(--color-error)'
+      : 'var(--color-warning)';
+  feedbackMessage.innerHTML = message;
+  feedbackOverlay.classList.remove('hidden');
+
+  feedbackBtn.onclick = () => {
+    feedbackOverlay.classList.add('hidden');
+    if (onContinue) onContinue();
+  };
+}
+
+// ============================================
+// Victory Screen
+// ============================================
+function showVictory() {
+  // Show confetti
+  spawnConfetti();
+
+  const timeStr = getTimeString();
+  const stars = state.timerSeconds < 60 ? '🌟🌟🌟' : state.timerSeconds < 120 ? '🌟🌟' : '🌟';
+  const comment = state.timerSeconds < 60
+    ? '你简直是面积大师！'
+    : state.timerSeconds < 120
+      ? '干得漂亮！'
+      : '成功逃脱！';
+
+  gameArea.innerHTML = '';
+  passwordDisplay.innerHTML = '';
+  hintTextContainer.innerHTML = '';
+  hintBtn.disabled = true;
+
+  sceneArea.innerHTML = `
+    <span class="victory-icon">🏆</span>
+    <div class="victory-title">恭喜逃脱成功！</div>
+  `;
+
+  gameArea.innerHTML = `
+    <div class="victory-container">
+      <div class="victory-stars">${stars}</div>
+      <div class="victory-stats">
+        <div>🔓 解开了全部 <strong>3 个密室</strong>的密码锁</div>
+        <div>⏱️ 逃脱用时：<span class="time-highlight">${timeStr}</span></div>
+        <div style="margin-top:8px; font-size:16px; color:var(--color-primary-light)">${comment}</div>
+        <div style="margin-top:8px; font-size:13px; color:var(--color-text-dim)">
+          ✅ 1公顷 = 10000平方米<br>
+          ✅ 1平方千米 = 100公顷<br>
+          ✅ 长方形面积 = 长 × 宽<br>
+          ✅ 会用合适的面积单位
+        </div>
+      </div>
+      <button class="victory-btn" onclick="restartGame()">🔄 再挑战一次</button>
+    </div>
+  `;
+
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================
+// Confetti Animation
+// ============================================
+function spawnConfetti() {
+  confettiContainer.classList.remove('hidden');
+  confettiContainer.innerHTML = '';
+
+  const colors = ['#7C5CFC', '#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#EC4899', '#14B8A6'];
+
+  for (let i = 0; i < 80; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.width = (Math.random() * 8 + 6) + 'px';
+    piece.style.height = (Math.random() * 8 + 6) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+    piece.style.animationDelay = Math.random() * 1.5 + 's';
+    confettiContainer.appendChild(piece);
+  }
+
+  setTimeout(() => {
+    confettiContainer.classList.add('hidden');
+    confettiContainer.innerHTML = '';
+  }, 4000);
+}
+
+// ============================================
+// Restart
+// ============================================
+function restartGame() {
+  stopTimer();
+  state.currentRoom = 1;
+  state.currentStep = 1;
+  state.currentInput = '';
+  state.hintUsed = false;
+  state.isLocked = false;
+  state.timerSeconds = 0;
+
+  updateTimerDisplay();
+  hintBtn.classList.remove('used');
+  hintBtn.innerHTML = '💡 获取提示（免费）';
+  hintBtn.disabled = false;
+  hintTextContainer.innerHTML = '';
+  feedbackOverlay.classList.add('hidden');
+  confettiContainer.classList.add('hidden');
+  confettiContainer.innerHTML = '';
+
+  renderCurrentRoom();
+  startTimer();
+}
+
+restartBtn.addEventListener('click', () => {
+  if (confirm('确定要重新开始吗？当前进度将丢失。')) {
+    restartGame();
+  }
+});
+
+// ============================================
+// Initialize
+// ============================================
+function init() {
+  createParticles();
+  gameTitle.textContent = '🏛️ 面积密室逃脱';
+  updateRoomProgress();
+  renderCurrentRoom();
+  startTimer();
+}
+
+// Handle keyboard input for numpad
+document.addEventListener('keydown', (e) => {
+  if (state.isLocked) return;
+
+  const roomData = state.currentRoom === 3
+    ? rooms[state.currentRoom].steps[state.currentStep]
+    : rooms[state.currentRoom];
+
+  if (roomData.type === 'unitkeys') return;
+
+  const maxLength = roomData.passwordLength || rooms[state.currentRoom].passwordLength;
+
+  if (e.key >= '0' && e.key <= '9') {
+    handleNumpadPress(e.key, maxLength);
+  } else if (e.key === 'Backspace') {
+    handleNumpadPress('⌫', maxLength);
+  } else if (e.key === 'Enter') {
+    handleNumpadPress('✓', maxLength);
+  }
+});
+
+init();
+</script>
+
+</body>
+</html>

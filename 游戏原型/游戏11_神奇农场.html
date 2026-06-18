@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>神奇农场 - 公顷和平方千米</title>
+<style>
+/* ============================================
+   神奇农场 - 基于 Math Game Template
+   公顷和平方千米 | 模拟经营数学游戏
+   ============================================ */
+
+:root {
+  /* --- Farm Theme Colors --- */
+  --color-primary: #4CAF50;
+  --color-primary-light: #A5D6A7;
+  --color-primary-dark: #2E7D32;
+  --color-success: #388E3C;
+  --color-success-light: #C8E6C9;
+  --color-error: #E53935;
+  --color-error-light: #FFEBEE;
+  --color-warning: #F9A825;
+  --color-warning-light: #FFF8E1;
+  --color-bg: #F1F8E9;
+  --color-card: #FFFFFF;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-border: #E0E0E0;
+  --color-gold: #F9A825;
+  --color-gold-dark: #F57F17;
+
+  /* --- Sizing --- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-button: 0 4px 12px rgba(0,0,0,0.15);
+
+  /* --- Typography --- */
+  --font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-number: "Consolas", "Courier New", monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-family);
+  background: linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 100%);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* --- Game Container --- */
+.game-container {
+  width: 100%;
+  max-width: 500px;
+  background: var(--color-card);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 24px rgba(46,125,50,0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 600px;
+  position: relative;
+}
+
+/* --- Header Bar --- */
+.game-header {
+  background: linear-gradient(135deg, #66BB6A, #2E7D32);
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.game-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.game-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-icon { font-size: 18px; }
+
+.stat-value {
+  font-weight: 700;
+  font-family: var(--font-number);
+}
+
+/* --- Level Indicator --- */
+.level-indicator {
+  padding: 8px 20px;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* --- Question Area --- */
+.question-area {
+  padding: 20px 20px 12px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.question-text {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 6px;
+  line-height: 1.6;
+}
+
+.question-hint {
+  font-size: 13px;
+  color: var(--color-text-light);
+}
+
+/* --- Game Area --- */
+.game-area {
+  flex: 1;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+}
+
+/* --- Farm Grid (Level 1) --- */
+.farm-grid-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.farm-grid-label {
+  font-size: 12px;
+  color: var(--color-text-light);
+  text-align: center;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.farm-grid-axes {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.farm-y-axis {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: space-between;
+  padding-right: 6px;
+  min-width: 36px;
+}
+
+.farm-y-axis span {
+  font-size: 10px;
+  color: var(--color-text-light);
+  text-align: right;
+  line-height: 1;
+}
+
+.farm-grid-inner {
+  display: flex;
+  flex-direction: column;
+}
+
+.farm-x-axis {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 4px;
+  min-width: 100%;
+}
+
+.farm-x-axis span {
+  font-size: 10px;
+  color: var(--color-text-light);
+  text-align: center;
+  min-width: 28px;
+}
+
+.farm-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  gap: 2px;
+  width: 320px;
+  height: 320px;
+  border: 3px solid var(--color-primary-dark);
+  border-radius: 4px;
+  background: #795548;
+  padding: 3px;
+}
+
+.farm-cell {
+  border-radius: 2px;
+  transition: transform 0.15s;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.farm-cell:hover {
+  transform: scale(1.1);
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* --- Input Groups --- */
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 380px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.input-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.game-input {
+  width: 110px;
+  padding: 10px 12px;
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-number);
+  text-align: center;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #FAFAFA;
+}
+
+.game-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(76,175,80,0.15);
+  background: white;
+}
+
+.game-input.correct-input {
+  border-color: var(--color-success);
+  background: var(--color-success-light);
+}
+
+.game-input.wrong-input {
+  border-color: var(--color-error);
+  background: var(--color-error-light);
+  animation: shake 0.4s ease;
+}
+
+.input-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-light);
+  white-space: nowrap;
+}
+
+/* --- Submit Button --- */
+.submit-btn {
+  padding: 12px 28px;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 80px;
+  box-shadow: 0 3px 10px rgba(46,125,50,0.3);
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 16px rgba(46,125,50,0.4);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* --- Plot Card (Level 2/3) --- */
+.plot-card {
+  background: linear-gradient(135deg, #FFF8E1, #FFFDE7);
+  border: 2px solid #E0D89C;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+}
+
+.plot-card .plot-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.plot-card .plot-icon {
+  font-size: 28px;
+}
+
+.plot-card .plot-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #5D4037;
+}
+
+.plot-card .plot-info {
+  font-size: 13px;
+  color: var(--color-text-light);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.plot-rect-visual {
+  margin: 8px auto;
+  border: 2px dashed #A1887F;
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    0deg,
+    #C8E6C9,
+    #C8E6C9 4px,
+    #A5D6A7 4px,
+    #A5D6A7 8px
+  );
+  position: relative;
+}
+
+.plot-rect-visual .plot-dim-label {
+  position: absolute;
+  font-size: 11px;
+  color: #5D4037;
+  font-weight: 600;
+}
+
+/* --- Level 3 Panel --- */
+.level3-panel {
+  width: 100%;
+  max-width: 400px;
+}
+
+.level3-card {
+  background: white;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.level3-card .card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-primary-dark);
+}
+
+.level3-card .card-icon {
+  font-size: 24px;
+}
+
+.level3-card .card-desc {
+  font-size: 13px;
+  color: var(--color-text-light);
+  margin-bottom: 8px;
+}
+
+/* --- Progress Bar --- */
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 4px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #66BB6A, #43A047, #2E7D32);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* --- Feedback Modal --- */
+.feedback-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+
+.feedback-modal {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 340px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  animation: scaleIn 0.3s ease;
+}
+
+.feedback-icon {
+  font-size: 64px;
+  margin-bottom: 12px;
+  animation: popIn 0.4s ease;
+}
+
+.feedback-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.feedback-message {
+  font-size: 15px;
+  color: var(--color-text-light);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.feedback-btn {
+  padding: 12px 36px;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 3px 10px rgba(46,125,50,0.3);
+}
+
+.feedback-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 16px rgba(46,125,50,0.4);
+}
+
+/* --- Coin Pop Animation --- */
+.coin-pop {
+  position: fixed;
+  font-size: 28px;
+  pointer-events: none;
+  animation: coinFly 1s ease-out forwards;
+  z-index: 200;
+  font-weight: 700;
+  color: var(--color-gold-dark);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+@keyframes coinFly {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  50% { opacity: 1; transform: translateY(-60px) scale(1.3); }
+  100% { opacity: 0; transform: translateY(-100px) scale(0.5); }
+}
+
+/* --- Footer --- */
+.game-footer {
+  padding: 12px 20px;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--color-border);
+}
+
+.restart-btn {
+  padding: 8px 20px;
+  font-size: 14px;
+  color: var(--color-text-light);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.restart-btn:hover {
+  color: var(--color-primary-dark);
+  border-color: var(--color-primary);
+  background: #F1F8E9;
+}
+
+/* --- Victory Screen --- */
+.victory-container {
+  text-align: center;
+  padding: 20px;
+  animation: fadeIn 0.5s ease;
+}
+
+.victory-icon {
+  font-size: 80px;
+  margin-bottom: 12px;
+  animation: bounce 0.6s ease infinite alternate;
+}
+
+.victory-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: 8px;
+}
+
+.victory-stats {
+  font-size: 15px;
+  color: var(--color-text-light);
+  margin-bottom: 20px;
+  line-height: 2;
+}
+
+.victory-btn {
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  margin: 0 6px;
+  transition: all 0.2s;
+  box-shadow: 0 3px 10px rgba(46,125,50,0.3);
+}
+
+.victory-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* --- Level Transition Banner --- */
+.level-banner {
+  background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+  color: #5D4037;
+  padding: 12px 20px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 15px;
+  animation: scaleIn 0.4s ease;
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@keyframes pulse-success {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-14px); }
+}
+
+@keyframes popIn {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes growIn {
+  from { transform: scaleX(0.3); opacity: 0.5; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+/* --- Wheat/Plant Decoration --- */
+.farm-plant {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  animation: swayPlant 2s ease-in-out infinite;
+}
+
+@keyframes swayPlant {
+  0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+  50% { transform: translateX(-50%) rotate(2deg); }
+}
+
+/* --- Level 2 Rectangular Visual --- */
+.lvl2-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 10px 0;
+}
+
+.lvl2-rect {
+  position: relative;
+  border: 3px solid #795548;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #A5D6A7 0%, #66BB6A 30%, #81C784 50%, #4CAF50 70%, #66BB6A 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.lvl2-rect::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 8px,
+    rgba(0,0,0,0.05) 8px,
+    rgba(0,0,0,0.05) 12px
+  );
+}
+
+.lvl2-rect-label {
+  position: relative;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1B5E20;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+  z-index: 1;
+}
+
+.lvl2-dim-label {
+  font-size: 12px;
+  color: #5D4037;
+  font-weight: 600;
+}
+
+/* --- Responsive --- */
+@media (max-width: 360px) {
+  .game-container { min-height: 500px; }
+  .game-header { padding: 12px 16px; }
+  .game-title { font-size: 17px; }
+  .question-text { font-size: 15px; }
+  .farm-grid { width: 260px; height: 260px; }
+  .game-input { width: 90px; font-size: 17px; }
+  .input-row { gap: 4px; }
+}
+
+@media (min-width: 768px) {
+  .game-container { max-width: 580px; min-height: 680px; }
+  .farm-grid { width: 380px; height: 380px; }
+}
+
+/* --- Utility --- */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<div class="game-container" id="gameContainer">
+  <!-- Header -->
+  <div class="game-header">
+    <div class="game-title" id="gameTitle">🌾 神奇农场</div>
+    <div class="game-stats">
+      <div class="stat-item">
+        <span class="stat-icon">🪙</span>
+        <span class="stat-value" id="coinsDisplay">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">🏆</span>
+        <span class="stat-value" id="levelDisplay">1/3</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level Indicator -->
+  <div class="level-indicator" id="levelLabel">第 1 关 · 新手上路</div>
+
+  <!-- Question -->
+  <div class="question-area" id="questionArea">
+    <div class="question-text" id="questionText"></div>
+    <div class="question-hint" id="questionHint"></div>
+  </div>
+
+  <!-- Game Area -->
+  <div class="game-area" id="gameArea"></div>
+
+  <!-- Progress Bar -->
+  <div style="padding: 0 20px 12px;">
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="game-footer">
+    <button class="restart-btn" id="restartBtn">🔄 重新开始</button>
+  </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="feedback-overlay hidden" id="feedbackOverlay">
+  <div class="feedback-modal">
+    <div class="feedback-icon" id="feedbackIcon"></div>
+    <div class="feedback-title" id="feedbackTitle"></div>
+    <div class="feedback-message" id="feedbackMessage"></div>
+    <button class="feedback-btn" id="feedbackBtn">继续 →</button>
+  </div>
+</div>
+
+<script>
+// ============================================
+// DOM References
+// ============================================
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+const gameTitle = $('#gameTitle');
+const coinsDisplay = $('#coinsDisplay');
+const levelDisplay = $('#levelDisplay');
+const levelLabel = $('#levelLabel');
+const questionText = $('#questionText');
+const questionHint = $('#questionHint');
+const gameArea = $('#gameArea');
+const progressBar = $('#progressBar');
+const restartBtn = $('#restartBtn');
+const feedbackOverlay = $('#feedbackOverlay');
+const feedbackIcon = $('#feedbackIcon');
+const feedbackTitle = $('#feedbackTitle');
+const feedbackMessage = $('#feedbackMessage');
+const feedbackBtn = $('#feedbackBtn');
+
+// ============================================
+// Game State
+// ============================================
+const state = {
+  coins: 0,
+  level: 1,
+  totalLevels: 3,
+  totalSteps: 7, // L1:1 + L2:3 + L3:3
+  completedSteps: 0,
+  questionIndex: 0,
+  level2Pool: [],
+  level2Questions: [],
+  isAnswering: false,
+};
+
+// ============================================
+// Coin Effects
+// ============================================
+function addCoins(amount) {
+  state.coins += amount;
+  coinsDisplay.textContent = state.coins;
+  coinsDisplay.style.transform = 'scale(1.3)';
+  setTimeout(() => { coinsDisplay.style.transform = 'scale(1)'; }, 200);
+}
+
+function showCoinPop(x, y, amount) {
+  const el = document.createElement('div');
+  el.className = 'coin-pop';
+  el.textContent = `+${amount} 🪙`;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  document.body.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+// ============================================
+// Progress
+// ============================================
+function updateProgress() {
+  const pct = Math.round((state.completedSteps / state.totalSteps) * 100);
+  progressBar.style.width = pct + '%';
+}
+
+function updateLevelDisplay() {
+  levelDisplay.textContent = `${state.level}/${state.totalLevels}`;
+  const labels = ['第 1 关 · 新手上路', '第 2 关 · 勤劳农夫', '第 3 关 · 农场大亨'];
+  levelLabel.textContent = labels[state.level - 1] || `第 ${state.level} 关`;
+}
+
+// ============================================
+// Feedback Modal
+// ============================================
+function showFeedback(type, title, message, onContinue) {
+  const icons = {
+    correct: '✅',
+    wrong: '❌',
+    levelup: '🌟',
+    hint: '💡',
+  };
+  const colors = {
+    correct: 'var(--color-success)',
+    wrong: 'var(--color-error)',
+    levelup: '#F9A825',
+    hint: 'var(--color-warning)',
+  };
+  feedbackIcon.textContent = icons[type] || '✅';
+  feedbackTitle.textContent = title;
+  feedbackTitle.style.color = colors[type] || 'var(--color-success)';
+  feedbackMessage.textContent = message;
+  feedbackOverlay.classList.remove('hidden');
+
+  feedbackBtn.onclick = () => {
+    feedbackOverlay.classList.add('hidden');
+    if (onContinue) onContinue();
+  };
+}
+
+// ============================================
+// Victory Screen
+// ============================================
+function showVictory() {
+  gameArea.innerHTML = `
+    <div class="victory-container">
+      <div class="victory-icon">🏆</div>
+      <div class="victory-title">恭喜通关！</div>
+      <div class="victory-stats">
+        <div>🌾 完成全部 3 个关卡</div>
+        <div>🪙 最终金币：<strong style="color:var(--color-gold-dark);font-size:22px;">${state.coins}</strong></div>
+        <div>📐 掌握了公顷和平方千米的换算</div>
+        <div>🌟 你是最棒的农场主！</div>
+      </div>
+      <button class="victory-btn" onclick="restartGame()">🔄 再玩一次</button>
+    </div>
+  `;
+  progressBar.style.width = '100%';
+}
+
+// ============================================
+// Input Validation
+// ============================================
+function validateNumberInput(value, min, max, label) {
+  const num = Number(value);
+  if (value === '' || isNaN(num)) {
+    return { valid: false, message: `请输入"${label}"的数值` };
+  }
+  if (num < min || num > max) {
+    return { valid: false, message: `"${label}"的范围应在 ${min} ~ ${max} 之间` };
+  }
+  return { valid: true, value: num };
+}
+
+// ============================================
+// Level 1: 1公顷正方形农场
+// ============================================
+const HEARTBEAT_COLORS = [
+  '#C8E6C9', '#A5D6A7', '#81C784', '#66BB6A',
+  '#C8E6C9', '#A5D6A7', '#A5D6A7', '#81C784',
+  '#66BB6A', '#C8E6C9', '#A5D6A7', '#81C784',
+  '#C8E6C9', '#66BB6A', '#81C784', '#A5D6A7',
+  '#C8E6C9', '#81C784', '#A5D6A7', '#66BB6A',
+];
+let heartbeatIndex = 0;
+let heartbeatInterval = null;
+
+function renderLevel1() {
+  questionText.textContent = '这片正方形土地边长 100 米，面积是多少？';
+  questionHint.textContent = '请分别用平方米和公顷表示（1公顷 = 10000平方米）';
+
+  // Build farm grid
+  let gridHTML = '<div class="farm-grid-wrapper">';
+  gridHTML += '<div class="farm-grid" id="farmGrid">';
+  for (let row = 0; row < 10; row++) {
+    for (let col = 0; col < 10; col++) {
+      const colorIdx = (row * 10 + col) % HEARTBEAT_COLORS.length;
+      gridHTML += `<div class="farm-cell" style="background:${HEARTBEAT_COLORS[colorIdx]};" data-row="${row}" data-col="${col}"></div>`;
+    }
+  }
+  gridHTML += '</div>';
+  gridHTML += '<div class="farm-grid-label">📏 边长 = 100米 × 100米（每格 = 10m × 10m）</div>';
+  gridHTML += '</div>';
+
+  gridHTML += `
+    <div class="input-row mt-12">
+      <span class="input-label">面积 =</span>
+      <input type="number" class="game-input" id="input1_sqm" placeholder="平方米" min="0" max="9999999" inputmode="numeric">
+      <span class="input-unit">平方米</span>
+      <span class="input-label">=</span>
+      <input type="number" class="game-input" id="input1_ha" placeholder="公顷" min="0" max="99999" inputmode="numeric" step="any">
+      <span class="input-unit">公顷</span>
+    </div>
+    <button class="submit-btn mt-12" id="submitBtn1">✅ 提交答案</button>
+  `;
+
+  gameArea.innerHTML = gridHTML;
+
+  // Heartbeat animation on grid
+  startHeartbeat();
+
+  document.getElementById('submitBtn1').addEventListener('click', handleLevel1Submit);
+}
+
+function startHeartbeat() {
+  const cells = $$('.farm-cell');
+  if (cells.length === 0) return;
+  heartbeatIndex = 0;
+  clearInterval(heartbeatInterval);
+  heartbeatInterval = setInterval(() => {
+    cells.forEach(c => {
+      c.style.background = HEARTBEAT_COLORS[(heartbeatIndex + parseInt(c.dataset.row) + parseInt(c.dataset.col)) % HEARTBEAT_COLORS.length];
+    });
+    heartbeatIndex = (heartbeatIndex + 1) % HEARTBEAT_COLORS.length;
+  }, 600);
+}
+
+function stopHeartbeat() {
+  clearInterval(heartbeatInterval);
+  const cells = $$('.farm-cell');
+  cells.forEach((c, i) => {
+    const colorIdx = (parseInt(c.dataset.row) * 10 + parseInt(c.dataset.col)) % HEARTBEAT_COLORS.length;
+    c.style.background = HEARTBEAT_COLORS[colorIdx];
+  });
+}
+
+function handleLevel1Submit() {
+  if (state.isAnswering) return;
+  state.isAnswering = true;
+
+  const sqmInput = document.getElementById('input1_sqm');
+  const haInput = document.getElementById('input1_ha');
+
+  const sqmVal = validateNumberInput(sqmInput.value.trim(), 0, 99999999, '平方米');
+  const haVal = validateNumberInput(haInput.value.trim(), 0, 99999, '公顷');
+
+  if (!sqmVal.valid || !haVal.valid) {
+    const msg = (!sqmVal.valid ? sqmVal.message : haVal.message);
+    showFeedback('wrong', '输入有误', msg, () => { state.isAnswering = false; });
+    return;
+  }
+
+  const sqmCorrect = sqmVal.value === 10000;
+  const haCorrect = haVal.value === 1;
+
+  if (sqmCorrect) {
+    sqmInput.classList.add('correct-input');
+  } else {
+    sqmInput.classList.add('wrong-input');
+  }
+  if (haCorrect) {
+    haInput.classList.add('correct-input');
+  } else {
+    haInput.classList.add('wrong-input');
+  }
+
+  if (sqmCorrect && haCorrect) {
+    stopHeartbeat();
+    state.completedSteps++;
+    updateProgress();
+    addCoins(50);
+    const btnRect = document.getElementById('submitBtn1').getBoundingClientRect();
+    showCoinPop(btnRect.left + btnRect.width / 2, btnRect.top, 50);
+
+    showFeedback('correct', '回答正确！',
+      '10000平方米 = 1公顷 🌾\n你解锁了第一块土地！（+50金币）',
+      () => {
+        state.level = 2;
+        state.questionIndex = 0;
+        updateLevelDisplay();
+        generateLevel2Questions();
+        renderLevel2();
+        state.isAnswering = false;
+      });
+  } else {
+    let msg = '再想想：\n';
+    if (!sqmCorrect) msg += '· 正方形面积 = 边长 × 边长 = 100 × 100\n';
+    if (!haCorrect) msg += '· 1公顷 = 10000平方米\n';
+    showFeedback('wrong', '答案不对哦', msg, () => {
+      state.isAnswering = false;
+      sqmInput.classList.remove('correct-input', 'wrong-input');
+      haInput.classList.remove('correct-input', 'wrong-input');
+      sqmInput.value = '';
+      haInput.value = '';
+    });
+  }
+}
+
+// ============================================
+// Level 2: 长方形农田
+// ============================================
+const LEVEL2_POOL = [
+  { l: 200, w: 50, label: '麦田' },
+  { l: 400, w: 100, label: '玉米地' },
+  { l: 500, w: 200, label: '稻田' },
+  { l: 300, w: 200, label: '蔬菜园' },
+  { l: 250, w: 400, label: '果园' },
+  { l: 150, w: 200, label: '花田' },
+  { l: 800, w: 50, label: '豆田' },
+  { l: 100, w: 300, label: '茶园' },
+  { l: 600, w: 150, label: '棉田' },
+  { l: 700, w: 100, label: '甘蔗地' },
+];
+
+function generateLevel2Questions() {
+  // Shuffle and pick 3
+  const shuffled = [...LEVEL2_POOL].sort(() => Math.random() - 0.5);
+  state.level2Questions = shuffled.slice(0, 3).map(q => ({
+    label: q.label,
+    length: q.l,
+    width: q.w,
+    sqm: q.l * q.w,
+    hectares: Math.round((q.l * q.w) / 100) / 100,
+  }));
+  state.questionIndex = 0;
+}
+
+function renderLevel2() {
+  if (state.questionIndex >= state.level2Questions.length) {
+    // Level 2 complete
+    state.level = 3;
+    state.questionIndex = 0;
+    updateLevelDisplay();
+    addCoins(30);
+    showFeedback('levelup', '第2关通过！',
+      '你已掌握公顷计算！解锁第3关 🚜（+30金币）',
+      () => { renderLevel3(); });
+    return;
+  }
+
+  const q = state.level2Questions[state.questionIndex];
+  const totalInLevel = state.level2Questions.length;
+
+  questionText.textContent = `第 ${state.questionIndex + 1}/${totalInLevel} 题 · ${q.label}`;
+  questionHint.textContent = `一块长方形农田，长 ${q.length} 米、宽 ${q.width} 米。请计算面积。`;
+
+  // Visual: draw a scaled rectangle
+  const maxDisplaySize = 280;
+  const scale = Math.min(maxDisplaySize / q.length, maxDisplaySize / q.width);
+  const displayW = Math.round(q.length * scale);
+  const displayH = Math.round(q.width * scale);
+
+  gameArea.innerHTML = `
+    <div class="lvl2-visual">
+      <span class="lvl2-dim-label">${q.length}m</span>
+      <div class="lvl2-rect" style="width:${displayW}px;height:${displayH}px;" title="${q.label}">
+        <span class="lvl2-rect-label">${q.label}</span>
+      </div>
+      <span class="lvl2-dim-label" style="writing-mode:vertical-rl;">${q.width}m</span>
+    </div>
+    <div class="input-row mt-12">
+      <span class="input-label">面积 =</span>
+      <input type="number" class="game-input" id="input2_sqm" placeholder="平方米" min="0" max="99999999" inputmode="numeric">
+      <span class="input-unit">平方米</span>
+      <span class="input-label">=</span>
+      <input type="number" class="game-input" id="input2_ha" placeholder="公顷" min="0" max="99999" inputmode="numeric" step="any">
+      <span class="input-unit">公顷</span>
+    </div>
+    <button class="submit-btn mt-12" id="submitBtn2">✅ 提交答案</button>
+  `;
+
+  document.getElementById('submitBtn2').addEventListener('click', handleLevel2Submit);
+}
+
+function handleLevel2Submit() {
+  if (state.isAnswering) return;
+  state.isAnswering = true;
+
+  const q = state.level2Questions[state.questionIndex];
+  const sqmInput = document.getElementById('input2_sqm');
+  const haInput = document.getElementById('input2_ha');
+  const sqmVal = validateNumberInput(sqmInput.value.trim(), 0, 99999999, '平方米');
+  const haVal = validateNumberInput(haInput.value.trim(), 0, 99999, '公顷');
+
+  if (!sqmVal.valid || !haVal.valid) {
+    showFeedback('wrong', '输入有误',
+      (!sqmVal.valid ? sqmVal.message : haVal.message),
+      () => { state.isAnswering = false; });
+    return;
+  }
+
+  const sqmCorrect = sqmVal.value === q.sqm;
+  const haCorrect = haVal.value === q.hectares;
+
+  if (sqmCorrect) sqmInput.classList.add('correct-input');
+  else sqmInput.classList.add('wrong-input');
+  if (haCorrect) haInput.classList.add('correct-input');
+  else haInput.classList.add('wrong-input');
+
+  if (sqmCorrect && haCorrect) {
+    state.completedSteps++;
+    updateProgress();
+    const coinBonus = 20 + state.questionIndex * 5;
+    addCoins(coinBonus);
+    const btnRect = document.getElementById('submitBtn2').getBoundingClientRect();
+    showCoinPop(btnRect.left + btnRect.width / 2, btnRect.top, coinBonus);
+
+    showFeedback('correct', '回答正确！',
+      `${q.length}×${q.width}=${q.sqm}平方米 = ${q.hectares}公顷（+${coinBonus}金币）`,
+      () => {
+        state.questionIndex++;
+        state.isAnswering = false;
+        renderLevel2();
+      });
+  } else {
+    let hint = '';
+    if (!sqmCorrect) hint += `长方形面积 = 长 × 宽 = ${q.length} × ${q.width}\n`;
+    if (!haCorrect) hint += `1公顷 = 10000平方米，${q.sqm} ÷ 10000 = ${q.hectares}公顷\n`;
+    showFeedback('wrong', '再想想', hint, () => {
+      state.isAnswering = false;
+      sqmInput.classList.remove('correct-input', 'wrong-input');
+      haInput.classList.remove('correct-input', 'wrong-input');
+      sqmInput.value = '';
+      haInput.value = '';
+    });
+  }
+}
+
+// ============================================
+// Level 3: 多地块管理 (km²)
+// ============================================
+function renderLevel3() {
+  questionText.textContent = '农场升级！管理你的三块土地';
+  questionHint.textContent = '请完成平方千米（km²）与公顷的换算（1km² = 100公顷）';
+
+  gameArea.innerHTML = `
+    <div class="level3-panel">
+      <div class="level3-card" id="cardA">
+        <div class="card-header">
+          <span class="card-icon">🌽</span> 地块A — 玉米基地
+        </div>
+        <div class="card-desc">面积：2 平方千米 = ？公顷</div>
+        <div class="input-row">
+          <input type="number" class="game-input" id="input3a" placeholder="公顷" min="0" max="99999" inputmode="numeric">
+          <span class="input-unit">公顷</span>
+        </div>
+      </div>
+
+      <div class="level3-card" id="cardB">
+        <div class="card-header">
+          <span class="card-icon">🌾</span> 地块B — 金色麦田
+        </div>
+        <div class="card-desc">面积：150 公顷 = ？平方千米</div>
+        <div class="input-row">
+          <input type="number" class="game-input" id="input3b" placeholder="平方千米" min="0" max="99999" inputmode="numeric" step="any">
+          <span class="input-unit">平方千米</span>
+        </div>
+      </div>
+
+      <div class="level3-card" id="cardC">
+        <div class="card-header">
+          <span class="card-icon">🍎</span> 地块C — 生态果园
+        </div>
+        <div class="card-desc">长 3 km，宽 2 km。面积 = ？平方千米</div>
+        <div class="input-row">
+          <input type="number" class="game-input" id="input3c" placeholder="平方千米" min="0" max="99999" inputmode="numeric">
+          <span class="input-unit">平方千米</span>
+        </div>
+      </div>
+
+      <button class="submit-btn mt-12" id="submitBtn3">✅ 全部提交</button>
+    </div>
+  `;
+
+  document.getElementById('submitBtn3').addEventListener('click', handleLevel3Submit);
+}
+
+function handleLevel3Submit() {
+  if (state.isAnswering) return;
+  state.isAnswering = true;
+
+  const answers = [
+    { id: '3a', input: document.getElementById('input3a'), correct: 200, label: '地块A', unit: '公顷', min: 0, max: 99999 },
+    { id: '3b', input: document.getElementById('input3b'), correct: 1.5, label: '地块B', unit: '平方千米', min: 0, max: 99999 },
+    { id: '3c', input: document.getElementById('input3c'), correct: 6, label: '地块C', unit: '平方千米', min: 0, max: 99999 },
+  ];
+
+  let allValid = true;
+  const results = [];
+
+  for (const a of answers) {
+    const val = validateNumberInput(a.input.value.trim(), a.min, a.max, `${a.label}(${a.unit})`);
+    if (!val.valid) {
+      a.input.classList.add('wrong-input');
+      allValid = false;
+      results.push({ ...a, userVal: null, correct: false, msg: val.message });
+    } else {
+      const isCorrect = val.value === a.correct;
+      if (isCorrect) {
+        a.input.classList.add('correct-input');
+      } else {
+        a.input.classList.add('wrong-input');
+      }
+      results.push({ ...a, userVal: val.value, correct: isCorrect, msg: null });
+    }
+  }
+
+  if (!allValid) {
+    const badResult = results.find(r => r.msg);
+    showFeedback('wrong', '输入有误', badResult.msg, () => {
+      state.isAnswering = false;
+      clearLevel3Inputs();
+    });
+    return;
+  }
+
+  const allCorrect = results.every(r => r.correct);
+
+  if (allCorrect) {
+    state.completedSteps = state.totalSteps;
+    updateProgress();
+    addCoins(100);
+    const btnRect = document.getElementById('submitBtn3').getBoundingClientRect();
+    showCoinPop(btnRect.left + btnRect.width / 2, btnRect.top, 100);
+
+    showFeedback('levelup', '全部正确！',
+      '🎉 地块A: 2km² = 200公顷\n地块B: 150公顷 = 1.5km²\n地块C: 3×2 = 6km²\n\n你是农场的明星！（+100金币）',
+      () => {
+        state.isAnswering = false;
+        showVictory();
+      });
+  } else {
+    const wrongList = results.filter(r => !r.correct);
+    let msg = '以下地块需要修正：\n';
+    for (const w of wrongList) {
+      if (w.id === '3a') msg += `· ${w.label}: 1km² = 100公顷，2km² = ?\n`;
+      if (w.id === '3b') msg += `· ${w.label}: 1km² = 100公顷，150公顷 = ?\n`;
+      if (w.id === '3c') msg += `· ${w.label}: 面积 = 长×宽 = 3×2\n`;
+    }
+    showFeedback('wrong', '还需努力', msg, () => {
+      state.isAnswering = false;
+      clearLevel3Inputs();
+      // Clear only wrong inputs
+      for (const w of wrongList) {
+        w.input.value = '';
+      }
+    });
+  }
+}
+
+function clearLevel3Inputs() {
+  ['input3a', 'input3b', 'input3c'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.remove('correct-input', 'wrong-input');
+    }
+  });
+}
+
+// ============================================
+// Game Flow Control
+// ============================================
+function startGame() {
+  state.coins = 0;
+  state.level = 1;
+  state.questionIndex = 0;
+  state.completedSteps = 0;
+  state.isAnswering = false;
+  stopHeartbeat();
+  coinsDisplay.textContent = '0';
+  updateLevelDisplay();
+  updateProgress();
+  renderLevel1();
+}
+
+function restartGame() {
+  stopHeartbeat();
+  feedbackOverlay.classList.add('hidden');
+  startGame();
+}
+
+// ============================================
+// Initialize
+// ============================================
+restartBtn.addEventListener('click', restartGame);
+
+// Handle Enter key for input submission
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !state.isAnswering) {
+    const submitBtn = document.getElementById('submitBtn1')
+      || document.getElementById('submitBtn2')
+      || document.getElementById('submitBtn3');
+    if (submitBtn && !submitBtn.disabled) {
+      submitBtn.click();
+    }
+  }
+});
+
+// Start
+startGame();
+</script>
+
+</body>
+</html>
