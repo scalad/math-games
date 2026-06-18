@@ -8,7 +8,7 @@
 :root {
   --c1:#FF6B6B;--c2:#4ECDC4;--c3:#FFD93D;--c4:#6C5CE7;--c5:#A8E6CF;
   --bg:#F0F2FF;--text:#2D3436;--card:#FFFFFF;
-  --shadow:0 4px 24px rgba(0,0,0,0.08);--radius:18px;
+  --shadow:0 4px 24px rgba(0,0,0,0.08);--radius:14px;
   --font:"Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -17,53 +17,72 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ===== Hero ===== */
 .hero{
   background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 50%,#A21CAF 100%);
-  color:#fff;text-align:center;padding:52px 20px 44px;position:relative;overflow:hidden
+  color:#fff;text-align:center;padding:48px 20px 40px;position:relative;overflow:hidden
 }
 .hero::before{content:'';position:absolute;top:-100px;right:-80px;width:300px;height:300px;background:rgba(255,255,255,0.05);border-radius:50%}
 .hero::after{content:'';position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;background:rgba(255,255,255,0.04);border-radius:50%}
-.hero-badge{display:inline-block;background:rgba(255,255,255,0.16);padding:6px 18px;border-radius:30px;font-size:12px;font-weight:600;letter-spacing:1px;margin-bottom:14px;position:relative;z-index:1}
-.hero h1{font-size:36px;font-weight:800;margin-bottom:6px;position:relative;z-index:1}
+.hero-badge{display:inline-block;background:rgba(255,255,255,0.16);padding:6px 18px;border-radius:30px;font-size:12px;font-weight:600;letter-spacing:1px;margin-bottom:12px;position:relative;z-index:1}
+.hero h1{font-size:34px;font-weight:800;margin-bottom:4px;position:relative;z-index:1}
 .hero .sub{font-size:14px;opacity:.85;position:relative;z-index:1}
 
 /* ===== Container ===== */
-.container{max-width:960px;margin:0 auto;padding:0 20px}
+.container{max-width:1060px;margin:0 auto;padding:0 20px}
 
 /* ===== Stats ===== */
-.stats-bar{display:flex;justify-content:center;gap:28px;margin:-26px auto 36px;position:relative;z-index:2;flex-wrap:wrap}
+.stats-bar{display:flex;justify-content:center;gap:28px;margin:-24px auto 32px;position:relative;z-index:2;flex-wrap:wrap}
 .stat-card{background:var(--card);border-radius:14px;padding:14px 26px;text-align:center;box-shadow:var(--shadow);min-width:90px}
 .stat-card .num{font-size:26px;font-weight:800;color:#4F46E5}
 .stat-card .lbl{font-size:11px;color:#999;margin-top:2px}
 
 /* ===== Knowledge Point Section ===== */
-.kp-section{margin-bottom:48px}
-.kp-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-.kp-grade{display:inline-block;background:#EDE9FE;color:#6D28D9;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700}
-.kp-title{font-size:22px;font-weight:700}
-.kp-desc{font-size:13px;color:#888;margin:-4px 0 18px 0}
+.kp-section{margin-bottom:40px}
+.kp-header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.kp-grade{display:inline-block;background:#EDE9FE;color:#6D28D9;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap}
+.kp-title{font-size:20px;font-weight:700}
+.kp-desc{font-size:12px;color:#999;margin:-2px 0 14px 0}
 
-/* ===== Game Grid ===== */
-.game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-bottom:24px}
+/* ===== Game Row — 5 cards in one row ===== */
+.game-row{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  margin-bottom:10px;
+}
 .game-card{
   background:var(--card);border-radius:var(--radius);
-  padding:22px;box-shadow:var(--shadow);cursor:pointer;
-  transition:transform .25s,border-color .25s,box-shadow .25s;
+  padding:14px 10px;box-shadow:var(--shadow);cursor:pointer;
+  transition:transform .2s,border-color .2s,box-shadow .2s;
   border:2px solid transparent;position:relative;overflow:hidden;
-  display:flex;flex-direction:column;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
 }
-.game-card:hover{transform:translateY(-5px);box-shadow:0 12px 36px rgba(0,0,0,0.12)}
-.game-card .tag{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;margin-bottom:10px;align-self:flex-start}
+.game-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(0,0,0,0.12);border-color:#A5B4FC}
+.game-card .tag{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;margin-bottom:8px}
 .tag-0{background:#FFE0E0;color:#C0392B}
 .tag-1{background:#D4F4F0;color:#0E6655}
 .tag-2{background:#FFF3CD;color:#B8860B}
 .tag-3{background:#EDE7F6;color:#4527A0}
 .tag-4{background:#E0F2E9;color:#1B5E20}
 .tag-5{background:#FFE0F0;color:#C03060}
-.game-card .icon{font-size:44px;margin-bottom:10px}
-.game-card .name{font-size:17px;font-weight:700;margin-bottom:5px}
-.game-card .desc{font-size:12px;color:#777;line-height:1.5;flex:1}
-.game-card .play-btn{display:none}
+.game-card .icon{font-size:32px;margin-bottom:6px}
+.game-card .name{font-size:14px;font-weight:700;margin-bottom:3px;line-height:1.3}
+.game-card .desc{font-size:11px;color:#999;line-height:1.4}
 
-/* ===== Modal Overlay ===== */
+/* ===== Docs Row inside KP section ===== */
+.kp-docs{
+  display:flex;flex-wrap:wrap;gap:6px;
+  padding:8px 0 0 0;
+}
+.kp-doc-link{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;color:#888;text-decoration:none;
+  padding:4px 10px;border-radius:10px;
+  background:#F5F5FF;border:1px solid #eee;
+  transition:all .15s;white-space:nowrap;
+}
+.kp-doc-link:hover{color:#4F46E5;border-color:#A5B4FC;background:#EEF0FF}
+.kp-doc-sep{font-size:10px;color:#ccc;align-self:center}
+
+/* ===== Modal ===== */
 .modal-overlay{
   position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;
   background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;
@@ -77,8 +96,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 }
 .modal-bar{
   display:flex;align-items:center;justify-content:space-between;
-  padding:10px 18px;background:#f8f8fc;border-bottom:1px solid #eee;
-  flex-shrink:0;
+  padding:10px 18px;background:#f8f8fc;border-bottom:1px solid #eee;flex-shrink:0;
 }
 .modal-bar .title{font-size:15px;font-weight:700}
 .modal-close{
@@ -90,30 +108,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .modal-close:hover{background:#e74c3c;color:#fff}
 .modal-iframe{flex:1;border:none;width:100%}
 
-/* ===== New Knowledge Point Placeholder ===== */
-.kp-placeholder{
-  background:var(--card);border-radius:var(--radius);padding:40px 24px;
-  text-align:center;border:2px dashed #ddd;transition:all .2s;
+/* ===== Instructions ===== */
+.instructions{
+  background:var(--card);border-radius:var(--radius);padding:18px 22px;
+  box-shadow:var(--shadow);font-size:12px;color:#888;line-height:1.9;margin-bottom:20px;
 }
-.kp-placeholder:hover{border-color:#4F46E5;background:#fafaff}
-.kp-placeholder .ph-icon{font-size:48px;margin-bottom:12px}
-.kp-placeholder .ph-title{font-size:17px;font-weight:700;color:#888;margin-bottom:6px}
-.kp-placeholder .ph-desc{font-size:13px;color:#bbb}
-
-/* ===== Docs Section ===== */
-.doc-section{margin-bottom:40px}
-.doc-title{font-size:18px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.doc-row{display:flex;flex-wrap:wrap;gap:10px}
-.doc-link{
-  background:var(--card);border-radius:12px;padding:10px 18px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.04);text-decoration:none;
-  color:#555;font-size:13px;display:flex;align-items:center;gap:7px;
-  border:1px solid #eee;transition:all .2s
-}
-.doc-link:hover{color:#4F46E5;border-color:#4F46E5;box-shadow:0 4px 14px rgba(79,70,229,0.1)}
+.instructions strong{color:#555}
 
 /* ===== Footer ===== */
-.footer{text-align:center;padding:40px 20px;color:#bbb;font-size:12px;border-top:1px solid #eee;margin-top:32px}
+.footer{text-align:center;padding:32px 20px;color:#bbb;font-size:12px;border-top:1px solid #eee;margin-top:24px}
 .footer a{color:#4F46E5;text-decoration:none}
 
 /* ===== Animations ===== */
@@ -121,13 +124,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 @keyframes scaleUp{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
 
 /* ===== Responsive ===== */
+@media(max-width:900px){
+  .game-row{grid-template-columns:repeat(3,1fr)}
+}
 @media(max-width:600px){
-  .hero{padding:36px 16px 30px}
-  .hero h1{font-size:26px}
-  .stats-bar{gap:10px}
-  .stat-card{padding:10px 18px}
-  .stat-card .num{font-size:22px}
-  .game-grid{grid-template-columns:1fr}
+  .hero{padding:32px 16px 26px}
+  .hero h1{font-size:24px}
+  .stats-bar{gap:8px}
+  .stat-card{padding:10px 16px}
+  .stat-card .num{font-size:20px}
+  .game-row{grid-template-columns:repeat(2,1fr);gap:8px}
+  .game-card{padding:10px 8px}
+  .game-card .icon{font-size:26px}
+  .game-card .name{font-size:13px}
   .modal-box{max-height:100vh;border-radius:0}
 }
 </style>
@@ -150,140 +159,116 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div class="stat-card"><div class="num">5 档</div><div class="lbl">自适应练习</div></div>
   </div>
 
-  <!-- ===== Knowledge Point: 1~5的认识 ===== -->
+  <!-- ===== 一年级 · 1~5 数字的认识 ===== -->
   <div class="kp-section">
     <div class="kp-header">
       <span class="kp-grade">📘 一年级上册</span>
       <span class="kp-title">1~5 数字的认识</span>
     </div>
-    <p class="kp-desc">数数、读数、写数 · CPA教学法（具象→意象→抽象） · 5款创意游戏全覆盖</p>
-    <div class="game-grid">
+    <p class="kp-desc">数数 · 读数 · 写数 — CPA教学法（具象→意象→抽象）— 5款创意游戏全覆盖</p>
+
+    <div class="game-row">
       <div class="game-card" onclick="openGame('游戏原型/游戏01_开心农场打地鼠.html','🐹 开心农场打地鼠')">
-        <span class="tag tag-0">🏁 竞速族</span>
+        <span class="tag tag-0">🏁 竞速</span>
         <span class="icon">🐹</span>
         <div class="name">开心农场打地鼠</div>
-        <div class="desc">听/看图快速点击正确的数字地鼠，3关速度挑战，连击×5得分翻倍！</div>
+        <div class="desc">听/看图快速点击数字地鼠，3关挑战</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏02_数字记忆翻翻乐.html','🃏 数字记忆翻翻乐')">
-        <span class="tag tag-1">🃏 卡牌族</span>
+        <span class="tag tag-1">🃏 卡牌</span>
         <span class="icon">🃏</span>
         <div class="name">数字记忆翻翻乐</div>
-        <div class="desc">翻转卡牌配对数量与数字符号，从物品到中文，3关记忆挑战！</div>
+        <div class="desc">翻牌配对数量与数字，3关记忆挑战</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏03_砸金蛋识数字.html','🥚 砸金蛋识数字')">
-        <span class="tag tag-2">🎯 运气族</span>
+        <span class="tag tag-2">🎯 运气</span>
         <span class="icon">🥚</span>
         <div class="name">砸金蛋识数字</div>
-        <div class="desc">敲开5颗金蛋答题赢星星奖励，全对获得"丰收小达人"称号！</div>
+        <div class="desc">敲开金蛋答题赢星星，丰收小达人</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏04_数物连连看.html','🔗 数物连连看')">
-        <span class="tag tag-3">📝 笔纸族</span>
+        <span class="tag tag-3">📝 笔纸</span>
         <span class="icon">🔗</span>
         <div class="name">数物连连看</div>
-        <div class="desc">两次点击连线匹配物品与数字，含干扰项挑战，彩虹连线视觉满分！</div>
+        <div class="desc">连线匹配物品与数字，彩虹视觉</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏05_神秘数字猜猜猜.html','🔍 神秘数字猜猜猜')">
-        <span class="tag tag-4">🕵️ 推理族</span>
+        <span class="tag tag-4">🕵️ 推理</span>
         <span class="icon">🔍</span>
         <div class="name">神秘数字猜猜猜</div>
-        <div class="desc">侦探破案！根据线索排除推理猜出神秘数字，还能反向出题！</div>
+        <div class="desc">侦探破案！根据线索推理猜数字</div>
       </div>
+    </div>
+
+    <div class="kp-docs">
+      <a class="kp-doc-link" href="教学方案/一年级_1-5数字的认识_教学方案.md">📖 教学方案</a>
+      <a class="kp-doc-link" href="游戏设计文档/游戏01_开心农场打地鼠.md">🐹</a>
+      <a class="kp-doc-link" href="游戏设计文档/游戏02_数字记忆翻翻乐.md">🃏</a>
+      <a class="kp-doc-link" href="游戏设计文档/游戏03_砸金蛋识数字.md">🥚</a>
+      <a class="kp-doc-link" href="游戏设计文档/游戏04_数物连连看.md">🔗</a>
+      <a class="kp-doc-link" href="游戏设计文档/游戏05_神秘数字猜猜猜.md">🔍</a>
+      <span class="kp-doc-sep">— 5份设计文档</span>
     </div>
   </div>
 
-  <!-- ===== Knowledge Point: 年、月、日的认识 ===== -->
+  <!-- ===== 三年级 · 年、月、日的认识 ===== -->
   <div class="kp-section">
     <div class="kp-header">
       <span class="kp-grade">📙 三年级下册</span>
       <span class="kp-title">年、月、日的认识</span>
     </div>
     <p class="kp-desc">大月小月 · 平年闰年 · 24时计时法 · 日历阅读 — 5款创意游戏 + 5档自适应练习</p>
-    <div class="game-grid">
+
+    <div class="game-row">
       <div class="game-card" onclick="openGame('游戏原型/游戏06_时间旅行社.html','🧳 时间旅行社')">
-        <span class="tag tag-5">🎭 角色族</span>
+        <span class="tag tag-5">🎭 角色</span>
         <span class="icon">🧳</span>
         <div class="name">时间旅行社</div>
-        <div class="desc">扮演小导游，帮顾客在月历上预订行程！选大月/找闰年/转24时，3关角色扮演。</div>
+        <div class="desc">扮演导游在月历上帮顾客预订行程</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏07_月份记忆王.html','🃏 月份记忆王')">
-        <span class="tag tag-1">🃏 卡牌族</span>
+        <span class="tag tag-1">🃏 卡牌</span>
         <span class="icon">🃏</span>
         <div class="name">月份记忆王</div>
-        <div class="desc">翻牌配对：月份↔天数/分类！3关记忆挑战，配对效率决定星级评定。</div>
+        <div class="desc">翻牌配对月份↔天数/分类，星级评定</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏08_日历谜题大挑战.html','🔐 日历谜题大挑战')">
-        <span class="tag tag-4">🕵️ 推理族</span>
+        <span class="tag tag-4">🕵️ 推理</span>
         <span class="icon">🔐</span>
         <div class="name">日历谜题大挑战</div>
-        <div class="desc">被困时间密室！破解4道年月日密码锁，3级提示系统助你推理逃脱。</div>
+        <div class="desc">4道密码锁密室逃脱，3级提示推理</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏09_月历补全大师.html','📅 月历补全大师')">
-        <span class="tag tag-3">📝 笔纸族</span>
+        <span class="tag tag-3">📝 笔纸</span>
         <span class="icon">📅</span>
         <div class="name">月历补全大师</div>
-        <div class="desc">时间风暴吹乱了日历！根据星期规律填补空白日期，4关渐进挑战。</div>
+        <div class="desc">填补被风暴吹乱的日历空格，4关</div>
       </div>
       <div class="game-card" onclick="openGame('游戏原型/游戏10_闪电时间赛.html','⚡ 闪电时间赛')">
-        <span class="tag tag-0">🏁 竞速族</span>
+        <span class="tag tag-0">🏁 竞速</span>
         <span class="icon">⚡</span>
         <div class="name">闪电时间赛</div>
-        <div class="desc">30秒限时快问快答！大小月/平闰年/24时，连击×2.0得分翻倍！</div>
+        <div class="desc">30秒限时快问快答，连击翻倍得分</div>
       </div>
     </div>
-  </div>
 
-  <!-- ===== Coming Soon ===== -->
-  <div class="kp-section">
-    <div class="kp-header">
-      <span class="kp-grade">📘 更多知识点</span>
-      <span class="kp-title">持续更新中</span>
-    </div>
-    <div class="kp-placeholder">
-      <div class="ph-icon">🚧</div>
-      <div class="ph-title">分数初步认识、面积与周长、小数的认识……</div>
-      <div class="ph-desc">每个知识点将配套 5 款创意游戏 + 自适应练习系统，敬请期待！</div>
+    <div class="kp-docs">
+      <a class="kp-doc-link" href="教学方案/三年级_年日月认识_教学方案.md">📖 教学方案（7模块）</a>
+      <a class="kp-doc-link" href="游戏设计文档/游戏06_时间旅行社.md">🧳</a>
+      <a class="kp-doc-link" href="游戏设计文档/游戏07_月份记忆王.md">🃏</a>
+      <a class="kp-doc-link" href="游戏设计文档/游戏08_日历谜题大挑战.md">🔐</a>
+      <a class="kp-doc-link" href="游戏设计文档/游戏09_月历补全大师.md">📅</a>
+      <a class="kp-doc-link" href="游戏设计文档/游戏10_闪电时间赛.md">⚡</a>
+      <span class="kp-doc-sep">— 5份设计文档 + 练习题池</span>
     </div>
   </div>
 
-  <!-- ===== Documents ===== -->
-  <div class="doc-section">
-    <div class="doc-title">📄 教学文档</div>
-    <div class="doc-row">
-      <a class="doc-link" href="总览.md">📋 总览 — 全部游戏速览 + 自适应练习系统</a>
-      <a class="doc-link" href="教学方案/一年级_1-5数字的认识_教学方案.md">📖 一年级 — 1~5数字认识 (CPA)</a>
-      <a class="doc-link" href="教学方案/三年级_年日月认识_教学方案.md">📖 三年级 — 年月日认识 (7模块)</a>
-    </div>
-  </div>
-  <div class="doc-section">
-    <div class="doc-title">🎨 游戏设计文档 — 三年级 年、月、日</div>
-    <div class="doc-row">
-      <a class="doc-link" href="游戏设计文档/游戏06_时间旅行社.md">🧳 时间旅行社</a>
-      <a class="doc-link" href="游戏设计文档/游戏07_月份记忆王.md">🃏 月份记忆王</a>
-      <a class="doc-link" href="游戏设计文档/游戏08_日历谜题大挑战.md">🔐 日历谜题大挑战</a>
-      <a class="doc-link" href="游戏设计文档/游戏09_月历补全大师.md">📅 月历补全大师</a>
-      <a class="doc-link" href="游戏设计文档/游戏10_闪电时间赛.md">⚡ 闪电时间赛</a>
-    </div>
-  </div>
-  <div class="doc-section">
-    <div class="doc-title">🎨 游戏设计文档 — 一年级 1~5的认识</div>
-    <div class="doc-row">
-      <a class="doc-link" href="游戏设计文档/游戏01_开心农场打地鼠.md">🐹 打地鼠设计</a>
-      <a class="doc-link" href="游戏设计文档/游戏02_数字记忆翻翻乐.md">🃏 翻翻乐设计</a>
-      <a class="doc-link" href="游戏设计文档/游戏03_砸金蛋识数字.md">🥚 砸金蛋设计</a>
-      <a class="doc-link" href="游戏设计文档/游戏04_数物连连看.md">🔗 连连看设计</a>
-      <a class="doc-link" href="游戏设计文档/游戏05_神秘数字猜猜猜.md">🔍 猜数字设计</a>
-    </div>
-  </div>
-
-  <!-- ===== How to use ===== -->
-  <div class="doc-section">
-    <div class="doc-title">💡 玩法说明</div>
-    <div style="background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);font-size:13px;color:#666;line-height:1.9">
-      <p>🎯 <strong>点卡片即玩</strong> — 点击任意游戏卡片，在弹窗中全屏体验，按 <strong>ESC</strong> 或点右上角 ✕ 关闭。</p>
-      <p>📊 <strong>自适应练习</strong> — 游戏通关后根据你的表现自动匹配练习难度：</p>
-      <p style="margin-left:16px">&lt;40% 基础巩固 → 40-60% 查漏补缺 → 60-80% 能力提升 → 80-95% 思维拓展 → ≥95% 挑战冲刺</p>
-      <p>📱 <strong>全设备支持</strong> — 电脑、平板均可流畅运行，触屏友好，无需安装任何软件。</p>
-    </div>
+  <!-- ===== 玩法说明 ===== -->
+  <div class="instructions">
+    <p>🎯 <strong>点卡片即玩</strong> — 点击任意游戏卡片，在弹窗中全屏体验，按 <strong>ESC</strong> 或点 ✕ 关闭</p>
+    <p>📊 <strong>自适应练习</strong> — 通关后自动匹配难度：&lt;40% 基础巩固 → 40-60% 查漏补缺 → 60-80% 能力提升 → 80-95% 思维拓展 → ≥95% 挑战冲刺</p>
+    <p>📱 <strong>全设备支持</strong> — 电脑、平板均可流畅运行，触屏友好，无需安装任何软件</p>
+    <p>📂 <a href="总览.md">查看全部游戏总览文档 →</a></p>
   </div>
 </div>
 
@@ -292,7 +277,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <p style="margin-top:4px">📂 <a href="https://github.com/scalad/math-games">GitHub</a> &nbsp;·&nbsp; Made with ❤️ for kids who love math</p>
 </div>
 
-<!-- ===== Modal Overlay ===== -->
+<!-- ===== Modal ===== -->
 <div class="modal-overlay" id="modal" style="display:none" onclick="closeModal(event)">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-bar">
@@ -304,7 +289,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <script>
-// ===== Modal Logic =====
 const modal = document.getElementById('modal');
 const modalIframe = document.getElementById('modalIframe');
 const modalTitle = document.getElementById('modalTitle');
@@ -315,28 +299,24 @@ function openGame(url, name) {
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
-
 function closeGame() {
   modalIframe.src = '';
   modal.style.display = 'none';
   document.body.style.overflow = '';
 }
-
 function closeModal(e) {
   if (e.target === modal) closeGame();
 }
-
-// ESC to close
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape' && modal.style.display === 'flex') closeGame();
 });
 
-// ===== Dynamic Stats =====
+// Auto stats
 (function(){
   const sections = document.querySelectorAll('.kp-section');
   let totalGames = 0;
   sections.forEach(s => { totalGames += s.querySelectorAll('.game-card').length; });
-  document.getElementById('totalKps').textContent = sections.length - 1; // exclude placeholder
+  document.getElementById('totalKps').textContent = sections.length;
   document.getElementById('totalGames').textContent = totalGames;
 })();
 </script>
