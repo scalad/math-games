@@ -698,7 +698,7 @@ document.addEventListener('keydown', function(e) {
 function mdToHtml(md) {
   let html = md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
-    return '<pre><code>' + code.replace(/\n$/, '') + '</code></pre>';
+    return '\n<!--CODEBLOCK-->\n<pre><code>' + code.replace(/\n$/, '') + '</code></pre>\n<!--/CODEBLOCK-->\n';
   });
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
   html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
@@ -710,11 +710,6 @@ function mdToHtml(md) {
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-  html = html.replace(/^(\|.+\|)$/gm, function(line) {
-    return line.replace(/^\|(.+)\|$/, function(_, cells) {
-      return '<tr>' + cells.split('|').map(c => '<td>' + c.trim() + '</td>').join('') + '</tr>';
-    });
-  });
   html = html.replace(/^&gt; (.*)$/gm, '<blockquote>$1</blockquote>');
   html = html.replace(/<\/blockquote>\n<blockquote>/g, '<br>');
   html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
@@ -724,15 +719,66 @@ function mdToHtml(md) {
     if (m.indexOf('<ul>') >= 0) return m;
     return '<ol>' + m + '</ol>';
   });
+
+  // ====== Table rendering ======
+  // Process table blocks: consecutive lines starting/ending with |
   var lines = html.split('\n');
   var out = [];
-  for (var i = 0; i < lines.length; i++) {
-    var line = lines[i].trim();
-    if (!line) { out.push(''); continue; }
-    if (/^<(pre|h[1-4]|hr|blockquote|ul|ol|li|tr|td|th|\/)/.test(line)) {
-      out.push(line); continue;
+  var i = 0;
+  while (i < lines.length) {
+    var line = lines[i];
+    // Detect table start: line starts and ends with |
+    if (/^\|.+\|$/.test(line.trim())) {
+      var tableRows = [];
+      while (i < lines.length && /^\|.+\|$/.test(lines[i].trim())) {
+        tableRows.push(lines[i].trim());
+        i++;
+      }
+      // Build table HTML
+      if (tableRows.length >= 2) {
+        var tbl = '<table>';
+        var isAlignRow = /^\|[\s\-:]+\|$/.test(tableRows[1]);
+        var headerIdx = isAlignRow ? 0 : 0;
+        var bodyStart = isAlignRow ? 2 : 1;
+
+        if (isAlignRow) {
+          // First row is header
+          tbl += '<thead><tr>' + tableRows[0].replace(/^\||\|$/g,'').split('|').map(function(c){return '<th>'+c.trim()+'</th>';}).join('') + '</tr></thead>';
+        } else if (tableRows.length > 0) {
+          tbl += '<thead><tr>' + tableRows[0].replace(/^\||\|$/g,'').split('|').map(function(c){return '<th>'+c.trim()+'</th>';}).join('') + '</tr></thead>';
+        }
+        if (bodyStart < tableRows.length) {
+          tbl += '<tbody>';
+          for (var j = bodyStart; j < tableRows.length; j++) {
+            tbl += '<tr>' + tableRows[j].replace(/^\||\|$/g,'').split('|').map(function(c){return '<td>'+c.trim()+'</td>';}).join('') + '</tr>';
+          }
+          tbl += '</tbody>';
+        }
+        tbl += '</table>';
+        out.push(tbl);
+      } else {
+        // Single row — not really a table
+        i -= tableRows.length;
+        out.push(line);
+        i++;
+      }
+      continue;
     }
-    out.push('<p>' + line + '</p>');
+    out.push(line);
+    i++;
+  }
+  html = out.join('\n');
+
+  // ====== Paragraphs ======
+  out = [];
+  var rawLines = html.split('\n');
+  for (var k = 0; k < rawLines.length; k++) {
+    var l = rawLines[k].trim();
+    if (!l) { out.push(''); continue; }
+    if (/^<(pre|h[1-4]|hr|blockquote|ul|ol|li|tr|td|th|\/|table|thead|tbody|!--)/.test(l)) {
+      out.push(l); continue;
+    }
+    out.push('<p>' + l + '</p>');
   }
   html = out.join('\n');
   html = html.replace(/<p>\s*<\/p>/g, '');
