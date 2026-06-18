@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数学游戏原型</title>
+<style>
+/* ============================================
+   Math Game Prototype Base Styles
+   Kid-friendly, responsive, touch-optimized
+   ============================================ */
+
+:root {
+  /* --- Color Palette (customize per game) --- */
+  --color-primary: #4A90D9;
+  --color-primary-light: #7AB3E8;
+  --color-primary-dark: #2E6AB0;
+  --color-success: #52C41A;
+  --color-success-light: #D9F7BE;
+  --color-error: #FF4D4F;
+  --color-error-light: #FFF1F0;
+  --color-warning: #FAAD14;
+  --color-warning-light: #FFFBE6;
+  --color-bg: #F0F5FF;
+  --color-card: #FFFFFF;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-border: #E8E8E8;
+
+  /* --- Sizing --- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-button: 0 4px 12px rgba(0,0,0,0.15);
+
+  /* --- Typography --- */
+  --font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-number: "Consolas", "Courier New", monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-family);
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* --- Game Container --- */
+.game-container {
+  width: 100%;
+  max-width: 480px;
+  background: var(--color-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 600px;
+  position: relative;
+}
+
+/* --- Header Bar --- */
+.game-header {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.game-title { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+.game-stats { display: flex; gap: 16px; font-size: 14px; }
+.stat-item { display: flex; align-items: center; gap: 4px; }
+.stat-icon { font-size: 16px; }
+.stat-value { font-weight: 700; font-family: var(--font-number); }
+
+/* --- Level Indicator --- */
+.level-indicator {
+  padding: 8px 20px;
+  background: var(--color-primary-light);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* --- Question Area --- */
+.question-area { padding: 20px; text-align: center; flex-shrink: 0; }
+.question-text { font-size: 18px; font-weight: 600; color: var(--color-text); margin-bottom: 8px; line-height: 1.5; }
+.question-hint { font-size: 13px; color: var(--color-text-light); }
+
+/* --- Game Area --- */
+.game-area {
+  flex: 1; padding: 16px 20px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 200px;
+}
+
+/* --- Options Grid --- */
+.options-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; width: 100%; max-width: 360px;
+}
+.option-btn {
+  padding: 16px; font-size: 20px; font-weight: 700;
+  font-family: var(--font-number); color: var(--color-text);
+  background: var(--color-card); border: 2px solid var(--color-border);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: all 0.2s ease; min-height: 56px;
+  display: flex; align-items: center; justify-content: center;
+}
+.option-btn:hover { border-color: var(--color-primary); background: var(--color-bg); transform: translateY(-2px); box-shadow: var(--shadow-button); }
+.option-btn:active { transform: translateY(0); }
+.option-btn.correct { border-color: var(--color-success); background: var(--color-success-light); color: var(--color-success); animation: pulse-success 0.5s ease; }
+.option-btn.incorrect { border-color: var(--color-error); background: var(--color-error-light); color: var(--color-error); animation: shake 0.4s ease; }
+.option-btn:disabled { pointer-events: none; opacity: 0.7; }
+
+/* --- Input --- */
+.input-group { display: flex; gap: 12px; width: 100%; max-width: 360px; }
+.game-input {
+  flex: 1; padding: 14px 16px; font-size: 22px; font-weight: 700;
+  font-family: var(--font-number); text-align: center;
+  border: 2px solid var(--color-border); border-radius: var(--radius-md);
+  outline: none; transition: border-color 0.2s;
+}
+.game-input:focus { border-color: var(--color-primary); }
+.submit-btn {
+  padding: 14px 24px; font-size: 16px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: background 0.2s; min-width: 72px;
+}
+.submit-btn:hover { background: var(--color-primary-dark); }
+
+/* --- Progress Bar --- */
+.progress-bar-container {
+  width: 100%; height: 8px; background: var(--color-border);
+  border-radius: 4px; margin-top: 12px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success), var(--color-primary));
+  border-radius: 4px; transition: width 0.5s ease;
+}
+
+/* --- Feedback Modal --- */
+.feedback-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4); display: flex;
+  justify-content: center; align-items: center;
+  z-index: 100; animation: fadeIn 0.2s ease;
+}
+.feedback-modal {
+  background: white; border-radius: var(--radius-lg);
+  padding: 32px 24px; text-align: center;
+  max-width: 320px; width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  animation: scaleIn 0.3s ease;
+}
+.feedback-icon { font-size: 56px; margin-bottom: 12px; }
+.feedback-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.feedback-message { font-size: 15px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.5; }
+.feedback-btn {
+  padding: 12px 32px; font-size: 16px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: background 0.2s;
+}
+.feedback-btn:hover { background: var(--color-primary-dark); }
+
+/* --- Footer --- */
+.game-footer {
+  padding: 12px 20px; display: flex; justify-content: center;
+  border-top: 1px solid var(--color-border);
+}
+.restart-btn {
+  padding: 8px 20px; font-size: 14px; color: var(--color-text-light);
+  background: transparent; border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+}
+.restart-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+/* --- Victory Screen --- */
+.victory-container { text-align: center; padding: 20px; }
+.victory-icon { font-size: 72px; margin-bottom: 12px; animation: bounce 0.6s ease infinite alternate; }
+.victory-title { font-size: 26px; font-weight: 700; color: var(--color-success); margin-bottom: 8px; }
+.victory-stats { font-size: 15px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.8; }
+.victory-btn {
+  padding: 12px 32px; font-size: 16px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; margin: 0 6px; transition: background 0.2s;
+}
+.victory-btn:hover { background: var(--color-primary-dark); }
+
+/* ============================================
+   Practice Mode Styles
+   ============================================ */
+
+/* --- Practice Container (hidden by default) --- */
+.practice-container {
+  display: none; flex-direction: column;
+  height: 100%;
+}
+
+/* --- Difficulty Badge --- */
+.practice-badge-bar {
+  padding: 12px 20px;
+  background: var(--color-bg);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+}
+.practice-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 13px; font-weight: 700;
+}
+.badge-tier-1 { background: #E8F5E9; color: #2E7D32; }
+.badge-tier-2 { background: #E3F2FD; color: #1565C0; }
+.badge-tier-3 { background: #FFF3E0; color: #E65100; }
+.badge-tier-4 { background: #F3E5F5; color: #7B1FA2; }
+.badge-tier-5 { background: #FFEBEE; color: #C62828; }
+
+.practice-progress-text {
+  font-size: 13px; color: var(--color-text-light);
+}
+
+/* --- Practice Question Card --- */
+.practice-question-card {
+  margin: 20px; padding: 24px 20px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  flex: 1;
+}
+.practice-q-num {
+  font-size: 12px; font-weight: 700; color: var(--color-primary);
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.practice-q-title {
+  font-size: 17px; font-weight: 600; color: var(--color-text);
+  margin-bottom: 16px; line-height: 1.6;
+}
+.practice-options { display: flex; flex-direction: column; gap: 10px; }
+.practice-option {
+  padding: 14px 16px; font-size: 15px; text-align: left;
+  background: var(--color-bg); border: 2px solid var(--color-border);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: all 0.2s; line-height: 1.4;
+}
+.practice-option:hover { border-color: var(--color-primary); background: white; }
+.practice-option.selected-correct { border-color: var(--color-success); background: var(--color-success-light); }
+.practice-option.selected-wrong { border-color: var(--color-error); background: var(--color-error-light); }
+.practice-option.show-correct { border-color: var(--color-success); }
+.practice-option:disabled { pointer-events: none; }
+
+/* --- Practice Input (for fill-in problems) --- */
+.practice-input-area { display: flex; gap: 10px; }
+.practice-input {
+  flex: 1; padding: 12px 16px; font-size: 18px; font-weight: 700;
+  font-family: var(--font-number); text-align: center;
+  border: 2px solid var(--color-border); border-radius: var(--radius-md);
+  outline: none;
+}
+.practice-input:focus { border-color: var(--color-primary); }
+
+/* --- Practice Feedback --- */
+.practice-feedback {
+  margin: 0 20px 12px; padding: 12px 16px;
+  border-radius: var(--radius-md); font-size: 14px;
+  line-height: 1.5; display: none;
+}
+.practice-feedback.show { display: block; animation: fadeIn 0.3s ease; }
+.practice-feedback.correct { background: var(--color-success-light); color: #2E7D32; }
+.practice-feedback.wrong { background: var(--color-error-light); color: #C62828; }
+
+/* --- Practice Navigation --- */
+.practice-nav {
+  padding: 12px 20px; display: flex; gap: 10px;
+  justify-content: center; border-top: 1px solid var(--color-border);
+}
+.practice-nav-btn {
+  padding: 10px 24px; font-size: 15px; font-weight: 700;
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: all 0.2s;
+}
+.practice-nav-btn.primary { background: var(--color-primary); color: white; }
+.practice-nav-btn.primary:hover { background: var(--color-primary-dark); }
+.practice-nav-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.practice-nav-btn.secondary { background: transparent; color: var(--color-text-light); border: 1px solid var(--color-border); }
+.practice-nav-btn.secondary:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+/* --- Practice Summary --- */
+.practice-summary { text-align: center; padding: 30px 20px; }
+.practice-summary-icon { font-size: 64px; margin-bottom: 12px; }
+.practice-summary-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.practice-summary-score { font-size: 36px; font-weight: 700; font-family: var(--font-number); margin-bottom: 12px; }
+.practice-summary-detail { font-size: 14px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.8; }
+
+/* --- Animations --- */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes shake { 0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)} }
+@keyframes pulse-success { 0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)} }
+@keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-12px)} }
+@keyframes popIn { 0%{transform:scale(0);opacity:0}80%{transform:scale(1.1)}100%{transform:scale(1);opacity:1} }
+
+/* --- Utility --- */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+
+/* --- Responsive --- */
+@media (max-width: 360px) {
+  .game-container { min-height: 500px; }
+  .game-header { padding: 12px 16px; }
+  .game-title { font-size: 17px; }
+  .question-text, .practice-q-title { font-size: 16px; }
+  .option-btn { font-size: 18px; padding: 12px; }
+}
+@media (min-width: 768px) {
+  .game-container { max-width: 640px; min-height: 700px; }
+  .options-grid { grid-template-columns: 1fr 1fr 1fr; max-width: 480px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==============================
+     GAME MODE
+     ============================== -->
+<div class="game-container" id="gameContainer">
+  <div class="game-header">
+    <div class="game-title" id="gameTitle">🎮 游戏名称</div>
+    <div class="game-stats">
+      <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-value" id="scoreDisplay">0</span></div>
+      <div class="stat-item"><span class="stat-icon">🎯</span><span class="stat-value" id="levelDisplay">1/3</span></div>
+    </div>
+  </div>
+
+  <div class="level-indicator" id="levelLabel">第 1 关</div>
+
+  <div class="question-area" id="questionArea">
+    <div class="question-text" id="questionText">请计算：3 + 5 = ?</div>
+    <div class="question-hint" id="questionHint">选择正确的答案</div>
+  </div>
+
+  <div class="game-area" id="gameArea"><!-- injected by JS --></div>
+
+  <div style="padding: 0 20px;">
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <div class="game-footer">
+    <button class="restart-btn" id="restartBtn">🔄 重新开始</button>
+  </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="feedback-overlay hidden" id="feedbackOverlay">
+  <div class="feedback-modal">
+    <div class="feedback-icon" id="feedbackIcon">✅</div>
+    <div class="feedback-title" id="feedbackTitle">回答正确！</div>
+    <div class="feedback-message" id="feedbackMessage"></div>
+    <button class="feedback-btn" id="feedbackBtn">继续 →</button>
+  </div>
+</div>
+
+<!-- ==============================
+     PRACTICE MODE (hidden initially)
+     ============================== -->
+<div class="practice-container hidden" id="practiceContainer">
+  <div class="practice-badge-bar">
+    <span class="practice-badge" id="practiceBadge">📝 巩固练习</span>
+    <span class="practice-progress-text" id="practiceProgress">第 1/5 题</span>
+  </div>
+
+  <div class="practice-question-card">
+    <div class="practice-q-num" id="practiceQNum">第 1 题</div>
+    <div class="practice-q-title" id="practiceQTitle">题目内容</div>
+    <div id="practiceQContent">
+      <!-- Options or input injected by JS -->
+    </div>
+  </div>
+
+  <div class="practice-feedback" id="practiceFeedback"></div>
+
+  <div class="practice-nav">
+    <button class="practice-nav-btn secondary hidden" id="practiceSkipBtn">跳过</button>
+    <button class="practice-nav-btn primary" id="practiceNextBtn">下一题 →</button>
+  </div>
+</div>
+
+
+<!-- ============================================
+     Game Logic
+     ============================================ -->
+<script>
+// ============================================
+// DOM References
+// ============================================
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+// Game mode
+const gameContainer = $('#gameContainer');
+const gameTitle = $('#gameTitle');
+const scoreDisplay = $('#scoreDisplay');
+const levelDisplay = $('#levelDisplay');
+const levelLabel = $('#levelLabel');
+const questionText = $('#questionText');
+const questionHint = $('#questionHint');
+const gameArea = $('#gameArea');
+const progressBar = $('#progressBar');
+const restartBtn = $('#restartBtn');
+const feedbackOverlay = $('#feedbackOverlay');
+const feedbackIcon = $('#feedbackIcon');
+const feedbackTitle = $('#feedbackTitle');
+const feedbackMessage = $('#feedbackMessage');
+const feedbackBtn = $('#feedbackBtn');
+
+// Practice mode
+const practiceContainer = $('#practiceContainer');
+const practiceBadge = $('#practiceBadge');
+const practiceProgress = $('#practiceProgress');
+const practiceQNum = $('#practiceQNum');
+const practiceQTitle = $('#practiceQTitle');
+const practiceQContent = $('#practiceQContent');
+const practiceFeedback = $('#practiceFeedback');
+const practiceNextBtn = $('#practiceNextBtn');
+const practiceSkipBtn = $('#practiceSkipBtn');
+
+// ============================================
+// Game State
+// ============================================
+const state = {
+  // Game
+  score: 0,
+  level: 1,
+  totalLevels: 3,
+  questionsPerLevel: 3,
+  currentQuestion: 0,
+  totalQuestions: 0,
+  isAnswering: false,
+
+  // Performance tracking (used for adaptive practice)
+  correctCount: 0,
+  totalAttempts: 0,
+
+  // Practice mode
+  mode: 'game',       // 'game' | 'practice'
+  practiceTier: 1,    // 1-5, determined by game performance
+  practiceIndex: 0,
+  practiceCorrect: 0,
+};
+
+// ============================================
+// UI Utility Functions
+// ============================================
+
+function updateScore(points) {
+  state.score += points;
+  scoreDisplay.textContent = state.score;
+}
+function updateLevel(level) {
+  state.level = level;
+  levelDisplay.textContent = `${level}/${state.totalLevels}`;
+  levelLabel.textContent = `第 ${level} 关`;
+}
+function updateProgress(current, total) {
+  progressBar.style.width = total > 0 ? `${Math.round((current / total) * 100)}%` : '0%';
+}
+
+function showFeedback(type, title, message, onContinue) {
+  feedbackIcon.textContent = type === 'correct' ? '✅' : type === 'hint' ? '💡' : '❌';
+  feedbackTitle.textContent = title;
+  feedbackTitle.style.color = type === 'correct' ? 'var(--color-success)'
+    : type === 'hint' ? 'var(--color-warning)' : 'var(--color-error)';
+  feedbackMessage.textContent = message;
+  feedbackOverlay.classList.remove('hidden');
+  feedbackBtn.onclick = () => { feedbackOverlay.classList.add('hidden'); if (onContinue) onContinue(); };
+}
+
+function setAnswering(v) { state.isAnswering = v; }
+
+// ============================================
+// PRACTICE SYSTEM
+// ============================================
+
+/**
+ * ADAPTIVE PRACTICE PROBLEMS
+ * ============================
+ * This is where you define 5 tiers of practice problems.
+ * After the game ends, the system calculates the player's
+ * accuracy and selects the appropriate tier.
+ *
+ * Each tier contains 3-5 problems. The tier system:
+ *   Tier 1 (< 40% accuracy)  → 基础巩固
+ *   Tier 2 (40-60% accuracy)  → 查漏补缺
+ *   Tier 3 (60-80% accuracy)  → 能力提升
+ *   Tier 4 (80-95% accuracy)  → 思维拓展
+ *   Tier 5 (>= 95% accuracy)  → 挑战冲刺
+ *
+ * REPLACE the example problems below with real ones
+ * matching your knowledge point.
+ */
+
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+// REPLACE: Define real practice problems per tier
+const practiceProblems = {
+  1: [ // 基础巩固
+    { type: 'choice', q: '3 + 5 = ?', options: ['6', '7', '8', '9'], answer: 2, hint: '3加5等于8' },
+    { type: 'choice', q: '10 - 4 = ?', options: ['5', '6', '7', '8'], answer: 1, hint: '10减4等于6' },
+    { type: 'choice', q: '2 + 6 = ?', options: ['7', '8', '9', '10'], answer: 1, hint: '2加6等于8' },
+  ],
+  2: [ // 查漏补缺
+    { type: 'choice', q: '7 + 6 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '7加6等于13' },
+    { type: 'choice', q: '15 - 8 = ?', options: ['6', '7', '8', '9'], answer: 1, hint: '15减8等于7' },
+    { type: 'choice', q: '9 + 5 = ?', options: ['13', '14', '15', '16'], answer: 1, hint: '9加5等于14' },
+  ],
+  3: [ // 能力提升
+    { type: 'choice', q: '18 + 7 = ?', options: ['23', '24', '25', '26'], answer: 2, hint: '先加2凑20，再加5得25' },
+    { type: 'choice', q: '34 - 9 = ?', options: ['23', '24', '25', '26'], answer: 2, hint: '先减4得30，再减5得25' },
+    { type: 'choice', q: '26 + 15 = ?', options: ['39', '40', '41', '42'], answer: 2, hint: '先加10得36，再加5得41' },
+  ],
+  4: [ // 思维拓展
+    { type: 'choice', q: '如果 A + B = 15，A - B = 3，那么 A = ?', options: ['6', '7', '8', '9'], answer: 3, hint: '(15+3)÷2 = 9' },
+    { type: 'choice', q: '45 + 28 = ?', options: ['71', '72', '73', '74'], answer: 2, hint: '45+20=65, 65+8=73' },
+    { type: 'choice', q: '100 - 37 = ?', options: ['61', '62', '63', '64'], answer: 2, hint: '100-30=70, 70-7=63' },
+  ],
+  5: [ // 挑战冲刺
+    { type: 'choice', q: '小明有38元，买了17元的书和9元的笔，还剩多少？', options: ['11', '12', '13', '14'], answer: 1, hint: '38-17-9=12，或38-(17+9)=12' },
+    { type: 'fill', q: '填入缺失的数：__ + 19 = 56', answer: '37', hint: '56 - 19 = 37' },
+    { type: 'choice', q: '□ × 7 + 3 = 38，□ = ?', options: ['4', '5', '6', '7'], answer: 1, hint: '(38-3)÷7 = 5' },
+  ],
+};
+
+/**
+ * Determine practice tier from game performance.
+ * Called once at game completion.
+ */
+function determinePracticeTier() {
+  const accuracy = state.totalAttempts > 0
+    ? state.correctCount / state.totalAttempts
+    : 0;
+
+  if (accuracy < 0.4) return 1;
+  if (accuracy < 0.6) return 2;
+  if (accuracy < 0.8) return 3;
+  if (accuracy < 0.95) return 4;
+  return 5;
+}
+
+/**
+ * Switch from game mode to practice mode.
+ */
+function enterPracticeMode() {
+  state.practiceTier = determinePracticeTier();
+  state.mode = 'practice';
+  state.practiceIndex = 0;
+  state.practiceCorrect = 0;
+
+  // Hide game, show practice
+  gameContainer.classList.add('hidden');
+  practiceContainer.classList.remove('hidden');
+  practiceContainer.style.display = 'flex';
+
+  // Update badge
+  const tier = difficultyLabels[state.practiceTier];
+  practiceBadge.innerHTML = `${tier.icon} ${tier.name}`;
+  practiceBadge.className = `practice-badge ${tier.badgeClass}`;
+
+  // Set up next button
+  practiceNextBtn.textContent = '开始答题 →';
+  practiceNextBtn.classList.remove('hidden');
+  practiceNextBtn.disabled = false;
+
+  // Render first question
+  renderPracticeQuestion();
+}
+
+/**
+ * Render current practice question.
+ */
+function renderPracticeQuestion() {
+  const problems = practiceProblems[state.practiceTier];
+  if (!problems || state.practiceIndex >= problems.length) {
+    showPracticeSummary();
+    return;
+  }
+
+  const p = problems[state.practiceIndex];
+  const total = problems.length;
+
+  practiceProgress.textContent = `第 ${state.practiceIndex + 1}/${total} 题`;
+  practiceQNum.textContent = `第 ${state.practiceIndex + 1} 题`;
+  practiceQTitle.textContent = p.q;
+
+  practiceFeedback.classList.remove('show', 'correct', 'wrong');
+  practiceFeedback.textContent = '';
+
+  if (p.type === 'fill') {
+    practiceQContent.innerHTML = `
+      <div class="practice-input-area">
+        <input type="text" class="practice-input" id="practiceInput" placeholder="输入答案" inputmode="numeric">
+        <button class="submit-btn" id="practiceSubmitBtn">确认</button>
+      </div>`;
+    $('#practiceSubmitBtn').addEventListener('click', handlePracticeSubmit);
+    $('#practiceInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') handlePracticeSubmit(); });
+    $('#practiceInput').focus();
+  } else {
+    // choice type
+    practiceQContent.innerHTML = `<div class="practice-options"></div>`;
+    const opts = practiceQContent.querySelector('.practice-options');
+    p.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'practice-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => handlePracticeChoice(idx, p.answer, p.options[p.answer]));
+      opts.appendChild(btn);
+    });
+  }
+
+  practiceNextBtn.textContent = state.practiceIndex < problems.length - 1 ? '下一题 →' : '查看结果 📊';
+  practiceNextBtn.disabled = true;
+}
+
+function handlePracticeChoice(selected, correctIdx, correctText) {
+  const options = practiceQContent.querySelectorAll('.practice-option');
+  options.forEach(o => o.disabled = true);
+
+  if (selected === correctIdx) {
+    options[selected].classList.add('selected-correct');
+    state.practiceCorrect++;
+    practiceFeedback.textContent = `✅ 正确！${correctText}`;
+    practiceFeedback.className = 'practice-feedback show correct';
+  } else {
+    options[selected].classList.add('selected-wrong');
+    options[correctIdx].classList.add('show-correct');
+    practiceFeedback.textContent = `❌ 正确答案是 ${correctText}。加油！`;
+    practiceFeedback.className = 'practice-feedback show wrong';
+  }
+
+  practiceNextBtn.disabled = false;
+}
+
+function handlePracticeSubmit() {
+  const input = $('#practiceInput');
+  const btn = $('#practiceSubmitBtn');
+  if (!input || btn.disabled) return;
+
+  const problems = practiceProblems[state.practiceTier];
+  const p = problems[state.practiceIndex];
+  const userAnswer = input.value.trim();
+
+  btn.disabled = true;
+  input.disabled = true;
+
+  if (userAnswer === p.answer) {
+    state.practiceCorrect++;
+    practiceFeedback.textContent = `✅ 正确！答案就是 ${p.answer}`;
+    practiceFeedback.className = 'practice-feedback show correct';
+  } else {
+    practiceFeedback.textContent = `❌ 正确答案是 ${p.answer}。${p.hint || ''}`;
+    practiceFeedback.className = 'practice-feedback show wrong';
+  }
+
+  practiceNextBtn.disabled = false;
+}
+
+function handlePracticeNext() {
+  const problems = practiceProblems[state.practiceTier];
+  if (state.practiceIndex >= problems.length - 1) {
+    showPracticeSummary();
+    return;
+  }
+
+  state.practiceIndex++;
+  renderPracticeQuestion();
+}
+
+function showPracticeSummary() {
+  const problems = practiceProblems[state.practiceTier];
+  const total = problems ? problems.length : 0;
+  const pct = total > 0 ? Math.round((state.practiceCorrect / total) * 100) : 0;
+
+  let emoji, color;
+  if (pct >= 80) { emoji = '🌟'; color = 'var(--color-success)'; }
+  else if (pct >= 60) { emoji = '👍'; color = 'var(--color-primary)'; }
+  else { emoji = '💪'; color = 'var(--color-warning)'; }
+
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden');
+  practiceContainer.style.display = 'none';
+
+  gameArea.innerHTML = `
+    <div class="practice-summary">
+      <div class="practice-summary-icon">${emoji}</div>
+      <div class="practice-summary-title">练习完成！</div>
+      <div class="practice-summary-score" style="color:${color}">${state.practiceCorrect}/${total}</div>
+      <div class="practice-summary-detail">
+        <div>📊 正确率：${pct}%</div>
+        <div>🎮 游戏得分：${state.score} 分</div>
+        ${pct >= 80 ? '<div>🏆 太棒了，你对这个知识点掌握得很好！</div>' :
+          pct >= 60 ? '<div>📚 还不错，继续加油会更好！</div>' :
+          '<div>🌱 没关系，多练习几次就能进步！</div>'}
+      </div>
+      <button class="victory-btn" onclick="restartGame()">🔄 再玩一次</button>
+    </div>`;
+}
+
+// Practice next button
+practiceNextBtn.addEventListener('click', handlePracticeNext);
+
+// ============================================
+// Game Logic (REPLACE THIS SECTION)
+// ============================================
+
+const questions = {
+  1: [
+    { q: '3 + 5 = ?', options: ['6', '7', '8', '9'], answer: 2, hint: '试着用手指算一算' },
+    { q: '10 - 4 = ?', options: ['5', '6', '7', '8'], answer: 1, hint: '从10倒着数4个' },
+    { q: '2 + 6 = ?', options: ['7', '8', '9', '10'], answer: 1, hint: '2加6等于几？' },
+  ],
+  2: [
+    { q: '15 + 8 = ?', options: ['21', '22', '23', '24'], answer: 2, hint: '先加5再加3' },
+    { q: '20 - 7 = ?', options: ['11', '12', '13', '14'], answer: 2, hint: '20减5再减2' },
+    { q: '9 + 9 = ?', options: ['16', '17', '18', '19'], answer: 2, hint: '两个9相加' },
+  ],
+  3: [
+    { q: '25 + 17 = ?', options: ['40', '41', '42', '43'], answer: 2, hint: '先加10再加7' },
+    { q: '50 - 23 = ?', options: ['25', '26', '27', '28'], answer: 2, hint: '50减20再减3' },
+    { q: '33 + 19 = ?', options: ['50', '51', '52', '53'], answer: 2, hint: '先加20再减1' },
+  ],
+};
+
+function renderQuestion() {
+  const levelQuestions = questions[state.level];
+  if (!levelQuestions || state.currentQuestion >= levelQuestions.length) {
+    if (state.level >= state.totalLevels) {
+      showVictory(state.score);
+    } else {
+      updateLevel(state.level + 1);
+      state.currentQuestion = 0;
+      state.totalQuestions = (state.level - 1) * state.questionsPerLevel;
+      updateProgress(state.totalQuestions, state.totalLevels * state.questionsPerLevel);
+      renderQuestion();
+    }
+    return;
+  }
+
+  const q = levelQuestions[state.currentQuestion];
+  questionText.textContent = q.q;
+  questionHint.textContent = q.hint || '选择一个答案';
+
+  gameArea.innerHTML = '<div class="options-grid"></div>';
+  const grid = gameArea.querySelector('.options-grid');
+
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => handleAnswer(idx, q.answer, q.options[q.answer]));
+    grid.appendChild(btn);
+  });
+
+  setAnswering(false);
+}
+
+function handleAnswer(selected, correct, correctAnswer) {
+  if (state.isAnswering) return;
+  setAnswering(true);
+
+  state.totalAttempts++;
+
+  const buttons = gameArea.querySelectorAll('.option-btn');
+
+  if (selected === correct) {
+    buttons[selected].classList.add('correct');
+    updateScore(10 * state.level);
+    state.correctCount++;
+    state.currentQuestion++;
+    state.totalQuestions++;
+    updateProgress(state.totalQuestions, state.totalLevels * state.questionsPerLevel);
+    setTimeout(() => {
+      showFeedback('correct', '回答正确！',
+        `答案就是 ${correctAnswer}！(+${10 * state.level}分)`,
+        () => renderQuestion());
+    }, 400);
+  } else {
+    buttons[selected].classList.add('incorrect');
+    buttons[correct].classList.add('correct');
+    state.currentQuestion++;
+    state.totalQuestions++;
+    setTimeout(() => {
+      showFeedback('hint', '再想一想',
+        `正确答案是 ${correctAnswer}。记住这个方法，下一题加油！`,
+        () => renderQuestion());
+    }, 600);
+  }
+}
+
+/**
+ * Victory screen — now includes "进入练习" button
+ * that transitions to adaptive practice mode.
+ */
+function showVictory(finalScore) {
+  state.correctCount = state.correctCount || 0;
+  state.totalAttempts = state.totalAttempts || state.totalQuestions;
+
+  const accuracy = state.totalAttempts > 0
+    ? Math.round((state.correctCount / state.totalAttempts) * 100)
+    : 0;
+
+  const tier = determinePracticeTier();
+  const tierLabel = difficultyLabels[tier];
+
+  gameArea.innerHTML = `
+    <div class="victory-container">
+      <div class="victory-icon">🏆</div>
+      <div class="victory-title">恭喜通关！</div>
+      <div class="victory-stats">
+        <div>🎯 完成关卡：${state.totalLevels} 关</div>
+        <div>⭐ 最终得分：${finalScore} 分</div>
+        <div>📊 正确率：${accuracy}%</div>
+      </div>
+      <button class="victory-btn" onclick="enterPracticeMode()">
+        📝 进入练习 <small>(${tierLabel.icon} ${tierLabel.name})</small>
+      </button>
+      <div style="margin-top:8px;">
+        <button class="restart-btn" onclick="restartGame()">🔄 直接重玩</button>
+      </div>
+    </div>
+  `;
+}
+
+function restartGame() {
+  // Switch back to game mode if in practice
+  state.mode = 'game';
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden');
+  practiceContainer.style.display = 'none';
+
+  state.score = 0;
+  state.level = 1;
+  state.currentQuestion = 0;
+  state.totalQuestions = 0;
+  state.correctCount = 0;
+  state.totalAttempts = 0;
+  updateScore(0);
+  updateLevel(1);
+  updateProgress(0, state.totalLevels * state.questionsPerLevel);
+  renderQuestion();
+}
+
+// ============================================
+// Initialize
+// ============================================
+restartBtn.addEventListener('click', restartGame);
+gameTitle.textContent = '🧮 数学大挑战';
+restartGame();
+</script>
+
+</body>
+</html>
