@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔍 圆之侦探</title>
+<style>
+:root {
+  --color-primary: #1a3a5c;
+  --color-primary-light: #2c5f8a;
+  --color-primary-dark: #0d1f33;
+  --color-gold: #c9a84c;
+  --color-gold-light: #e0c97a;
+  --color-gold-dark: #8b7328;
+  --color-success: #27ae60;
+  --color-success-light: #d5f5e3;
+  --color-error: #c0392b;
+  --color-error-light: #fadbd8;
+  --color-warning: #e67e22;
+  --color-warning-light: #fdebd0;
+  --color-bg: #e8ecf1;
+  --color-card: #ffffff;
+  --color-text: #1a1a2e;
+  --color-text-light: #5a6a7e;
+  --color-border: #d5dce6;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --shadow-card: 0 2px 16px rgba(0,0,0,0.1);
+  --font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-number: "Consolas", "Courier New", monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-family);
+  background: linear-gradient(180deg, #1a2a3a 0%, #1a3a5c 30%, #e8ecf1 30%, #e8ecf1 100%);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.game-container {
+  width: 100%;
+  max-width: 500px;
+  background: var(--color-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card), 0 8px 40px rgba(26,58,92,0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 620px;
+}
+
+.game-header {
+  background: linear-gradient(135deg, #1a3a5c 0%, #2c5f8a 100%);
+  color: white;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--color-gold);
+}
+.game-title { font-size: 19px; font-weight: 700; letter-spacing: 1px; }
+.game-stats { display: flex; gap: 14px; font-size: 13px; }
+.stat-item { display: flex; align-items: center; gap: 4px; }
+.stat-icon { font-size: 15px; }
+.stat-value { font-weight: 700; font-family: var(--font-number); color: var(--color-gold-light); }
+
+.case-bar {
+  padding: 8px 20px;
+  background: linear-gradient(90deg, #fef9e7, #fffdf5, #fef9e7);
+  font-size: 13px; font-weight: 600;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid #e8dca0;
+}
+.case-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  color: var(--color-gold-dark);
+}
+.case-progress { color: var(--color-text-light); font-size: 12px; }
+.case-number {
+  font-family: var(--font-number); color: var(--color-primary);
+  font-weight: 700;
+}
+
+.question-area { padding: 16px 20px; text-align: center; flex-shrink: 0; }
+.question-badge {
+  display: inline-block; padding: 3px 12px; background: var(--color-primary-light);
+  color: white; border-radius: 12px; font-size: 11px; font-weight: 600;
+  margin-bottom: 8px; letter-spacing: 1px;
+}
+.question-text { font-size: 17px; font-weight: 600; color: var(--color-text); margin-bottom: 4px; line-height: 1.5; }
+.question-hint { font-size: 12px; color: var(--color-text-light); font-style: italic; }
+
+.game-area {
+  flex: 1; padding: 12px 20px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 200px;
+}
+
+/* Canvas for graphical questions */
+canvas {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fafbfc;
+  cursor: pointer;
+  touch-action: manipulation;
+  max-width: 100%;
+}
+
+/* Options */
+.options-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; width: 100%; max-width: 380px;
+}
+.option-btn {
+  padding: 14px 12px; font-size: 15px; font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-card); border: 2px solid var(--color-border);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: all 0.2s ease; min-height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; line-height: 1.3;
+}
+.option-btn:hover { border-color: var(--color-gold); background: #fefdf7; transform: translateY(-1px); }
+.option-btn:active { transform: translateY(0); }
+.option-btn.correct { border-color: var(--color-success); background: var(--color-success-light); color: #1e8449; }
+.option-btn.incorrect { border-color: var(--color-error); background: var(--color-error-light); color: #922b21; animation: shake 0.4s ease; }
+.option-btn:disabled { pointer-events: none; opacity: 0.7; }
+
+.option-btn.single-col { grid-column: 1 / -1; }
+
+.reason-box {
+  margin-top: 10px; padding: 10px 14px;
+  border-radius: var(--radius-sm); font-size: 13px;
+  line-height: 1.5; width: 100%; max-width: 380px;
+  text-align: left; display: none;
+}
+.reason-box.show { display: block; animation: fadeIn 0.3s ease; }
+.reason-box.correct { background: var(--color-success-light); color: #1e8449; border: 1px solid var(--color-success); }
+.reason-box.wrong { background: var(--color-error-light); color: #922b21; border: 1px solid var(--color-error); }
+
+.progress-bar-container {
+  width: 100%; height: 5px; background: var(--color-border);
+  border-radius: 3px; margin-top: 8px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-gold), var(--color-gold-dark));
+  border-radius: 3px; transition: width 0.5s ease;
+}
+
+/* Feedback overlay */
+.feedback-overlay {
+  position: fixed; top:0;left:0;right:0;bottom:0;
+  background: rgba(0,0,0,0.5); display:flex;
+  justify-content:center; align-items:center;
+  z-index:100; animation:fadeIn 0.2s ease;
+}
+.feedback-modal {
+  background: white; border-radius: var(--radius-lg);
+  padding: 28px 24px; text-align: center;
+  max-width: 320px; width: 90%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  animation: scaleIn 0.3s ease;
+}
+.feedback-icon { font-size: 56px; margin-bottom: 10px; }
+.feedback-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.feedback-message { font-size: 14px; color: var(--color-text-light); margin-bottom: 18px; line-height: 1.5; }
+.feedback-btn {
+  padding: 10px 28px; font-size: 15px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: background 0.2s;
+}
+.feedback-btn:hover { background: var(--color-primary-dark); }
+
+.game-footer {
+  padding: 10px 20px; display: flex; justify-content: center;
+  border-top: 1px solid var(--color-border);
+}
+.restart-btn {
+  padding: 8px 20px; font-size: 14px; color: var(--color-text-light);
+  background: transparent; border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+}
+.restart-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+/* Victory */
+.victory-container { text-align: center; padding: 20px; }
+.victory-icon { font-size: 68px; margin-bottom: 10px; animation: bounce 0.6s ease infinite alternate; }
+.victory-title { font-size: 24px; font-weight: 700; color: var(--color-gold-dark); margin-bottom: 6px; }
+.victory-subtitle { font-size: 14px; color: var(--color-text-light); margin-bottom: 16px; }
+.victory-stats { font-size: 14px; color: var(--color-text-light); margin-bottom: 18px; line-height: 1.8; }
+.victory-btn {
+  padding: 12px 28px; font-size: 16px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; margin: 0 5px; transition: background 0.2s;
+}
+.victory-btn:hover { background: var(--color-primary-dark); }
+.victory-btn.gold { background: var(--color-gold); color: #1a1a2e; }
+.victory-btn.gold:hover { background: var(--color-gold-dark); color: white; }
+
+/* Practice mode */
+.practice-container { display: none; flex-direction: column; height: 100%; }
+.practice-badge-bar {
+  padding: 12px 20px; background: #f8f9fa;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+}
+.practice-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700;
+}
+.badge-tier-1 { background: #E8F5E9; color: #2E7D32; }
+.badge-tier-2 { background: #E3F2FD; color: #1565C0; }
+.badge-tier-3 { background: #FFF3E0; color: #E65100; }
+.badge-tier-4 { background: #F3E5F5; color: #7B1FA2; }
+.badge-tier-5 { background: #FFEBEE; color: #C62828; }
+.practice-progress-text { font-size: 13px; color: var(--color-text-light); }
+
+.practice-question-card {
+  margin: 16px 20px; padding: 20px;
+  background: var(--color-card); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); flex: 1;
+}
+.practice-q-num { font-size: 12px; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
+.practice-q-title { font-size: 16px; font-weight: 600; color: var(--color-text); margin-bottom: 14px; line-height: 1.5; }
+.practice-options { display: flex; flex-direction: column; gap: 8px; }
+.practice-option {
+  padding: 12px 14px; font-size: 14px; text-align: left;
+  background: #f8f9fa; border: 2px solid var(--color-border);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: all 0.2s; line-height: 1.4;
+}
+.practice-option:hover { border-color: var(--color-primary); background: white; }
+.practice-option.selected-correct { border-color: var(--color-success); background: var(--color-success-light); }
+.practice-option.selected-wrong { border-color: var(--color-error); background: var(--color-error-light); }
+.practice-option.show-correct { border-color: var(--color-success); }
+.practice-option:disabled { pointer-events: none; }
+
+.practice-input-area { display: flex; gap: 8px; }
+.practice-input {
+  flex: 1; padding: 12px 14px; font-size: 18px; font-weight: 700;
+  font-family: var(--font-number); text-align: center;
+  border: 2px solid var(--color-border); border-radius: var(--radius-md); outline: none;
+}
+.practice-input:focus { border-color: var(--color-primary); }
+
+.practice-feedback {
+  margin: 0 20px 10px; padding: 10px 14px;
+  border-radius: var(--radius-md); font-size: 13px;
+  line-height: 1.5; display: none;
+}
+.practice-feedback.show { display: block; animation: fadeIn 0.3s ease; }
+.practice-feedback.correct { background: var(--color-success-light); color: #1e8449; }
+.practice-feedback.wrong { background: var(--color-error-light); color: #922b21; }
+
+.practice-nav {
+  padding: 10px 20px; display: flex; gap: 8px;
+  justify-content: center; border-top: 1px solid var(--color-border);
+}
+.practice-nav-btn {
+  padding: 10px 22px; font-size: 14px; font-weight: 700;
+  border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s;
+}
+.practice-nav-btn.primary { background: var(--color-primary); color: white; }
+.practice-nav-btn.primary:hover { background: var(--color-primary-dark); }
+.practice-nav-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.practice-nav-btn.secondary { background: transparent; color: var(--color-text-light); border: 1px solid var(--color-border); }
+.practice-nav-btn.secondary:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+.practice-summary { text-align: center; padding: 24px 16px; }
+.practice-summary-icon { font-size: 56px; margin-bottom: 10px; }
+.practice-summary-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.practice-summary-score { font-size: 32px; font-weight: 700; font-family: var(--font-number); margin-bottom: 10px; }
+.practice-summary-detail { font-size: 13px; color: var(--color-text-light); margin-bottom: 18px; line-height: 1.7; }
+
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes scaleIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+@keyframes shake { 0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)} }
+@keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-10px)} }
+
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+
+@media (max-width: 360px) {
+  .game-container { min-height: 500px; }
+  .question-text { font-size: 15px; }
+  .option-btn { font-size: 13px; padding: 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="game-container" id="gameContainer">
+  <div class="game-header">
+    <div class="game-title">🔍 圆之侦探</div>
+    <div class="game-stats">
+      <div class="stat-item"><span class="stat-icon">🏅</span><span class="stat-value" id="scoreDisplay">0</span></div>
+      <div class="stat-item"><span class="stat-icon">📋</span><span class="stat-value" id="levelDisplay">案1/5</span></div>
+    </div>
+  </div>
+
+  <div class="case-bar">
+    <span class="case-badge">🕵️ <span id="caseName">案件一：真假圆辨别</span></span>
+    <span class="case-progress">破案进度：<span class="case-number" id="caseProgress">0/3</span></span>
+  </div>
+
+  <div class="question-area">
+    <div class="question-badge" id="questionBadge">线索调查</div>
+    <div class="question-text" id="questionText"></div>
+    <div class="question-hint" id="questionHint"></div>
+  </div>
+
+  <div class="game-area" id="gameArea"></div>
+  <div class="reason-box" id="reasonBox"></div>
+
+  <div style="padding: 0 20px;">
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="game-footer">
+    <button class="restart-btn" id="restartBtn">🔄 重新调查</button>
+  </div>
+</div>
+
+<div class="feedback-overlay hidden" id="feedbackOverlay">
+  <div class="feedback-modal">
+    <div class="feedback-icon" id="feedbackIcon">✅</div>
+    <div class="feedback-title" id="feedbackTitle">推理正确！</div>
+    <div class="feedback-message" id="feedbackMessage"></div>
+    <button class="feedback-btn" id="feedbackBtn">继续调查 →</button>
+  </div>
+</div>
+
+<div class="practice-container hidden" id="practiceContainer">
+  <div class="practice-badge-bar">
+    <span class="practice-badge" id="practiceBadge">📝 巩固练习</span>
+    <span class="practice-progress-text" id="practiceProgress">第 1/4 题</span>
+  </div>
+  <div class="practice-question-card">
+    <div class="practice-q-num" id="practiceQNum">第 1 题</div>
+    <div class="practice-q-title" id="practiceQTitle">题目内容</div>
+    <div id="practiceQContent"></div>
+  </div>
+  <div class="practice-feedback" id="practiceFeedback"></div>
+  <div class="practice-nav">
+    <button class="practice-nav-btn secondary hidden" id="practiceSkipBtn">跳过</button>
+    <button class="practice-nav-btn primary" id="practiceNextBtn">下一题 →</button>
+  </div>
+</div>
+
+<script>
+// ============================================
+// DOM
+// ============================================
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+const gameContainer = $('#gameContainer');
+const scoreDisplay = $('#scoreDisplay');
+const levelDisplay = $('#levelDisplay');
+const caseName = $('#caseName');
+const caseProgress = $('#caseProgress');
+const questionBadge = $('#questionBadge');
+const questionText = $('#questionText');
+const questionHint = $('#questionHint');
+const gameArea = $('#gameArea');
+const reasonBox = $('#reasonBox');
+const progressBar = $('#progressBar');
+const restartBtn = $('#restartBtn');
+const feedbackOverlay = $('#feedbackOverlay');
+const feedbackIcon = $('#feedbackIcon');
+const feedbackTitle = $('#feedbackTitle');
+const feedbackMessage = $('#feedbackMessage');
+const feedbackBtn = $('#feedbackBtn');
+
+const practiceContainer = $('#practiceContainer');
+const practiceBadge = $('#practiceBadge');
+const practiceProgress = $('#practiceProgress');
+const practiceQNum = $('#practiceQNum');
+const practiceQTitle = $('#practiceQTitle');
+const practiceQContent = $('#practiceQContent');
+const practiceFeedback = $('#practiceFeedback');
+const practiceNextBtn = $('#practiceNextBtn');
+const practiceSkipBtn = $('#practiceSkipBtn');
+
+// ============================================
+// State
+// ============================================
+const state = {
+  score: 0, level: 1, totalLevels: 5, currentQ: 0,
+  questionsPerLevel: [3, 3, 3, 3, 3],
+  totalQs: 15, answered: 0,
+  correctCount: 0, totalAttempts: 0,
+  isAnswering: false,
+  mode: 'game', practiceTier: 1, practiceIndex: 0, practiceCorrect: 0,
+};
+
+// ============================================
+// Practice Problems
+// ============================================
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '圆形中，最中心的那个点叫什么？', options: ['顶点', '中心点', '圆心', '圆点'], answer: 2, hint: '圆的中心，用字母 O 表示的那个点。' },
+    { type: 'choice', q: '从圆心到圆上任意一点的线段叫什么？', options: ['直径', '半径', '弦', '周长'], answer: 1, hint: '半径连接圆心和圆上任意一点，用字母 r 表示。' },
+    { type: 'choice', q: '通过圆心并且两端都在圆上的线段叫什么？', options: ['半径', '弧', '弦', '直径'], answer: 3, hint: '直径是最长的弦，它经过圆心，用字母 d 表示。' },
+    { type: 'fill', q: '圆心用字母 ___ 表示，半径用字母 ___ 表示，直径用字母 ___ 表示。（用大写字母，用逗号分隔）', answer: 'O,r,d', hint: '圆心是 O，半径是 r，直径是 d。' },
+  ],
+  2: [
+    { type: 'choice', q: '在同一个圆中，直径的长度是半径的几倍？', options: ['1倍', '2倍', '3倍', '一半'], answer: 1, hint: '直径 = 半径 × 2，即 d = 2r。' },
+    { type: 'choice', q: '一个圆的半径是4cm，它的直径是多少？', options: ['2cm', '4cm', '6cm', '8cm'], answer: 3, hint: 'd = 2r = 2 × 4 = 8cm。' },
+    { type: 'choice', q: '画圆时，圆规两脚之间的距离是圆的什么？', options: ['直径', '半径', '周长', '圆心'], answer: 1, hint: '圆规的针尖到笔尖的距离就是半径。' },
+    { type: 'fill', q: '一个圆的直径是10cm，它的半径是___cm。', answer: '5', hint: 'r = d ÷ 2 = 10 ÷ 2 = 5cm。' },
+  ],
+  3: [
+    { type: 'choice', q: '用圆规画一个直径6cm的圆，圆规两脚应张开多少？', options: ['3cm', '6cm', '12cm', '1.5cm'], answer: 0, hint: '直径6cm → 半径 = 6÷2 = 3cm。' },
+    { type: 'choice', q: '下面哪个说法是正确的？', options: ['半径一定比直径短', '同一个圆中所有半径都相等', '直径不经过圆心', '圆的对称轴只有2条'], answer: 1, hint: '同圆中所有半径都相等——"一中同长"。' },
+    { type: 'fill', q: '一个圆的半径是3.5cm，它的直径是___cm。', answer: '7', hint: 'd = 2r = 2 × 3.5 = 7cm。' },
+    { type: 'choice', q: '小华用圆规画了一个圆，圆规两脚张开5cm。这个圆的直径是多少？', options: ['2.5cm', '5cm', '10cm', '15cm'], answer: 2, hint: '圆规两脚=半径=5cm，直径=2×5=10cm。' },
+  ],
+  4: [
+    { type: 'choice', q: '一个圆的直径是9cm，小明说半径是4.5cm，小红说半径是18cm。谁对？', options: ['小明对', '小红对', '都不对', '都对'], answer: 0, hint: 'r = d÷2 = 9÷2 = 4.5cm。' },
+    { type: 'choice', q: '下面哪一项不是判断一个图形是否为圆的必要条件？', options: ['所有半径相等', '有一个中心点', '有四条对称轴', '是封闭的曲线'], answer: 2, hint: '圆有无数条对称轴，不是"四条"。' },
+    { type: 'fill', q: '一个圆中5条半径都是3cm，直径是___cm。', answer: '6', hint: '直径 = 2×3 = 6cm。' },
+    { type: 'choice', q: '画直径20米的圆形操场，只用绳子和木桩，绳子多长？', options: ['10米', '20米', '40米', '5米'], answer: 0, hint: '绳子=半径。直径20米→半径=10米。' },
+  ],
+  5: [
+    { type: 'choice', q: '墨子说："圆，一中同长也。"这句话中"一中"和"同长"分别指什么？', options: ['中=圆心，同长=半径都相等', '中=中心线，同长=直径都相等', '中=中点，同长=圆周长相等', '中=中间，同长=面积都相等'], answer: 0, hint: '"一中"指圆心；"同长"指半径都相等。' },
+    { type: 'fill', q: '一个圆可以画无数条对称轴。每条对称轴都通过圆的___。', answer: '圆心O', hint: '对称轴都是直径所在直线，经过圆心O。' },
+    { type: 'choice', q: '圆规画圆时两脚距离慢慢变大，能画出真正的圆吗？', options: ['能', '不能，因为半径在变', '能转一圈就是', '不能针尖会移动'], answer: 1, hint: '圆要求"定长"。半径在变就不是圆。' },
+    { type: 'choice', q: '大圆半径是小圆的3倍，大圆直径是小圆的几倍？', options: ['1.5倍', '3倍', '6倍', '9倍'], answer: 1, hint: '半径成比例，直径也成相同比例。' },
+  ],
+};
+
+// ============================================
+// Game Questions
+// ============================================
+const gameQuestions = {
+  1: { // Level 1: True/false circle ID (canvas)
+    name: '案件一：真假圆辨别', badge: '图形鉴定',
+    label: '案1', canvasW: 440, canvasH: 220,
+    tasks: [
+      { // Q1: which is a real circle?
+        type: 'canvas_choice',
+        q: '以下A、B、C三个图形中，哪个是真正的圆？',
+        hint: '💡 提示：圆的"一中同长"——所有半径都相等',
+        choice: ['A', 'B', 'C'], answer: 2,
+        reason: 'C是圆：从中心到边上每一点距离相等。A是椭圆（左右长上下短），B是不规则曲线（半径各处不同）。',
+        draw: (ctx) => {
+          // A: ellipse
+          ctx.save(); ctx.translate(70, 110);
+          ctx.beginPath(); ctx.ellipse(0, 0, 45, 30, 0, 0, 2*Math.PI);
+          ctx.strokeStyle='#e74c3c'; ctx.lineWidth=3; ctx.stroke();
+          ctx.fillStyle='#e74c3c'; ctx.font='bold 18px sans-serif'; ctx.textAlign='center';
+          ctx.fillText('A', 0, -48); ctx.restore();
+          // B: irregular curve
+          ctx.save(); ctx.translate(220, 110);
+          ctx.beginPath();
+          for (let a=0; a<=2*Math.PI; a+=0.1) {
+            const r = 35 + 12*Math.sin(a*3)*Math.cos(a*2);
+            const x=r*Math.cos(a), y=r*Math.sin(a);
+            a===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+          }
+          ctx.closePath(); ctx.strokeStyle='#e67e22'; ctx.lineWidth=3; ctx.stroke();
+          ctx.fillStyle='#e67e22'; ctx.fillText('B', 0, -52); ctx.restore();
+          // C: real circle
+          ctx.save(); ctx.translate(370, 110);
+          ctx.beginPath(); ctx.arc(0, 0, 40, 0, 2*Math.PI);
+          ctx.strokeStyle='#27ae60'; ctx.lineWidth=3; ctx.stroke();
+          // Show center + 3 radii
+          ctx.fillStyle='#27ae60'; ctx.beginPath(); ctx.arc(0,0,3,0,2*Math.PI); ctx.fill();
+          for (let a=0; a<3; a++) {
+            const ang = a*2*Math.PI/3;
+            ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(40*Math.cos(ang),40*Math.sin(ang));
+            ctx.strokeStyle='rgba(39,174,96,0.4)'; ctx.lineWidth=1; ctx.setLineDash([3,3]); ctx.stroke();
+          }
+          ctx.setLineDash([]);
+          ctx.fillText('C', 0, -48); ctx.restore();
+        }
+      },
+      { // Q2
+        type: 'canvas_choice',
+        q: '以下三个图形，哪个不是圆？',
+        hint: '💡 查看每个图形的"圆心到边的距离"是否处处相等',
+        choice: ['A', 'B', 'C'], answer: 1,
+        reason: 'B不是圆！它虽然也是封闭曲线，但有点"扁"——不同方向的半径不相等。',
+        draw: (ctx) => {
+          ctx.save(); ctx.translate(70, 110);
+          ctx.beginPath(); ctx.arc(0, 0, 40, 0, 2*Math.PI);
+          ctx.strokeStyle='#27ae60'; ctx.lineWidth=3; ctx.stroke();
+          ctx.fillStyle='#27ae60'; ctx.font='bold 18px sans-serif'; ctx.textAlign='center';
+          ctx.fillText('A', 0, -48); ctx.restore();
+          ctx.save(); ctx.translate(220, 110);
+          ctx.beginPath(); ctx.ellipse(0, 0, 40, 25, 0, 0, 2*Math.PI);
+          ctx.strokeStyle='#e74c3c'; ctx.lineWidth=3; ctx.stroke();
+          ctx.fillStyle='#e74c3c'; ctx.fillText('B', 0, -48); ctx.restore();
+          ctx.save(); ctx.translate(370, 110);
+          ctx.beginPath(); ctx.arc(0, 0, 38, 0, 2*Math.PI);
+          ctx.strokeStyle='#27ae60'; ctx.lineWidth=3; ctx.stroke();
+          ctx.fillStyle='#27ae60'; ctx.fillText('C', 0, -48); ctx.restore();
+        }
+      },
+      { // Q3
+        type: 'canvas_choice',
+        q: '下面哪一个是"一中同长"的完美圆？',
+        hint: '💡 测量中心到各方向的距离',
+        choice: ['A', 'B', 'C'], answer: 0,
+        reason: 'A是标准圆。B有"角"（不是光滑的封闭曲线），C像"蛋形"（上下不对称）。',
+        draw: (ctx) => {
+          ctx.save(); ctx.translate(70, 110);
+          ctx.beginPath(); ctx.arc(0, 0, 38, 0, 2*Math.PI);
+          ctx.strokeStyle='#27ae60'; ctx.lineWidth=3; ctx.stroke();
+          ctx.fillStyle='#27ae60'; ctx.font='bold 18px sans-serif'; ctx.textAlign='center';
+          ctx.fillText('A', 0, -46); ctx.restore();
+          ctx.save(); ctx.translate(220, 110);
+          ctx.beginPath();
+          const ptsB=6, rB=38;
+          for(let i=0;i<ptsB;i++) {
+            const a=i*2*Math.PI/ptsB - Math.PI/2;
+            i===0?ctx.moveTo(rB*Math.cos(a),rB*Math.sin(a)):ctx.lineTo(rB*Math.cos(a),rB*Math.sin(a));
+          }
+          ctx.closePath(); ctx.strokeStyle='#e74c3c'; ctx.lineWidth=3; ctx.stroke();
+          ctx.fillStyle='#e74c3c'; ctx.fillText('B', 0, -46); ctx.restore();
+          ctx.save(); ctx.translate(370, 110);
+          ctx.beginPath();
+          for(let a=0;a<=2*Math.PI;a+=0.05) {
+            const r=35+8*Math.sin(a/2);
+            const x=r*Math.cos(a), y=r*Math.sin(a);
+            a===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+          }
+          ctx.closePath(); ctx.strokeStyle='#e67e22'; ctx.lineWidth=3; ctx.stroke();
+          ctx.fillStyle='#e67e22'; ctx.fillText('C', 0, -46); ctx.restore();
+        }
+      },
+    ]
+  },
+  2: { // Level 2: Find center (canvas)
+    name: '案件二：谁是圆心', badge: '定位圆心',
+    label: '案2', canvasW: 440, canvasH: 280,
+    tasks: [
+      {
+        type: 'canvas_choice',
+        q: '图中圆上有4个候选点A、B、C、D，哪个是圆心O？',
+        hint: '💡 圆心到圆上任意一点的距离都相等（半径）',
+        choice: ['A点', 'B点', 'C点', 'D点'], answer: 2,
+        reason: 'C点是圆心——从C到圆上各点的距离都相等，而A、B、D到圆边的距离长短不一。',
+        draw: (ctx) => {
+          const cx=220, cy=125, R=80;
+          ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2*Math.PI);
+          ctx.strokeStyle='#2c5f8a'; ctx.lineWidth=3; ctx.stroke();
+          // A: top-left
+          ctx.fillStyle='#e74c3c'; ctx.beginPath(); ctx.arc(cx-50, cy-40, 6, 0, 2*Math.PI); ctx.fill();
+          ctx.fillStyle='#e74c3c'; ctx.font='bold 16px sans-serif'; ctx.fillText('A', cx-50-22, cy-40+6);
+          // B: right
+          ctx.fillStyle='#e67e22'; ctx.beginPath(); ctx.arc(cx+55, cy+20, 6, 0, 2*Math.PI); ctx.fill();
+          ctx.fillStyle='#e67e22'; ctx.fillText('B', cx+55+10, cy+20+6);
+          // C: center (correct)
+          ctx.fillStyle='#27ae60'; ctx.beginPath(); ctx.arc(cx, cy, 7, 0, 2*Math.PI); ctx.fill();
+          ctx.fillStyle='#27ae60'; ctx.fillText('C', cx-20, cy-15);
+          // D: bottom
+          ctx.fillStyle='#3498db'; ctx.beginPath(); ctx.arc(cx+10, cy+65, 6, 0, 2*Math.PI); ctx.fill();
+          ctx.fillStyle='#3498db'; ctx.fillText('D', cx+10+12, cy+65+6);
+          // Show some radii from center to edge
+          ctx.setLineDash([3,3]);
+          for (let a=0; a<8; a++) {
+            const ang=a*Math.PI/4;
+            ctx.beginPath(); ctx.moveTo(cx,cy);
+            ctx.lineTo(cx+R*Math.cos(ang),cy+R*Math.sin(ang));
+            ctx.strokeStyle='rgba(39,174,96,0.3)'; ctx.lineWidth=1; ctx.stroke();
+          }
+          ctx.setLineDash([]);
+        }
+      },
+      {
+        type: 'canvas_choice',
+        q: '图中没有标注圆心，哪个位置最可能是圆心O？',
+        hint: '💡 想象从候选点测量到圆边各方向的距离',
+        choice: ['位置P', '位置Q', '位置R', '位置S'], answer: 1,
+        reason: '位置Q是圆心！对称折叠法：圆是轴对称图形，折痕交点就是圆心。Q恰好在几条"对称折痕"的交叉处。',
+        draw: (ctx) => {
+          const cx=220, cy=140, R=90;
+          ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2*Math.PI); ctx.strokeStyle='#2c5f8a'; ctx.lineWidth=3; ctx.stroke();
+          // Candidates
+          const candidates = [
+            {x:cx-35, y:cy-30, label:'P', color:'#e74c3c'},
+            {x:cx, y:cy, label:'Q', color:'#27ae60'},
+            {x:cx+40, y:cy+15, label:'R', color:'#3498db'},
+            {x:cx-20, y:cy+45, label:'S', color:'#e67e22'},
+          ];
+          candidates.forEach(c => {
+            ctx.fillStyle=c.color; ctx.beginPath(); ctx.arc(c.x,c.y,6,0,2*Math.PI); ctx.fill();
+            ctx.fillText(c.label, c.x+12, c.y+5);
+          });
+          // Hint fold lines through Q
+          ctx.setLineDash([4,4]);
+          [0, Math.PI/4, Math.PI/2].forEach(a => {
+            ctx.beginPath();
+            ctx.moveTo(cx-95*Math.cos(a), cy-95*Math.sin(a));
+            ctx.lineTo(cx+95*Math.cos(a), cy+95*Math.sin(a));
+            ctx.strokeStyle='rgba(39,174,96,0.3)'; ctx.lineWidth=1; ctx.stroke();
+          });
+          ctx.setLineDash([]);
+        }
+      },
+      {
+        type: 'choice',
+        q: '不用圆规，只用一张圆形纸片，怎样最快找到圆心？',
+        options: ['用尺子量', '对折再对折，折痕交点', '在圆上任意画线', '用手摸'],
+        answer: 1,
+        reason: '对折纸片：第一次对折产生一条直径，第二次换方向对折产生另一条直径，两条折痕的交点就是圆心O。这就是"对称法"找圆心！',
+      },
+    ]
+  },
+  3: { // Level 3: Radius vs Diameter (canvas + choice)
+    name: '案件三：半径鉴定', badge: '线段鉴定',
+    label: '案3', canvasW: 440, canvasH: 280,
+    tasks: [
+      {
+        type: 'canvas_choice',
+        q: '图中标注了①、②、③、④四条线段，哪一条是半径？',
+        hint: '💡 半径：从圆心出发，到圆上为止',
+        choice: ['①', '②', '③', '④'], answer: 0,
+        reason: '①是半径：从圆心O出发，到达圆上。②虽然从圆心出发但没到圆上；③穿过了圆心但两端都在圆上（这是直径！）；④没经过圆心。',
+        draw: (ctx) => {
+          const cx=100, cy=140, R=75;
+          ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2*Math.PI); ctx.strokeStyle='#2c5f8a'; ctx.lineWidth=2.5; ctx.stroke();
+          // Center
+          ctx.fillStyle='#1a3a5c'; ctx.beginPath(); ctx.arc(cx,cy,5,0,2*Math.PI); ctx.fill();
+          ctx.fillText('O', cx-14, cy-10);
+          // ① Radius: O to right edge
+          ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+R,cy);
+          ctx.strokeStyle='#27ae60'; ctx.lineWidth=3; ctx.stroke();
+          ctx.fillStyle='#27ae60'; ctx.fillText('①', cx+R/2, cy-10);
+          // ② O to mid
+          ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+40,cy-35);
+          ctx.strokeStyle='#e67e22'; ctx.lineWidth=3; ctx.stroke();
+          ctx.fillStyle='#e67e22'; ctx.fillText('②', cx+25, cy-28);
+          // ③ Diameter: through O, edge to edge (right edge to left edge)
+          ctx.beginPath(); ctx.moveTo(cx-R,cy); ctx.lineTo(cx+R,cy);
+          ctx.strokeStyle='#3498db'; ctx.lineWidth=3; ctx.stroke();
+          ctx.fillStyle='#3498db'; ctx.fillText('③', cx, cy+16);
+          // ④ Chord not through O
+          ctx.beginPath(); ctx.moveTo(cx-50,cy-60); ctx.lineTo(cx-30,cy-R+10);
+          ctx.strokeStyle='#e74c3c'; ctx.lineWidth=3; ctx.stroke();
+          ctx.fillStyle='#e74c3c'; ctx.fillText('④', cx-55, cy-58);
+        }
+      },
+      {
+        type: 'canvas_choice',
+        q: '找出图中的直径。',
+        hint: '💡 直径：经过圆心、两端都在圆上',
+        choice: ['线段m', '线段n', '线段p', '线段q'], answer: 2,
+        reason: '线段p是直径：它经过圆心O且两端都在圆上（最长的弦）。m是半径，n是弦（不经过圆心），q没经过圆心。',
+        draw: (ctx) => {
+          const cx=100, cy=140, R=75;
+          ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2*Math.PI); ctx.strokeStyle='#2c5f8a'; ctx.lineWidth=2.5; ctx.stroke();
+          ctx.fillStyle='#1a3a5c'; ctx.beginPath(); ctx.arc(cx,cy,5,0,2*Math.PI); ctx.fill();
+          ctx.fillText('O', cx-14, cy-10);
+          // m: radius (diagonal up-right)
+          ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+53,cy-53);
+          ctx.strokeStyle='#27ae60'; ctx.lineWidth=3; ctx.stroke(); ctx.fillStyle='#27ae60'; ctx.fillText('m', cx+60, cy-60);
+          // n: chord (not through O)
+          ctx.beginPath(); ctx.moveTo(cx-60,cy-50); ctx.lineTo(cx-20,cy+60);
+          ctx.strokeStyle='#e67e22'; ctx.lineWidth=2.5; ctx.stroke(); ctx.fillStyle='#e67e22'; ctx.fillText('n', cx-65, cy-55);
+          // p: diameter (through O)
+          const ang=Math.PI/6;
+          ctx.beginPath(); ctx.moveTo(cx-R*Math.cos(ang),cy-R*Math.sin(ang)); ctx.lineTo(cx+R*Math.cos(ang),cy+R*Math.sin(ang));
+          ctx.strokeStyle='#3498db'; ctx.lineWidth=3; ctx.stroke(); ctx.fillStyle='#3498db'; ctx.fillText('p', cx+R*Math.cos(ang)+5, cy+R*Math.sin(ang));
+          // q: short segment top
+          ctx.beginPath(); ctx.moveTo(cx-25,cy-R+5); ctx.lineTo(cx+25,cy-R+5);
+          ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2.5; ctx.stroke(); ctx.fillStyle='#e74c3c'; ctx.fillText('q', cx+28, cy-R);
+        }
+      },
+      {
+        type: 'choice',
+        q: '以下关于半径和直径的说法，哪一个是正确的？',
+        options: ['直径＝半径', '半径＝直径×2', '直径＝半径×2', '半径和直径没有关系'],
+        answer: 2,
+        reason: '直径＝半径×2（d=2r）。一条直径恰好等于两条半径的长度。在同一个圆中，直径是半径的两倍。',
+      },
+    ]
+  },
+  4: { // Level 4: Concept judge
+    name: '案件四：概念裁判', badge: '逻辑判决',
+    label: '案4',
+    tasks: [
+      {
+        type: 'judge',
+        q: '"直径一定比半径长"——这句话对吗？',
+        hint: '💡 考虑：在不同的圆中比较呢？',
+        answer: false,
+        reason_true: '正确推理：在"同一个圆"中，直径确实比半径长（d=2r）。',
+        reason_false: '错误！这句话缺少前提"在同一个圆中"。一个大圆的半径可能比小圆的直径还长。例如：大圆半径10cm > 小圆直径6cm。',
+      },
+      {
+        type: 'judge',
+        q: '"画圆时，圆规两脚的距离是圆的半径"——这句话对吗？',
+        hint: '💡 回想圆规画圆的步骤：针尖=圆心，两脚距离=？',
+        answer: true,
+        reason_true: '正确！圆规的针尖是圆心，针尖到笔尖的距离就是半径。"定长"指的就是这个距离保持不变。',
+        reason_false: '你再想想：圆规的针尖=圆心，两脚的距离不正是从圆心到笔尖吗？这就是半径！',
+      },
+      {
+        type: 'choice',
+        q: '一个圆的半径是7cm，直径是多少？',
+        options: ['3.5cm', '7cm', '14cm', '21cm'],
+        answer: 2,
+        reason: 'd=2r=2×7=14cm。半径×2就得到直径。',
+      },
+    ]
+  },
+  5: { // Level 5: Final mystery
+    name: '案件五：终极谜案', badge: '综合推理',
+    label: '案5',
+    tasks: [
+      {
+        type: 'choice',
+        q: '某图形有这些特征：①是封闭曲线 ②有无数条对称轴 ③所有半径相等 ④没有角。它是？',
+        options: ['正方形', '椭圆', '圆', '正六边形'],
+        answer: 2,
+        reason: '只有圆同时满足所有4个条件！正方形有4条对称轴和4个角；椭圆不是所有半径相等；正六边形只有6条对称轴且有角。',
+      },
+      {
+        type: 'judge',
+        q: '"圆心决定圆的位置，半径决定圆的大小"——这句话对吗？',
+        hint: '💡 想想画圆的两个关键要素',
+        answer: true,
+        reason_true: '完全正确！圆心确定圆"在哪里"，半径确定圆"有多大"。只要圆心和半径确定了，这个圆就唯一确定了。这正是"定点+定长"的画圆原理。',
+        reason_false: '再想想：如果把圆心移动，圆的位置会变；如果改变半径，圆的大小会变。所以它们确实分别决定了位置和大小。',
+      },
+      {
+        type: 'choice',
+        q: '如图，大圆里有3个完全相同的小圆，如果大圆半径=6cm，每个小圆的半径是多少？',
+        options: ['1cm', '2cm', '3cm', '4cm'],
+        answer: 1,
+        reason: '3个一样大的小圆排在大圆直径上：6×2÷3=4cm是直径，半径=4÷2=2cm。每个小圆半径=2cm。',
+        hasCanvas: true,
+        drawCanvas: (ctx) => {
+          const cx=220, cy=130, bigR=80;
+          ctx.beginPath(); ctx.arc(cx, cy, bigR, 0, 2*Math.PI); ctx.strokeStyle='#2c5f8a'; ctx.lineWidth=2.5; ctx.stroke();
+          ctx.fillStyle='#1a3a5c'; ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.fillText('R=6cm', cx, cy-70);
+          // 3 small circles along diameter
+          const sr=26.67;
+          for(let i=-1; i<=1; i++){
+            ctx.beginPath(); ctx.arc(cx+i*53, cy, sr, 0, 2*Math.PI);
+            ctx.strokeStyle='#c9a84c'; ctx.lineWidth=2; ctx.stroke();
+            ctx.fillStyle='rgba(201,168,76,0.2)'; ctx.fill();
+            ctx.fillStyle='#8b7328'; ctx.fillText('?', cx+i*53, cy+4);
+          }
+        }
+      },
+    ]
+  },
+};
+
+// ============================================
+// Helpers
+// ============================================
+function updateScore(p) { state.score+=p; scoreDisplay.textContent=state.score; }
+function updateLevel(l) { state.level=l; levelDisplay.textContent=`案${l}/5`; }
+function setAnswering(v) { state.isAnswering=v; }
+function updateProgress() {
+  const total=state.totalQs; progressBar.style.width=`${Math.round(state.answered/total*100)}%`;
+  caseProgress.textContent=`${state.answered}/${state.totalQs}`;
+}
+
+function showFeedback(type,title,msg,cb) {
+  feedbackIcon.textContent=type==='correct'?'🔍✅':type==='judge'?'⚖️':'💡';
+  feedbackTitle.textContent=title;
+  feedbackTitle.style.color=type==='correct'?'var(--color-success)':'var(--color-primary)';
+  feedbackMessage.textContent=msg;
+  feedbackOverlay.classList.remove('hidden');
+  feedbackBtn.onclick=()=>{feedbackOverlay.classList.add('hidden');if(cb)cb();};
+}
+
+// ============================================
+// Question Rendering
+// ============================================
+function renderQuestion() {
+  const lvlData=gameQuestions[state.level];
+  if(!lvlData||state.currentQ>=lvlData.tasks.length) {
+    if(state.level>=state.totalLevels){showVictory(state.score);return;}
+    state.currentQ=0; updateLevel(state.level+1); renderQuestion(); return;
+  }
+
+  const task=lvlData.tasks[state.currentQ];
+  caseName.textContent=lvlData.name;
+  questionBadge.textContent=lvlData.badge||'线索调查';
+  questionText.textContent=task.q;
+  questionHint.textContent=task.hint||'';
+  reasonBox.classList.remove('show','correct','wrong'); reasonBox.textContent='';
+  setAnswering(false);
+
+  if(task.type==='canvas_choice') {
+    // Canvas with choices below
+    gameArea.innerHTML='';
+    const c=document.createElement('canvas');
+    c.width=lvlData.canvasW; c.height=lvlData.canvasH;
+    c.style.maxWidth='100%';
+    gameArea.appendChild(c);
+    const ctx=c.getContext('2d');
+    task.draw(ctx);
+
+    const opts=document.createElement('div');
+    opts.className='options-grid';
+    opts.style.marginTop='12px';
+    task.choice.forEach((ch,i)=>{
+      const btn=document.createElement('button');
+      btn.className='option-btn'; btn.textContent=ch;
+      btn.addEventListener('click',()=>handleCanvasChoice(i,task.answer,task.choice[task.answer],task.reason));
+      opts.appendChild(btn);
+    });
+    gameArea.appendChild(opts);
+  } else if(task.type==='choice') {
+    gameArea.innerHTML='';
+    if(task.hasCanvas&&task.drawCanvas) {
+      const c=document.createElement('canvas');
+      c.width=440; c.height=200; c.style.maxWidth='100%';
+      gameArea.appendChild(c);
+      task.drawCanvas(c.getContext('2d'));
+    }
+    const opts=document.createElement('div');
+    opts.className='options-grid';
+    opts.style.marginTop=task.hasCanvas?'12px':'0';
+    task.options.forEach((opt,i)=>{
+      const btn=document.createElement('button');
+      btn.className='option-btn'; btn.textContent=opt;
+      if(task.options.length===3) btn.classList.add('single-col');
+      btn.addEventListener('click',()=>handleChoice(i,task.answer,task.options[task.answer],task.reason));
+      opts.appendChild(btn);
+    });
+    gameArea.appendChild(opts);
+  } else if(task.type==='judge') {
+    gameArea.innerHTML=`
+      <div class="options-grid">
+        <button class="option-btn" id="judgeTrue">✅ 正确（是）</button>
+        <button class="option-btn" id="judgeFalse">❌ 错误（否）</button>
+      </div>`;
+    $('#judgeTrue').addEventListener('click',()=>{
+      const correct=task.answer===true;
+      handleJudge(true,task.answer,correct?task.reason_true:task.reason_false,correct);
+    });
+    $('#judgeFalse').addEventListener('click',()=>{
+      const correct=task.answer===false;
+      handleJudge(false,task.answer,correct?task.reason_false:task.reason_true,correct);
+    });
+  }
+  updateProgress();
+}
+
+function handleCanvasChoice(selected,correctIdx,correctLabel,reason) {
+  if(state.isAnswering)return; setAnswering(true); state.totalAttempts++; state.answered++;
+  const btns=gameArea.querySelectorAll('.option-btn');
+  btns.forEach(b=>b.disabled=true);
+
+  if(selected===correctIdx){state.correctCount++;btns[selected].classList.add('correct');updateScore(20*state.level);
+    reasonBox.textContent='✅ 推理正确！'+reason;reasonBox.className='reason-box show correct';
+  } else {btns[selected].classList.add('incorrect');btns[correctIdx].classList.add('correct');
+    reasonBox.textContent='❌ '+reason;reasonBox.className='reason-box show wrong';
+  }
+  updateProgress();
+  setTimeout(()=>{state.currentQ++;renderQuestion();},1800);
+}
+
+function handleChoice(selected,correctIdx,correctLabel,reason) {
+  if(state.isAnswering)return; setAnswering(true); state.totalAttempts++; state.answered++;
+  const btns=gameArea.querySelectorAll('.option-btn');
+  btns.forEach(b=>b.disabled=true);
+  if(selected===correctIdx){state.correctCount++;btns[selected].classList.add('correct');updateScore(20*state.level);
+    reasonBox.textContent='✅ '+reason;reasonBox.className='reason-box show correct';
+  } else {btns[selected].classList.add('incorrect');btns[correctIdx].classList.add('correct');
+    reasonBox.textContent='❌ '+reason;reasonBox.className='reason-box show wrong';
+  }
+  updateProgress();
+  setTimeout(()=>{state.currentQ++;renderQuestion();},1800);
+}
+
+function handleJudge(userAnswer,correctAnswer,reason,isCorrect) {
+  if(state.isAnswering)return; setAnswering(true); state.totalAttempts++; state.answered++;
+  document.querySelectorAll('#judgeTrue,#judgeFalse').forEach(b=>b.disabled=true);
+  const selBtn=userAnswer?$('#judgeTrue'):$('#judgeFalse');
+  const corrBtn=correctAnswer?$('#judgeTrue'):$('#judgeFalse');
+  if(isCorrect){state.correctCount++;selBtn.classList.add('correct');updateScore(25*state.level);
+    reasonBox.textContent='✅ 判决正确！'+reason;reasonBox.className='reason-box show correct';
+  } else {selBtn.classList.add('incorrect');corrBtn.classList.add('correct');
+    reasonBox.textContent='❌ 判决有误！'+reason;reasonBox.className='reason-box show wrong';
+  }
+  updateProgress();
+  setTimeout(()=>{state.currentQ++;renderQuestion();},2000);
+}
+
+// ============================================
+// Victory & Practice (same as template)
+// ============================================
+function showVictory(finalScore) {
+  const acc=state.totalAttempts>0?Math.round(state.correctCount/state.totalAttempts*100):0;
+  const tier=determinePracticeTier(); const tl=difficultyLabels[tier];
+  gameArea.innerHTML=`
+    <div class="victory-container">
+      <div class="victory-icon">🕵️‍♂️</div>
+      <div class="victory-title">案件全部侦破！</div>
+      <div class="victory-subtitle">圆之侦探，名不虚传！</div>
+      <div class="victory-stats">
+        <div>📋 破案数：${state.totalLevels}/5 案件</div>
+        <div>✅ 正确率：${acc}%</div>
+        <div>🏅 侦探积分：${finalScore} 分</div>
+      </div>
+      <button class="victory-btn" onclick="enterPracticeMode()">📝 进入练习 <small>(${tl.icon} ${tl.name})</small></button>
+      <div style="margin-top:8px;"><button class="restart-btn" onclick="restartGame()">🔄 重新调查</button></div>
+    </div>`;
+}
+
+function determinePracticeTier() {
+  const acc=state.totalAttempts>0?state.correctCount/state.totalAttempts:0;
+  if(acc<0.4)return 1;if(acc<0.6)return 2;if(acc<0.8)return 3;if(acc<0.95)return 4;return 5;
+}
+
+function enterPracticeMode() {
+  state.practiceTier=determinePracticeTier(); state.mode='practice'; state.practiceIndex=0; state.practiceCorrect=0;
+  gameContainer.classList.add('hidden'); practiceContainer.classList.remove('hidden'); practiceContainer.style.display='flex';
+  const tl=difficultyLabels[state.practiceTier];
+  practiceBadge.innerHTML=`${tl.icon} ${tl.name}`; practiceBadge.className=`practice-badge ${tl.badgeClass}`;
+  practiceNextBtn.textContent='开始答题 →'; practiceNextBtn.classList.remove('hidden'); practiceNextBtn.disabled=false;
+  renderPracticeQuestion();
+}
+
+function renderPracticeQuestion() {
+  const probs=practiceProblems[state.practiceTier];
+  if(!probs||state.practiceIndex>=probs.length){showPracticeSummary();return;}
+  const p=probs[state.practiceIndex];
+  practiceProgress.textContent=`第 ${state.practiceIndex+1}/${probs.length} 题`;
+  practiceQNum.textContent=`第 ${state.practiceIndex+1} 题`; practiceQTitle.textContent=p.q;
+  practiceFeedback.classList.remove('show','correct','wrong'); practiceFeedback.textContent='';
+  if(p.type==='fill'){
+    practiceQContent.innerHTML=`<div class="practice-input-area"><input type="text" class="practice-input" id="practiceInput" placeholder="输入答案" inputmode="text"><button class="practice-nav-btn primary" id="practiceSubmitBtn">确认</button></div>`;
+    $('#practiceSubmitBtn').addEventListener('click',handlePracticeSubmit);
+    $('#practiceInput').addEventListener('keydown',(e)=>{if(e.key==='Enter')handlePracticeSubmit();});
+    setTimeout(()=>{const inp=$('#practiceInput');if(inp)inp.focus();},100);
+  } else {
+    practiceQContent.innerHTML='<div class="practice-options"></div>';
+    const opts=practiceQContent.querySelector('.practice-options');
+    p.options.forEach((opt,idx)=>{const btn=document.createElement('button');btn.className='practice-option';btn.textContent=opt;btn.addEventListener('click',()=>handlePracticeChoice(idx,p.answer,p.options[p.answer]));opts.appendChild(btn);});
+  }
+  practiceNextBtn.textContent=state.practiceIndex<probs.length-1?'下一题 →':'查看结果 📊'; practiceNextBtn.disabled=true;
+}
+
+function handlePracticeChoice(sel,corr,corrText){const opts=practiceQContent.querySelectorAll('.practice-option');opts.forEach(o=>o.disabled=true);if(sel===corr){opts[sel].classList.add('selected-correct');state.practiceCorrect++;practiceFeedback.textContent=`✅ 正确！${corrText}`;practiceFeedback.className='practice-feedback show correct';}else{opts[sel].classList.add('selected-wrong');opts[corr].classList.add('show-correct');practiceFeedback.textContent=`❌ 正确答案是 ${corrText}。加油！`;practiceFeedback.className='practice-feedback show wrong';}practiceNextBtn.disabled=false;}
+function handlePracticeSubmit(){const inp=$('#practiceInput'),btn=$('#practiceSubmitBtn');if(!inp||!btn||btn.disabled)return;const probs=practiceProblems[state.practiceTier];const p=probs[state.practiceIndex];const ans=inp.value.trim();if(!ans)return;btn.disabled=true;inp.disabled=true;if(ans===p.answer){state.practiceCorrect++;practiceFeedback.textContent=`✅ 正确！答案就是 ${p.answer}`;practiceFeedback.className='practice-feedback show correct';}else{practiceFeedback.textContent=`❌ 正确答案是 ${p.answer}。${p.hint||''}`;practiceFeedback.className='practice-feedback show wrong';}practiceNextBtn.disabled=false;}
+function handlePracticeNext(){const probs=practiceProblems[state.practiceTier];if(state.practiceIndex>=probs.length-1){showPracticeSummary();return;}state.practiceIndex++;renderPracticeQuestion();}
+function showPracticeSummary(){const probs=practiceProblems[state.practiceTier];const total=probs?probs.length:0;const pct=total>0?Math.round(state.practiceCorrect/total*100):0;let emoji,color;if(pct>=80){emoji='🌟';color='var(--color-success)';}else if(pct>=60){emoji='👍';color='var(--color-primary)';}else{emoji='💪';color='var(--color-warning)';}
+gameContainer.classList.remove('hidden');practiceContainer.classList.add('hidden');practiceContainer.style.display='none';
+gameArea.innerHTML=`<div class="practice-summary"><div class="practice-summary-icon">${emoji}</div><div class="practice-summary-title">练习完成！</div><div class="practice-summary-score" style="color:${color}">${state.practiceCorrect}/${total}</div><div class="practice-summary-detail"><div>📊 练习正确率：${pct}%</div><div>🎮 侦探积分：${state.score} 分</div>${pct>=80?'<div>🏆 太棒了，你对圆的概念掌握得很好！</div>':pct>=60?'<div>📚 还不错，继续加油会更好！</div>':'<div>🌱 没关系，多练习几次就能进步！</div>'}</div><button class="victory-btn" onclick="restartGame()">🔄 再玩一次</button></div>`;}
+
+function restartGame() {stopAll();state.score=0;state.level=1;state.currentQ=0;state.answered=0;state.correctCount=0;state.totalAttempts=0;state.mode='game';scoreDisplay.textContent='0';updateLevel(1);gameContainer.classList.remove('hidden');practiceContainer.classList.add('hidden');practiceContainer.style.display='none';renderQuestion();}
+function stopAll(){}
+
+restartBtn.addEventListener('click',restartGame); practiceNextBtn.addEventListener('click',handlePracticeNext);
+renderQuestion();
+</script>
+</body>
+</html>

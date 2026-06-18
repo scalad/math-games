@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏗️ 花坛设计师</title>
+<style>
+:root {
+  --color-primary: #16A34A;
+  --color-primary-light: #4ADE80;
+  --color-primary-dark: #15803D;
+  --color-success: #22C55E;
+  --color-error: #EF4444;
+  --color-warning: #F59E0B;
+  --color-bg: #F0FDF4;
+  --color-card: #FFFFFF;
+  --color-text: #1F2937;
+  --color-text-light: #6B7280;
+  --color-border: #D1D5DB;
+  --color-grass: #86EFAC;
+  --color-water: #7DD3FC;
+  --color-flower1: #F87171;
+  --color-flower2: #FBBF24;
+  --color-flower3: #C084FC;
+  --color-path: #D4C5A0;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.06);
+  --font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-number: "Consolas", "Courier New", monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: var(--font-family);
+  background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 25%, #86EFAC 25%, #DCFCE7 100%);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.game-container {
+  width: 100%;
+  max-width: 520px;
+  background: var(--color-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card), 0 8px 40px rgba(22,163,74,0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 640px;
+}
+
+.game-header {
+  background: linear-gradient(135deg, #15803D, #16A34A);
+  color: white;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.game-title { font-size: 19px; font-weight: 700; }
+.game-stats { display: flex; gap: 14px; font-size: 13px; }
+.stat-item { display: flex; align-items: center; gap: 4px; }
+.stat-icon { font-size: 15px; }
+.stat-value { font-weight: 700; font-family: var(--font-number); }
+
+.level-indicator {
+  padding: 8px 20px; background: #F0FDF4;
+  font-size: 13px; font-weight: 600;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid #DCFCE7;
+  color: var(--color-primary-dark);
+}
+
+.question-area { padding: 12px 20px; text-align: center; flex-shrink: 0; }
+.question-text { font-size: 15px; font-weight: 600; color: var(--color-text); margin-bottom: 4px; }
+.question-hint { font-size: 12px; color: var(--color-text-light); }
+
+.game-area {
+  flex: 1; padding: 10px 16px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+
+canvas {
+  border: 2px solid #86EFAC;
+  border-radius: var(--radius-md);
+  background: #F0FDF4;
+  cursor: crosshair;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.controls-bar {
+  display: flex; gap: 8px; align-items: center;
+  justify-content: center; padding: 8px; flex-wrap: wrap;
+}
+.control-btn {
+  padding: 8px 16px; font-size: 13px; font-weight: 700;
+  border: 2px solid var(--color-primary); border-radius: 20px;
+  background: white; color: var(--color-primary);
+  cursor: pointer; transition: all 0.2s;
+}
+.control-btn:hover { background: var(--color-primary); color: white; }
+.control-btn.active { background: var(--color-primary); color: white; }
+.control-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.radius-slider {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 600;
+}
+.radius-slider input { width: 80px; accent-color: var(--color-primary); }
+
+.status-text {
+  font-size: 12px; color: var(--color-text-light);
+  text-align: center; padding: 4px;
+}
+
+.progress-bar-container {
+  width: 100%; height: 5px; background: #DCFCE7;
+  border-radius: 3px; margin-top: 4px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success), var(--color-primary-dark));
+  border-radius: 3px; transition: width 0.5s ease;
+}
+
+/* Feedback overlay */
+.feedback-overlay {
+  position: fixed; top:0;left:0;right:0;bottom:0;
+  background: rgba(0,0,0,0.4); display:flex;
+  justify-content:center; align-items:center;
+  z-index:100; animation:fadeIn 0.2s ease;
+}
+.feedback-modal {
+  background: white; border-radius: var(--radius-lg);
+  padding: 28px 24px; text-align: center;
+  max-width: 320px; width: 90%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  animation: scaleIn 0.3s ease;
+}
+.feedback-icon { font-size: 56px; margin-bottom: 10px; }
+.feedback-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.feedback-message { font-size: 14px; color: var(--color-text-light); margin-bottom: 18px; line-height: 1.5; }
+.feedback-btn {
+  padding: 10px 28px; font-size: 15px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: background 0.2s;
+}
+.feedback-btn:hover { background: var(--color-primary-dark); }
+
+.game-footer {
+  padding: 10px 20px; display: flex; justify-content: center;
+  border-top: 1px solid var(--color-border);
+}
+.restart-btn {
+  padding: 8px 20px; font-size: 14px; color: var(--color-text-light);
+  background: transparent; border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+}
+.restart-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+/* Victory */
+.victory-container { text-align: center; padding: 20px; }
+.victory-icon { font-size: 68px; margin-bottom: 10px; animation: bounce 0.6s ease infinite alternate; }
+.victory-title { font-size: 24px; font-weight: 700; color: var(--color-success); margin-bottom: 6px; }
+.victory-stats { font-size: 14px; color: var(--color-text-light); margin-bottom: 18px; line-height: 1.8; }
+.victory-btn {
+  padding: 12px 28px; font-size: 16px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; margin: 0 5px; transition: background 0.2s;
+}
+.victory-btn:hover { background: var(--color-primary-dark); }
+
+/* Practice mode */
+.practice-container { display: none; flex-direction: column; height: 100%; }
+.practice-badge-bar {
+  padding: 12px 20px; background: #F8F9FA;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+}
+.practice-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700;
+}
+.badge-tier-1 { background: #E8F5E9; color: #2E7D32; }
+.badge-tier-2 { background: #E3F2FD; color: #1565C0; }
+.badge-tier-3 { background: #FFF3E0; color: #E65100; }
+.badge-tier-4 { background: #F3E5F5; color: #7B1FA2; }
+.badge-tier-5 { background: #FFEBEE; color: #C62828; }
+.practice-progress-text { font-size: 13px; color: var(--color-text-light); }
+
+.practice-question-card {
+  margin: 16px 20px; padding: 20px;
+  background: var(--color-card); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); flex: 1;
+}
+.practice-q-num { font-size: 12px; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
+.practice-q-title { font-size: 16px; font-weight: 600; color: var(--color-text); margin-bottom: 14px; line-height: 1.5; }
+.practice-options { display: flex; flex-direction: column; gap: 8px; }
+.practice-option {
+  padding: 12px 14px; font-size: 14px; text-align: left;
+  background: #F8F9FA; border: 2px solid var(--color-border);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: all 0.2s; line-height: 1.4;
+}
+.practice-option:hover { border-color: var(--color-primary); background: white; }
+.practice-option.selected-correct { border-color: var(--color-success); background: #DCFCE7; }
+.practice-option.selected-wrong { border-color: var(--color-error); background: #FEE2E2; }
+.practice-option.show-correct { border-color: var(--color-success); }
+.practice-option:disabled { pointer-events: none; }
+
+.practice-input-area { display: flex; gap: 8px; }
+.practice-input {
+  flex: 1; padding: 12px 14px; font-size: 18px; font-weight: 700;
+  font-family: var(--font-number); text-align: center;
+  border: 2px solid var(--color-border); border-radius: var(--radius-md); outline: none;
+}
+.practice-input:focus { border-color: var(--color-primary); }
+
+.practice-feedback {
+  margin: 0 20px 10px; padding: 10px 14px;
+  border-radius: var(--radius-md); font-size: 13px;
+  line-height: 1.5; display: none;
+}
+.practice-feedback.show { display: block; animation: fadeIn 0.3s ease; }
+.practice-feedback.correct { background: #DCFCE7; color: #065F46; }
+.practice-feedback.wrong { background: #FEE2E2; color: #991B1B; }
+
+.practice-nav {
+  padding: 10px 20px; display: flex; gap: 8px;
+  justify-content: center; border-top: 1px solid var(--color-border);
+}
+.practice-nav-btn {
+  padding: 10px 22px; font-size: 14px; font-weight: 700;
+  border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s;
+}
+.practice-nav-btn.primary { background: var(--color-primary); color: white; }
+.practice-nav-btn.primary:hover { background: var(--color-primary-dark); }
+.practice-nav-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.practice-nav-btn.secondary { background: transparent; color: var(--color-text-light); border: 1px solid var(--color-border); }
+.practice-nav-btn.secondary:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+.practice-summary { text-align: center; padding: 24px 16px; }
+.practice-summary-icon { font-size: 56px; margin-bottom: 10px; }
+.practice-summary-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.practice-summary-score { font-size: 32px; font-weight: 700; font-family: var(--font-number); margin-bottom: 10px; }
+.practice-summary-detail { font-size: 13px; color: var(--color-text-light); margin-bottom: 18px; line-height: 1.7; }
+
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes scaleIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+@keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-10px)} }
+
+.hidden { display: none !important; }
+
+@media (max-width: 360px) {
+  .game-container { min-height: 520px; }
+  .question-text { font-size: 13px; }
+}
+</style>
+</head>
+<body>
+
+<div class="game-container" id="gameContainer">
+  <div class="game-header">
+    <div class="game-title">🏗️ 花坛设计师</div>
+    <div class="game-stats">
+      <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-value" id="scoreDisplay">0</span></div>
+      <div class="stat-item"><span class="stat-icon">🌺</span><span class="stat-value" id="levelDisplay">1/5</span></div>
+    </div>
+  </div>
+
+  <div class="level-indicator">
+    <span id="levelName">第 1 关 · 单花坛设计</span>
+    <span id="taskStatus">任务 0/1</span>
+  </div>
+
+  <div class="question-area">
+    <div class="question-text" id="questionText"></div>
+    <div class="question-hint" id="questionHint"></div>
+  </div>
+
+  <div class="controls-bar" id="controlsBar">
+    <div class="radius-slider">
+      <span>半径:</span>
+      <input type="range" id="radiusSlider" min="1" max="6" step="0.5" value="2">
+      <span id="radiusValue" style="font-family:var(--font-number);min-width:30px;">2格</span>
+    </div>
+    <button class="control-btn" id="placeBtn">📍 放置花坛</button>
+    <button class="control-btn" id="undoBtn">↩ 撤销</button>
+  </div>
+
+  <div class="game-area" id="gameArea"></div>
+
+  <div class="status-text" id="statusText">在草地地图上点击放置花坛</div>
+
+  <div style="padding: 0 20px;">
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="game-footer">
+    <button class="restart-btn" id="restartBtn">🔄 重新设计</button>
+  </div>
+</div>
+
+<div class="feedback-overlay hidden" id="feedbackOverlay">
+  <div class="feedback-modal">
+    <div class="feedback-icon" id="feedbackIcon">✅</div>
+    <div class="feedback-title" id="feedbackTitle">设计完美！</div>
+    <div class="feedback-message" id="feedbackMessage"></div>
+    <button class="feedback-btn" id="feedbackBtn">继续 →</button>
+  </div>
+</div>
+
+<!-- Practice Mode -->
+<div class="practice-container hidden" id="practiceContainer">
+  <div class="practice-badge-bar">
+    <span class="practice-badge" id="practiceBadge">📝 巩固练习</span>
+    <span class="practice-progress-text" id="practiceProgress">第 1/4 题</span>
+  </div>
+  <div class="practice-question-card">
+    <div class="practice-q-num" id="practiceQNum">第 1 题</div>
+    <div class="practice-q-title" id="practiceQTitle">题目内容</div>
+    <div id="practiceQContent"></div>
+  </div>
+  <div class="practice-feedback" id="practiceFeedback"></div>
+  <div class="practice-nav">
+    <button class="practice-nav-btn secondary hidden" id="practiceSkipBtn">跳过</button>
+    <button class="practice-nav-btn primary" id="practiceNextBtn">下一题 →</button>
+  </div>
+</div>
+
+<script>
+// ============================================
+// DOM
+// ============================================
+const $ = s => document.querySelector(s);
+const gameContainer = $('#gameContainer');
+const scoreDisplay = $('#scoreDisplay');
+const levelDisplay = $('#levelDisplay');
+const levelName = $('#levelName');
+const taskStatus = $('#taskStatus');
+const questionText = $('#questionText');
+const questionHint = $('#questionHint');
+const radiusSlider = $('#radiusSlider');
+const radiusValue = $('#radiusValue');
+const placeBtn = $('#placeBtn');
+const undoBtn = $('#undoBtn');
+const statusText = $('#statusText');
+const progressBar = $('#progressBar');
+const restartBtn = $('#restartBtn');
+const feedbackOverlay = $('#feedbackOverlay');
+const feedbackIcon = $('#feedbackIcon');
+const feedbackTitle = $('#feedbackTitle');
+const feedbackMessage = $('#feedbackMessage');
+const feedbackBtn = $('#feedbackBtn');
+
+const practiceContainer = $('#practiceContainer');
+const practiceBadge = $('#practiceBadge');
+const practiceProgress = $('#practiceProgress');
+const practiceQNum = $('#practiceQNum');
+const practiceQTitle = $('#practiceQTitle');
+const practiceQContent = $('#practiceQContent');
+const practiceFeedback = $('#practiceFeedback');
+const practiceNextBtn = $('#practiceNextBtn');
+const practiceSkipBtn = $('#practiceSkipBtn');
+
+// ============================================
+// Canvas
+// ============================================
+const CELL = 40, COLS = 12, ROWS = 9;
+const canvasW = COLS * CELL, canvasH = ROWS * CELL;
+let canvas, ctx;
+
+function createCanvas() {
+  const area = $('#gameArea');
+  area.innerHTML = '';
+  canvas = document.createElement('canvas');
+  canvas.width = canvasW; canvas.height = canvasH;
+  canvas.style.maxWidth = '100%';
+  area.appendChild(canvas);
+  ctx = canvas.getContext('2d');
+}
+
+// ============================================
+// State
+// ============================================
+const state = {
+  score: 0, level: 1, totalLevels: 5,
+  placedCircles: [], currentR: 2,
+  taskIndex: 0,
+  correctCount: 0, totalAttempts: 0,
+  mode: 'game', practiceTier: 1, practiceIndex: 0, practiceCorrect: 0,
+};
+
+// ============================================
+// Practice Problems
+// ============================================
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '圆形中，最中心的那个点叫什么？', options: ['顶点', '中心点', '圆心', '圆点'], answer: 2, hint: '圆的中心，用字母 O 表示的那个点。' },
+    { type: 'choice', q: '从圆心到圆上任意一点的线段叫什么？', options: ['直径', '半径', '弦', '周长'], answer: 1, hint: '半径连接圆心和圆上任意一点，用字母 r 表示。' },
+    { type: 'choice', q: '通过圆心并且两端都在圆上的线段叫什么？', options: ['半径', '弧', '弦', '直径'], answer: 3, hint: '直径是最长的弦，它经过圆心，用字母 d 表示。' },
+    { type: 'fill', q: '圆心用字母 ___ 表示，半径用字母 ___ 表示，直径用字母 ___ 表示。（用大写字母，用逗号分隔）', answer: 'O,r,d', hint: '圆心是 O，半径是 r，直径是 d。' },
+  ],
+  2: [
+    { type: 'choice', q: '在同一个圆中，直径的长度是半径的几倍？', options: ['1倍', '2倍', '3倍', '一半'], answer: 1, hint: '直径 = 半径 × 2，即 d = 2r。' },
+    { type: 'choice', q: '一个圆的半径是4cm，它的直径是多少？', options: ['2cm', '4cm', '6cm', '8cm'], answer: 3, hint: 'd = 2r = 2 × 4 = 8cm。' },
+    { type: 'choice', q: '画圆时，圆规两脚之间的距离是圆的什么？', options: ['直径', '半径', '周长', '圆心'], answer: 1, hint: '圆规的针尖到笔尖的距离就是半径。' },
+    { type: 'fill', q: '一个圆的直径是10cm，它的半径是___cm。', answer: '5', hint: 'r = d ÷ 2 = 10 ÷ 2 = 5cm。' },
+  ],
+  3: [
+    { type: 'choice', q: '用圆规画一个直径6cm的圆，圆规两脚应张开多少？', options: ['3cm', '6cm', '12cm', '1.5cm'], answer: 0, hint: '直径6cm → 半径 = 6÷2 = 3cm。' },
+    { type: 'choice', q: '下面哪个说法是正确的？', options: ['半径一定比直径短', '同一个圆中所有半径都相等', '直径不经过圆心', '圆的对称轴只有2条'], answer: 1, hint: '同圆中所有半径都相等——"一中同长"。' },
+    { type: 'fill', q: '一个圆的半径是3.5cm，它的直径是___cm。', answer: '7', hint: 'd = 2r = 2 × 3.5 = 7cm。' },
+    { type: 'choice', q: '小华用圆规画了一个圆，圆规两脚张开5cm。这个圆的直径是多少？', options: ['2.5cm', '5cm', '10cm', '15cm'], answer: 2, hint: '圆规两脚=半径=5cm，直径=2×5=10cm。' },
+  ],
+  4: [
+    { type: 'choice', q: '一个圆的直径是9cm，小明说半径是4.5cm，小红说半径是18cm。谁对？', options: ['小明对', '小红对', '都不对', '都对'], answer: 0, hint: 'r = d÷2 = 9÷2 = 4.5cm。' },
+    { type: 'choice', q: '下面哪一项不是判断一个图形是否为圆的必要条件？', options: ['所有半径相等', '有一个中心点', '有四条对称轴', '是封闭的曲线'], answer: 2, hint: '圆有无数条对称轴，不是"四条"。' },
+    { type: 'fill', q: '一个圆中5条半径都是3cm，直径是___cm。', answer: '6', hint: '直径 = 2×3 = 6cm。' },
+    { type: 'choice', q: '画直径20米的圆形操场，只用绳子和木桩，绳子多长？', options: ['10米', '20米', '40米', '5米'], answer: 0, hint: '绳子=半径。直径20米→半径=10米。' },
+  ],
+  5: [
+    { type: 'choice', q: '墨子说："圆，一中同长也。"这句话中"一中"和"同长"分别指什么？', options: ['中=圆心，同长=半径都相等', '中=中心线，同长=直径都相等', '中=中点，同长=圆周长相等', '中=中间，同长=面积都相等'], answer: 0, hint: '"一中"指圆心；"同长"指半径都相等。' },
+    { type: 'fill', q: '一个圆可以画无数条对称轴。每条对称轴都通过圆的___。', answer: '圆心O', hint: '对称轴都是直径所在直线，经过圆心O。' },
+    { type: 'choice', q: '圆规画圆时两脚距离慢慢变大，能画出真正的圆吗？', options: ['能', '不能，因为半径在变', '能转一圈就是', '不能针尖会移动'], answer: 1, hint: '圆要求"定长"。半径在变就不是圆。' },
+    { type: 'choice', q: '大圆半径是小圆的3倍，大圆直径是小圆的几倍？', options: ['1.5倍', '3倍', '6倍', '9倍'], answer: 1, hint: '半径成比例，直径也成相同比例。' },
+  ],
+};
+
+// ============================================
+// Levels (tasks)
+// ============================================
+const levelTasks = {
+  1: { name:'第 1 关 · 单花坛设计', tasks:[
+    { desc:'设计一个半径2格的花坛，放在草地中央', r:2, count:1 },
+    { desc:'设计一个半径3格的花坛，放在任意位置', r:3, count:1 },
+    { desc:'设计一个半径1.5格的花坛，放在左下角区域', r:1.5, count:1, region:{x:1,y:5,w:4,h:3} },
+  ]},
+  2: { name:'第 2 关 · 双花坛布局', tasks:[
+    { desc:'设计两个半径2格的花坛，它们不能重叠', r:2, count:2, noOverlap:true },
+    { desc:'设计两个半径3格的花坛，不能重叠', r:3, count:2, noOverlap:true },
+  ]},
+  3: { name:'第 3 关 · 直径需求', tasks:[
+    { desc:'花坛直径需要6格，请设计它', r:3, count:1, hint:'💡 直径6格 → 半径=3格' },
+    { desc:'花坛直径5格，设计它', r:2.5, count:1, hint:'💡 直径5格 → 半径=2.5格' },
+    { desc:'两个直径4格的花坛，不重叠', r:2, count:2, noOverlap:true, hint:'💡 直径4格 → 半径=2格' },
+  ]},
+  4: { name:'第 4 关 · 公园规划', tasks:[
+    { desc:'在公园里规划：1个半径3格的大花坛+2个半径1.5格的小花坛，所有不重叠', r:[3,1.5,1.5], count:3, noOverlap:true },
+    { desc:'设计3个花坛半径分别为2格、2格、3格，保持不重叠且美观', r:[2,2,3], count:3, noOverlap:true },
+  ]},
+  5: { name:'第 5 关 · 自由设计', tasks:[
+    { desc:'自由设计！至少3个花坛，总面积（πr²之和）不低于15格²，不重叠', r:'free', count:3, minArea:15, noOverlap:true, free:true },
+  ]},
+};
+
+// ============================================
+// Drawing
+// ============================================
+function drawMap(hoverX, hoverY) {
+  ctx.clearRect(0, 0, canvasW, canvasH);
+
+  // Grass grid
+  for (let i = 0; i <= COLS; i++) {
+    ctx.beginPath(); ctx.moveTo(i*CELL,0); ctx.lineTo(i*CELL,ROWS*CELL);
+    ctx.strokeStyle='#BBF7D0'; ctx.lineWidth=0.5; ctx.stroke();
+  }
+  for (let j = 0; j <= ROWS; j++) {
+    ctx.beginPath(); ctx.moveTo(0,j*CELL); ctx.lineTo(COLS*CELL,j*CELL);
+    ctx.strokeStyle='#BBF7D0'; ctx.lineWidth=0.5; ctx.stroke();
+  }
+  // Bold lines
+  ctx.strokeStyle='#86EFAC'; ctx.lineWidth=1;
+  ctx.strokeRect(0, 0, canvasW, canvasH);
+
+  // Grid numbers
+  ctx.fillStyle='#9CA3AF'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+  for(let i=0;i<COLS;i++) ctx.fillText(i, i*CELL+CELL/2, ROWS*CELL-2);
+  ctx.textAlign='right';
+  for(let j=0;j<ROWS;j++) ctx.fillText(j, 12, j*CELL+CELL/2+3);
+
+  // Region highlight
+  const task = getCurrentTask();
+  if (task && task.region) {
+    ctx.fillStyle='rgba(251,191,36,0.12)';
+    ctx.fillRect(task.region.x*CELL, task.region.y*CELL, task.region.w*CELL, task.region.h*CELL);
+    ctx.strokeStyle='rgba(251,191,36,0.4)'; ctx.lineWidth=2; ctx.setLineDash([4,4]);
+    ctx.strokeRect(task.region.x*CELL, task.region.y*CELL, task.region.w*CELL, task.region.h*CELL);
+    ctx.setLineDash([]);
+  }
+
+  // Placed circles
+  const colors = ['#F87171','#FBBF24','#C084FC','#60A5FA','#34D399','#FB923C'];
+  state.placedCircles.forEach((c, idx) => {
+    ctx.beginPath();
+    ctx.arc(c.x*CELL, c.y*CELL, c.r*CELL, 0, 2*Math.PI);
+    const col = colors[idx % colors.length];
+    ctx.fillStyle = col + '40';
+    ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.stroke();
+    // Center dot
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(c.x*CELL, c.y*CELL, 4, 0, 2*Math.PI); ctx.fill();
+    // Label
+    ctx.fillStyle = '#1F2937'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(`r${c.r}`, c.x*CELL, c.y*CELL-8);
+  });
+
+  // Hover preview
+  if (hoverX >= 0 && hoverY >= 0) {
+    const r = state.currentR;
+    ctx.beginPath();
+    ctx.arc(hoverX*CELL, hoverY*CELL, r*CELL, 0, 2*Math.PI);
+    ctx.strokeStyle = 'rgba(22,163,74,0.5)'; ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#16A34A'; ctx.beginPath(); ctx.arc(hoverX*CELL, hoverY*CELL, 3, 0, 2*Math.PI); ctx.fill();
+  }
+}
+
+function getCurrentTask() {
+  const lvl = levelTasks[state.level];
+  if (!lvl) return null;
+  return lvl.tasks[state.taskIndex];
+}
+
+// ============================================
+// Interaction
+// ============================================
+let hoverX = -1, hoverY = -1;
+
+function getGridPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvasW / rect.width, scaleY = canvasH / rect.height;
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  const gx = (cx - rect.left) * scaleX / CELL;
+  const gy = (cy - rect.top) * scaleY / CELL;
+  return { x: gx, y: gy };
+}
+
+function onCanvasMove(e) {
+  e.preventDefault();
+  const pos = getGridPos(e);
+  hoverX = pos.x; hoverY = pos.y;
+  drawMap(hoverX, hoverY);
+}
+
+function onCanvasLeave() {
+  hoverX = -1; hoverY = -1;
+  drawMap(-1, -1);
+}
+
+function onCanvasClick(e) {
+  e.preventDefault();
+  const pos = getGridPos(e);
+  const gx = pos.x, gy = pos.y;
+  if (gx < 0 || gx >= COLS || gy < 0 || gy >= ROWS) return;
+
+  // Check region constraint
+  const task = getCurrentTask();
+  if (task && task.region) {
+    const r = task.region;
+    if (gx < r.x || gx >= r.x+r.w || gy < r.y || gy >= r.y+r.h) {
+      statusText.textContent = '❌ 请放在指定区域内！';
+      statusText.style.color = '#EF4444';
+      return;
+    }
+  }
+
+  placeCircleAt(gx, gy);
+}
+
+function placeCircleAt(gx, gy) {
+  const task = getCurrentTask();
+  const r = state.currentR;
+
+  // Check no overlap
+  if (task && task.noOverlap) {
+    for (const c of state.placedCircles) {
+      const dx = gx - c.x, dy = gy - c.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < r + c.r) {
+        statusText.textContent = '❌ 花坛重叠了！请换一个位置';
+        statusText.style.color = '#EF4444';
+        setTimeout(() => { statusText.textContent = '在草地地图上点击放置花坛'; statusText.style.color=''; }, 1500);
+        return;
+      }
+    }
+  }
+
+  state.placedCircles.push({ x: gx, y: gy, r: r });
+  state.totalAttempts++;
+  statusText.textContent = `✅ 花坛已放置！半径${r}格`;
+  statusText.style.color = '#16A34A';
+  setTimeout(() => { statusText.textContent = '在草地地图上点击放置花坛'; statusText.style.color=''; }, 1500);
+
+  drawMap(hoverX, hoverY);
+  updateTaskStatus();
+  checkTaskComplete();
+}
+
+function undoLast() {
+  if (state.placedCircles.length === 0) return;
+  state.placedCircles.pop();
+  drawMap(hoverX, hoverY);
+  updateTaskStatus();
+}
+
+function updateTaskStatus() {
+  const task = getCurrentTask();
+  const total = typeof task.count === 'number' ? task.count : (Array.isArray(task.r) ? task.r.length : 3);
+  taskStatus.textContent = `任务 ${state.placedCircles.length}/${total}`;
+  progressBar.style.width = `${Math.round(state.placedCircles.length/total*100)}%`;
+}
+
+function checkTaskComplete() {
+  const task = getCurrentTask();
+  const total = typeof task.count === 'number' ? task.count : (Array.isArray(task.r) ? task.r.length : 3);
+  if (state.placedCircles.length >= total) {
+    state.correctCount++;
+    const bonus = 20 * state.level;
+    state.score += bonus;
+    scoreDisplay.textContent = state.score;
+    statusText.textContent = `🎉 任务完成！+${bonus}分`;
+    statusText.style.color = '#16A34A';
+
+    setTimeout(() => {
+      const lvl = levelTasks[state.level];
+      state.taskIndex++;
+      if (state.taskIndex >= lvl.tasks.length) {
+        state.taskIndex = 0;
+        if (state.level >= state.totalLevels) {
+          showVictory(state.score);
+          return;
+        }
+        state.level++;
+      }
+      state.placedCircles = [];
+      levelName.textContent = levelTasks[state.level].name;
+      levelDisplay.textContent = `${state.level}/${state.totalLevels}`;
+      loadTask();
+    }, 800);
+  }
+}
+
+function loadTask() {
+  state.placedCircles = [];
+  const task = getCurrentTask();
+  questionText.textContent = task.desc;
+  questionHint.textContent = task.hint || '点击地图放置花坛，用滑块调整半径';
+  updateTaskStatus();
+
+  // Set radius
+  if (task.r === 'free') {
+    state.currentR = 2;
+  } else if (Array.isArray(task.r)) {
+    state.currentR = task.r[0];
+    radiusSlider.max = Math.max(...task.r);
+  } else {
+    state.currentR = task.r;
+  }
+
+  // Try to set slider
+  try {
+    if (state.currentR <= 6) {
+      radiusSlider.value = state.currentR;
+      radiusValue.textContent = state.currentR + '格';
+    }
+  } catch(e) {}
+
+  statusText.textContent = '在草地地图上点击放置花坛';
+  statusText.style.color = '';
+  drawMap(-1, -1);
+}
+
+// ============================================
+// Slider
+// ============================================
+radiusSlider.addEventListener('input', () => {
+  state.currentR = parseFloat(radiusSlider.value);
+  radiusValue.textContent = state.currentR + '格';
+  drawMap(hoverX, hoverY);
+});
+placeBtn.addEventListener('click', () => {
+  // Place at center of grid as default
+  if (hoverX < 0) hoverX = COLS/2;
+  if (hoverY < 0) hoverY = ROWS/2;
+  placeCircleAt(Math.floor(hoverX), Math.floor(hoverY));
+});
+undoBtn.addEventListener('click', undoLast);
+
+// ============================================
+// Show Feedback
+// ============================================
+function showFeedback(type, title, msg, cb) {
+  feedbackIcon.textContent = type==='correct'?'✅':'💡';
+  feedbackTitle.textContent = title;
+  feedbackTitle.style.color = type==='correct'?'var(--color-success)':'var(--color-warning)';
+  feedbackMessage.textContent = msg;
+  feedbackOverlay.classList.remove('hidden');
+  feedbackBtn.onclick = () => { feedbackOverlay.classList.add('hidden'); if(cb) cb(); };
+}
+
+// ============================================
+// Victory
+// ============================================
+function showVictory(finalScore) {
+  const acc = state.totalAttempts>0?Math.round(state.correctCount/state.totalAttempts*100):0;
+  const tier = determinePracticeTier(); const tl = difficultyLabels[tier];
+  document.querySelector('#gameArea').innerHTML = `
+    <div class="victory-container">
+      <div class="victory-icon">🌺</div>
+      <div class="victory-title">公园落成！</div>
+      <div class="victory-stats">
+        <div>🏗️ 完成关卡：${state.totalLevels} 关</div>
+        <div>✅ 设计成功率：${acc}%</div>
+        <div>⭐ 最终得分：${finalScore} 分</div>
+      </div>
+      <button class="victory-btn" onclick="enterPracticeMode()">📝 进入练习 <small>(${tl.icon} ${tl.name})</small></button>
+      <div style="margin-top:8px;"><button class="restart-btn" onclick="restartGame()">🔄 重新设计</button></div>
+    </div>`;
+}
+
+// ============================================
+// Practice System
+// ============================================
+function determinePracticeTier() {
+  const acc = state.totalAttempts>0?state.correctCount/state.totalAttempts:0;
+  if(acc<0.4)return 1;if(acc<0.6)return 2;if(acc<0.8)return 3;if(acc<0.95)return 4;return 5;
+}
+function enterPracticeMode(){
+  state.practiceTier=determinePracticeTier();state.mode='practice';state.practiceIndex=0;state.practiceCorrect=0;
+  gameContainer.classList.add('hidden');practiceContainer.classList.remove('hidden');practiceContainer.style.display='flex';
+  const tl=difficultyLabels[state.practiceTier];practiceBadge.innerHTML=`${tl.icon} ${tl.name}`;practiceBadge.className=`practice-badge ${tl.badgeClass}`;
+  practiceNextBtn.textContent='开始答题 →';practiceNextBtn.classList.remove('hidden');practiceNextBtn.disabled=false;renderPracticeQuestion();
+}
+function renderPracticeQuestion(){
+  const probs=practiceProblems[state.practiceTier];if(!probs||state.practiceIndex>=probs.length){showPracticeSummary();return;}
+  const p=probs[state.practiceIndex];practiceProgress.textContent=`第 ${state.practiceIndex+1}/${probs.length} 题`;
+  practiceQNum.textContent=`第 ${state.practiceIndex+1} 题`;practiceQTitle.textContent=p.q;
+  practiceFeedback.classList.remove('show','correct','wrong');practiceFeedback.textContent='';
+  if(p.type==='fill'){practiceQContent.innerHTML=`<div class="practice-input-area"><input type="text" class="practice-input" id="practiceInput" placeholder="输入答案"><button class="practice-nav-btn primary" id="practiceSubmitBtn">确认</button></div>`;
+    $('#practiceSubmitBtn').addEventListener('click',handlePracticeSubmit);$('#practiceInput').addEventListener('keydown',(e)=>{if(e.key==='Enter')handlePracticeSubmit();});setTimeout(()=>{const inp=$('#practiceInput');if(inp)inp.focus();},100);}
+  else{practiceQContent.innerHTML='<div class="practice-options"></div>';const opts=practiceQContent.querySelector('.practice-options');
+    p.options.forEach((opt,idx)=>{const btn=document.createElement('button');btn.className='practice-option';btn.textContent=opt;btn.addEventListener('click',()=>handlePracticeChoice(idx,p.answer,p.options[p.answer]));opts.appendChild(btn);});}
+  practiceNextBtn.textContent=state.practiceIndex<probs.length-1?'下一题 →':'查看结果 📊';practiceNextBtn.disabled=true;
+}
+function handlePracticeChoice(sel,corr,corrText){const opts=practiceQContent.querySelectorAll('.practice-option');opts.forEach(o=>o.disabled=true);if(sel===corr){opts[sel].classList.add('selected-correct');state.practiceCorrect++;practiceFeedback.textContent=`✅ 正确！${corrText}`;practiceFeedback.className='practice-feedback show correct';}else{opts[sel].classList.add('selected-wrong');opts[corr].classList.add('show-correct');practiceFeedback.textContent=`❌ 正确答案是 ${corrText}。`;practiceFeedback.className='practice-feedback show wrong';}practiceNextBtn.disabled=false;}
+function handlePracticeSubmit(){const inp=$('#practiceInput'),btn=$('#practiceSubmitBtn');if(!inp||!btn||btn.disabled)return;const probs=practiceProblems[state.practiceTier];const p=probs[state.practiceIndex];const ans=inp.value.trim();if(!ans)return;btn.disabled=true;inp.disabled=true;if(ans===p.answer){state.practiceCorrect++;practiceFeedback.textContent=`✅ 正确！`;practiceFeedback.className='practice-feedback show correct';}else{practiceFeedback.textContent=`❌ 正确答案是 ${p.answer}。${p.hint||''}`;practiceFeedback.className='practice-feedback show wrong';}practiceNextBtn.disabled=false;}
+function handlePracticeNext(){const probs=practiceProblems[state.practiceTier];if(state.practiceIndex>=probs.length-1){showPracticeSummary();return;}state.practiceIndex++;renderPracticeQuestion();}
+function showPracticeSummary(){const probs=practiceProblems[state.practiceTier];const total=probs?probs.length:0;const pct=total>0?Math.round(state.practiceCorrect/total*100):0;let emoji,color;if(pct>=80){emoji='🌟';color='var(--color-success)';}else if(pct>=60){emoji='👍';color='var(--color-primary)';}else{emoji='💪';color='var(--color-warning)';}
+  gameContainer.classList.remove('hidden');practiceContainer.classList.add('hidden');practiceContainer.style.display='none';
+  document.querySelector('#gameArea').innerHTML=`<div class="practice-summary"><div class="practice-summary-icon">${emoji}</div><div class="practice-summary-title">练习完成！</div><div class="practice-summary-score" style="color:${color}">${state.practiceCorrect}/${total}</div><div class="practice-summary-detail"><div>📊 练习正确率：${pct}%</div><div>🎮 设计得分：${state.score} 分</div>${pct>=80?'<div>🏆 太棒了！</div>':pct>=60?'<div>📚 继续加油！</div>':'<div>🌱 多练习会更好！</div>'}</div><button class="victory-btn" onclick="restartGame()">🔄 再玩一次</button></div>`;}
+
+function restartGame(){
+  state.score=0;state.level=1;state.taskIndex=0;state.placedCircles=[];state.currentR=2;state.correctCount=0;state.totalAttempts=0;state.mode='game';
+  scoreDisplay.textContent='0';levelDisplay.textContent='1/5';levelName.textContent=levelTasks[1].name;
+  gameContainer.classList.remove('hidden');practiceContainer.classList.add('hidden');practiceContainer.style.display='none';
+  createCanvas();
+  canvas.addEventListener('mousemove', onCanvasMove);
+  canvas.addEventListener('mouseleave', onCanvasLeave);
+  canvas.addEventListener('click', onCanvasClick);
+  canvas.addEventListener('touchmove', onCanvasMove, {passive:false});
+  canvas.addEventListener('touchend', (e) => { e.preventDefault(); onCanvasClick(e); });
+  loadTask();
+}
+
+// ============================================
+// Init
+// ============================================
+restartBtn.addEventListener('click', restartGame);
+practiceNextBtn.addEventListener('click', handlePracticeNext);
+restartGame();
+</script>
+</body>
+</html>

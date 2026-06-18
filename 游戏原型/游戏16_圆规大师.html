@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>圆规大师</title>
+<style>
+:root {
+  --color-primary: #5C6BC0;
+  --color-primary-light: #9FA8DA;
+  --color-primary-dark: #3949AB;
+  --color-success: #43A047;
+  --color-success-light: #E8F5E9;
+  --color-error: #EF5350;
+  --color-error-light: #FFEBEE;
+  --color-warning: #FF9800;
+  --color-warning-light: #FFF3E0;
+  --color-bg: #EEF0F9;
+  --color-card: #FFFFFF;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-border: #E0E0E0;
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+  --font-family: "Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:var(--font-family);background:var(--color-bg);color:var(--color-text);
+  min-height:100vh;display:flex;justify-content:center;align-items:center;
+  padding:16px;-webkit-tap-highlight-color:transparent;user-select:none;
+}
+.game-container{
+  width:100%;max-width:500px;background:var(--color-card);
+  border-radius:var(--radius-xl);box-shadow:var(--shadow-card);
+  overflow:hidden;display:flex;flex-direction:column;min-height:640px;
+}
+.game-header{
+  background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark));
+  color:white;padding:14px 20px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.game-title{font-size:20px;font-weight:700;}
+.game-stats{display:flex;gap:14px;font-size:14px;}
+.stat-item{display:flex;align-items:center;gap:4px;}
+.level-indicator{
+  padding:8px 20px;background:var(--color-primary-light);
+  color:white;font-size:13px;font-weight:600;text-align:center;
+}
+.question-area{padding:14px 20px 4px;text-align:center;flex-shrink:0;}
+.question-text{font-size:16px;font-weight:600;color:var(--color-text);line-height:1.5;}
+.question-hint{font-size:12px;color:var(--color-text-light);margin-top:4px;}
+
+.game-area{
+  flex:1;padding:12px 16px;
+  display:flex;flex-direction:column;align-items:center;
+}
+
+/* Canvas wrapper */
+.canvas-wrapper{
+  position:relative;background:#FAFAFA;
+  border:2px dashed var(--color-border);
+  border-radius:var(--radius-md);overflow:hidden;
+  cursor:crosshair;touch-action:none;
+}
+.canvas-wrapper canvas{display:block;}
+
+/* Target info bar */
+.target-info{
+  margin-top:8px;padding:8px 16px;
+  background:var(--color-bg);border-radius:var(--radius-sm);
+  font-size:14px;font-weight:600;text-align:center;
+  color:var(--color-primary-dark);width:100%;max-width:380px;
+}
+.target-info .dim{font-size:13px;color:var(--color-text-light);margin-top:2px;}
+
+/* Action buttons */
+.action-row{
+  display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;justify-content:center;
+}
+.action-btn{
+  padding:10px 20px;font-size:14px;font-weight:700;
+  border:2px solid var(--color-border);border-radius:var(--radius-md);
+  cursor:pointer;transition:all 0.2s;min-width:80px;
+  background:var(--color-card);color:var(--color-text);
+}
+.action-btn:hover{border-color:var(--color-primary);color:var(--color-primary);}
+.action-btn:disabled{opacity:0.5;pointer-events:none;}
+.action-btn.confirm{
+  background:var(--color-primary);color:white;border-color:var(--color-primary);
+}
+.action-btn.confirm:hover{background:var(--color-primary-dark);}
+.action-btn.retry{
+  background:var(--color-warning);color:white;border-color:var(--color-warning);
+}
+.action-btn.retry:hover{background:#F57C00;}
+.action-btn.next{
+  background:var(--color-success);color:white;border-color:var(--color-success);
+}
+.action-btn.next:hover{background:#2E7D32;}
+
+/* Measurement display */
+.measure-display{
+  text-align:center;font-size:14px;color:var(--color-text-light);
+  margin-top:4px;min-height:20px;
+}
+.measure-display .val{font-weight:700;font-size:18px;color:var(--color-primary-dark);}
+
+.progress-bar-container{
+  width:calc(100% - 40px);height:8px;background:var(--color-border);
+  border-radius:4px;margin:8px 20px;overflow:hidden;
+}
+.progress-bar-fill{
+  height:100%;background:linear-gradient(90deg,var(--color-success),var(--color-primary));
+  border-radius:4px;transition:width 0.5s ease;
+}
+
+.feedback-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.4);display:flex;
+  justify-content:center;align-items:center;z-index:100;animation:fadeIn 0.2s ease;
+}
+.feedback-modal{
+  background:white;border-radius:var(--radius-lg);padding:28px 24px;
+  text-align:center;max-width:340px;width:90%;
+  box-shadow:0 8px 32px rgba(0,0,0,0.2);animation:scaleIn 0.3s ease;
+}
+.feedback-icon{font-size:52px;margin-bottom:8px;}
+.feedback-title{font-size:20px;font-weight:700;margin-bottom:8px;}
+.feedback-message{font-size:14px;color:var(--color-text-light);margin-bottom:18px;line-height:1.5;}
+.feedback-btn{
+  padding:12px 28px;font-size:16px;font-weight:700;
+  color:white;background:var(--color-primary);
+  border:none;border-radius:var(--radius-md);cursor:pointer;
+}
+.feedback-btn:hover{background:var(--color-primary-dark);}
+
+.game-footer{
+  padding:10px 20px;display:flex;justify-content:center;
+  border-top:1px solid var(--color-border);
+}
+.restart-btn{
+  padding:8px 20px;font-size:14px;color:var(--color-text-light);
+  background:transparent;border:1px solid var(--color-border);
+  border-radius:var(--radius-sm);cursor:pointer;
+}
+.restart-btn:hover{color:var(--color-primary);border-color:var(--color-primary);}
+
+.victory-container{text-align:center;padding:20px;}
+.victory-icon{font-size:64px;margin-bottom:8px;animation:bounce 0.6s ease infinite alternate;}
+.victory-title{font-size:24px;font-weight:700;color:var(--color-success);margin-bottom:8px;}
+.victory-stats{font-size:14px;color:var(--color-text-light);margin-bottom:16px;line-height:1.8;}
+.victory-btn{
+  padding:12px 28px;font-size:16px;font-weight:700;
+  color:white;background:var(--color-primary);
+  border:none;border-radius:var(--radius-md);cursor:pointer;margin:0 6px;
+}
+.victory-btn:hover{background:var(--color-primary-dark);}
+
+/* Practice mode styles */
+.practice-container{display:none;flex-direction:column;height:100%;}
+.practice-badge-bar{
+  padding:10px 20px;background:var(--color-bg);
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--color-border);
+}
+.practice-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;}
+.badge-tier-1{background:#E8F5E9;color:#2E7D32;}
+.badge-tier-2{background:#E3F2FD;color:#1565C0;}
+.badge-tier-3{background:#FFF3E0;color:#E65100;}
+.badge-tier-4{background:#F3E5F5;color:#7B1FA2;}
+.badge-tier-5{background:#FFEBEE;color:#C62828;}
+.practice-progress-text{font-size:13px;color:var(--color-text-light);}
+.practice-question-card{
+  margin:16px 20px;padding:20px 18px;
+  background:var(--color-card);border:1px solid var(--color-border);
+  border-radius:var(--radius-lg);flex:1;
+}
+.practice-q-num{font-size:12px;font-weight:700;color:var(--color-primary);margin-bottom:6px;}
+.practice-q-title{font-size:16px;font-weight:600;color:var(--color-text);margin-bottom:14px;line-height:1.6;}
+.practice-options{display:flex;flex-direction:column;gap:10px;}
+.practice-option{
+  padding:12px 14px;font-size:14px;text-align:left;
+  background:var(--color-bg);border:2px solid var(--color-border);
+  border-radius:var(--radius-md);cursor:pointer;transition:all 0.2s;line-height:1.4;
+}
+.practice-option:hover{border-color:var(--color-primary);background:white;}
+.practice-option.selected-correct{border-color:var(--color-success);background:var(--color-success-light);}
+.practice-option.selected-wrong{border-color:var(--color-error);background:var(--color-error-light);}
+.practice-option.show-correct{border-color:var(--color-success);}
+.practice-option:disabled{pointer-events:none;}
+.practice-input-area{display:flex;gap:10px;}
+.practice-input{
+  flex:1;padding:12px 16px;font-size:18px;font-weight:700;
+  font-family:"Consolas","Courier New",monospace;text-align:center;
+  border:2px solid var(--color-border);border-radius:var(--radius-md);outline:none;
+}
+.practice-input:focus{border-color:var(--color-primary);}
+.submit-btn-sm{
+  padding:12px 20px;font-size:15px;font-weight:700;color:white;
+  background:var(--color-primary);border:none;border-radius:var(--radius-md);cursor:pointer;
+}
+.practice-feedback{
+  margin:0 20px 10px;padding:10px 14px;
+  border-radius:var(--radius-md);font-size:13px;line-height:1.5;display:none;
+}
+.practice-feedback.show{display:block;animation:fadeIn 0.3s ease;}
+.practice-feedback.correct{background:var(--color-success-light);color:#2E7D32;}
+.practice-feedback.wrong{background:var(--color-error-light);color:#C62828;}
+.practice-nav{
+  padding:10px 20px;display:flex;gap:10px;
+  justify-content:center;border-top:1px solid var(--color-border);
+}
+.practice-nav-btn{
+  padding:10px 22px;font-size:15px;font-weight:700;
+  border:none;border-radius:var(--radius-md);cursor:pointer;
+}
+.practice-nav-btn.primary{background:var(--color-primary);color:white;}
+.practice-nav-btn.primary:hover{background:var(--color-primary-dark);}
+.practice-nav-btn.primary:disabled{opacity:0.5;cursor:not-allowed;}
+.practice-nav-btn.secondary{background:transparent;color:var(--color-text-light);border:1px solid var(--color-border);}
+.practice-summary{text-align:center;padding:24px 16px;}
+.practice-summary-icon{font-size:56px;margin-bottom:10px;}
+.practice-summary-title{font-size:20px;font-weight:700;margin-bottom:8px;}
+.practice-summary-score{font-size:32px;font-weight:700;margin-bottom:10px;}
+.practice-summary-detail{font-size:14px;color:var(--color-text-light);margin-bottom:16px;line-height:1.8;}
+
+.hidden{display:none!important;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+
+@media(max-width:360px){
+  .game-container{min-height:540px;}
+  .canvas-wrapper{max-width:300px;}
+}
+@media(min-width:768px){
+  .game-container{max-width:560px;min-height:700px;}
+}
+</style>
+</head>
+<body>
+
+<div class="game-container" id="gameContainer">
+  <div class="game-header">
+    <div class="game-title">🎯 圆规大师</div>
+    <div class="game-stats">
+      <div class="stat-item"><span>⭐</span><span id="scoreDisplay">0</span></div>
+      <div class="stat-item"><span>📋</span><span id="levelDisplay">1/5</span></div>
+    </div>
+  </div>
+  <div class="level-indicator" id="levelLabel">第 1 关 · 初试锋芒</div>
+
+  <div class="question-area">
+    <div class="question-text" id="questionText">请画一个半径 <strong>3cm</strong> 的圆</div>
+    <div class="question-hint" id="questionHint">💡 点击画布确定圆心，拖动设定半径大小</div>
+  </div>
+
+  <div class="game-area" id="gameArea">
+    <div class="canvas-wrapper" id="canvasWrapper">
+      <canvas id="drawCanvas" width="380" height="380"></canvas>
+    </div>
+    <div class="target-info" id="targetInfo">
+      🎯 目标：半径 3.0 cm
+      <div class="dim">d = 2r = 6.0 cm</div>
+    </div>
+    <div class="measure-display" id="measureDisplay">
+      <span>当前半径：</span><span class="val" id="currentR">--</span><span> cm</span>
+    </div>
+    <div class="action-row">
+      <button class="action-btn retry" id="retryBtn" disabled>🔄 重画</button>
+      <button class="action-btn confirm" id="confirmBtn" disabled>✅ 确认提交</button>
+    </div>
+  </div>
+
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+  </div>
+
+  <div class="game-footer">
+    <button class="restart-btn" id="restartBtn">🔄 重新开始</button>
+  </div>
+</div>
+
+<div class="feedback-overlay hidden" id="feedbackOverlay">
+  <div class="feedback-modal">
+    <div class="feedback-icon" id="feedbackIcon">✅</div>
+    <div class="feedback-title" id="feedbackTitle"></div>
+    <div class="feedback-message" id="feedbackMessage"></div>
+    <button class="feedback-btn" id="feedbackBtn">继续 →</button>
+  </div>
+</div>
+
+<div class="practice-container hidden" id="practiceContainer">
+  <div class="practice-badge-bar">
+    <span class="practice-badge" id="practiceBadge">📝 巩固练习</span>
+    <span class="practice-progress-text" id="practiceProgress">第 1/5 题</span>
+  </div>
+  <div class="practice-question-card">
+    <div class="practice-q-num" id="practiceQNum">第 1 题</div>
+    <div class="practice-q-title" id="practiceQTitle"></div>
+    <div id="practiceQContent"></div>
+  </div>
+  <div class="practice-feedback" id="practiceFeedback"></div>
+  <div class="practice-nav">
+    <button class="practice-nav-btn secondary hidden" id="practiceSkipBtn">跳过</button>
+    <button class="practice-nav-btn primary" id="practiceNextBtn">下一题 →</button>
+  </div>
+</div>
+
+<script>
+// ============================================
+// DOM References
+// ============================================
+const $ = sel => document.querySelector(sel);
+const gameContainer = $('#gameContainer');
+const scoreDisplay = $('#scoreDisplay');
+const levelDisplay = $('#levelDisplay');
+const levelLabel = $('#levelLabel');
+const questionText = $('#questionText');
+const questionHint = $('#questionHint');
+const gameArea = $('#gameArea');
+const progressBar = $('#progressBar');
+const restartBtn = $('#restartBtn');
+const feedbackOverlay = $('#feedbackOverlay');
+const feedbackIcon = $('#feedbackIcon');
+const feedbackTitle = $('#feedbackTitle');
+const feedbackMessage = $('#feedbackMessage');
+const feedbackBtn = $('#feedbackBtn');
+const drawCanvas = $('#drawCanvas');
+const canvasWrapper = $('#canvasWrapper');
+const targetInfo = $('#targetInfo');
+const measureDisplay = $('#measureDisplay');
+const currentR = $('#currentR');
+const retryBtn = $('#retryBtn');
+const confirmBtn = $('#confirmBtn');
+const practiceContainer = $('#practiceContainer');
+const practiceBadge = $('#practiceBadge');
+const practiceProgress = $('#practiceProgress');
+const practiceQNum = $('#practiceQNum');
+const practiceQTitle = $('#practiceQTitle');
+const practiceQContent = $('#practiceQContent');
+const practiceFeedback = $('#practiceFeedback');
+const practiceNextBtn = $('#practiceNextBtn');
+
+// ============================================
+// Game State
+// ============================================
+const SCALE = 40; // pixels per cm
+const state = {
+  score: 0, level: 1, totalLevels: 5,
+  correctCount: 0, totalAttempts: 0,
+  // drawing
+  centerX: null, centerY: null,
+  radius: null, isDrawing: false, isConfirmed: false,
+  levelResult: null,
+  // multi-target tracking for level 5
+  multiIndex: 0,
+  multiResults: [],
+  mode: 'game',
+  practiceTier: 1, practiceIndex: 0, practiceCorrect: 0,
+};
+
+// ============================================
+// Level Config
+// ============================================
+const levelConfigs = {
+  1: { name:'第 1 关 · 初试锋芒', targetR:3, targetD:null, gridOn:true,
+       desc:'请画一个半径 <strong>3cm</strong> 的圆', hint:'💡 点击画布确定圆心，拖动设定半径大小' },
+  2: { name:'第 2 关 · 小试牛刀', targetR:4.5, targetD:null, gridOn:true,
+       desc:'请画一个半径 <strong>4.5cm</strong> 的圆', hint:'💡 半径4.5cm，比上一关更大一些！' },
+  3: { name:'第 3 关 · 直径转换', targetR:null, targetD:8, gridOn:true,
+       desc:'请画一个直径 <strong>8cm</strong> 的圆', hint:'💡 直径8cm → 半径是多少？先算再画！' },
+  4: { name:'第 4 关 · 无网格挑战', targetR:null, targetD:5, gridOn:false,
+       desc:'请画一个直径 <strong>5cm</strong> 的圆（无网格）', hint:'💡 直径5cm → 半径2.5cm，没有网格辅助了！' },
+  5: { name:'第 5 关 · 连画三圆', multiTargets:[{r:3},{r:5},{r:2}], gridOn:false,
+       desc:'请依次画三个圆：半径3cm、半径5cm、半径2cm', hint:'💡 当前第1个：画半径3cm的圆' },
+};
+
+// ============================================
+// Canvas Drawing
+// ============================================
+const ctx = drawCanvas.getContext('2d');
+const canvasW = drawCanvas.width;
+const canvasH = drawCanvas.height;
+const cxOrigin = canvasW / 2;
+const cyOrigin = canvasH / 2;
+
+function drawGrid() {
+  const cfg = levelConfigs[state.level];
+  if (!cfg.gridOn) return;
+  ctx.strokeStyle = '#E8E8F0';
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([4,4]);
+  const step = SCALE; // 1cm grid
+  for (let x = cxOrigin % step; x < canvasW; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvasH); ctx.stroke();
+  }
+  for (let y = cyOrigin % step; y < canvasH; y += step) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvasW, y); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  // Center crosshair
+  ctx.strokeStyle = '#D0D0DD';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(cxOrigin-10, cyOrigin); ctx.lineTo(cxOrigin+10, cyOrigin); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cxOrigin, cyOrigin-10); ctx.lineTo(cxOrigin, cyOrigin+10); ctx.stroke();
+}
+
+function redraw() {
+  ctx.clearRect(0, 0, canvasW, canvasH);
+  drawGrid();
+
+  // Draw placed center
+  if (state.centerX !== null && state.centerY !== null) {
+    // Center crosshair
+    ctx.strokeStyle = '#EF5350';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(state.centerX - 12, state.centerY);
+    ctx.lineTo(state.centerX + 12, state.centerY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(state.centerX, state.centerY - 12);
+    ctx.lineTo(state.centerX, state.centerY + 12);
+    ctx.stroke();
+
+    // Center dot
+    ctx.fillStyle = '#EF5350';
+    ctx.beginPath();
+    ctx.arc(state.centerX, state.centerY, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Label O
+    ctx.fillStyle = '#C62828';
+    ctx.font = 'bold 13px "Microsoft YaHei"';
+    ctx.fillText('O', state.centerX + 8, state.centerY - 8);
+
+    // If radius set, draw radius line and preview circle
+    if (state.radius !== null && state.radius > 0) {
+      // Radius line
+      ctx.strokeStyle = '#5C6BC0';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6,3]);
+      ctx.beginPath();
+      ctx.moveTo(state.centerX, state.centerY);
+      ctx.lineTo(state.centerX + state.radius, state.centerY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Endpoint dot + r label
+      ctx.fillStyle = '#3949AB';
+      ctx.beginPath();
+      ctx.arc(state.centerX + state.radius, state.centerY, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // r label
+      ctx.fillStyle = '#3949AB';
+      ctx.font = 'bold 12px "Microsoft YaHei"';
+      const rCm = (state.radius / SCALE).toFixed(1);
+      ctx.fillText('r=' + rCm + 'cm', state.centerX + state.radius / 2 - 20, state.centerY - 12);
+
+      // Preview circle
+      ctx.strokeStyle = '#5C6BC0';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(state.centerX, state.centerY, state.radius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // If confirmed, fill with light color
+      if (state.isConfirmed) {
+        const alpha = state.levelResult && state.levelResult.rating === 'perfect' ? 0.15 :
+                      state.levelResult && state.levelResult.rating === 'good' ? 0.1 : 0.05;
+        ctx.fillStyle = `rgba(67,160,71,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(state.centerX, state.centerY, state.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Target circle (dashed)
+        const cfg = levelConfigs[state.level];
+        const targetR = getTargetRadius(cfg);
+        if (targetR) {
+          ctx.strokeStyle = '#43A047';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8,4]);
+          ctx.beginPath();
+          ctx.arc(state.centerX, state.centerY, targetR * SCALE, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      }
+    }
+  }
+
+  // If nothing drawn yet, show hint text
+  if (state.centerX === null) {
+    ctx.fillStyle = '#AAAAAA';
+    ctx.font = '15px "Microsoft YaHei"';
+    ctx.textAlign = 'center';
+    ctx.fillText('👆 点击此处确定圆心', cxOrigin, cyOrigin);
+    ctx.textAlign = 'start';
+  }
+}
+
+function getTargetRadius(cfg) {
+  if (cfg.targetR !== null && cfg.targetR !== undefined) return cfg.targetR;
+  if (cfg.targetD !== null && cfg.targetD !== undefined) return cfg.targetD / 2;
+  if (cfg.multiTargets && state.multiIndex < cfg.multiTargets.length) {
+    const t = cfg.multiTargets[state.multiIndex];
+    return t.r || (t.d / 2);
+  }
+  return null;
+}
+
+function getTargetDisplay(cfg) {
+  if (cfg.targetR !== null && cfg.targetR !== undefined) return {type:'r', val:cfg.targetR};
+  if (cfg.targetD !== null && cfg.targetD !== undefined) return {type:'d', val:cfg.targetD};
+  if (cfg.multiTargets && state.multiIndex < cfg.multiTargets.length) {
+    const t = cfg.multiTargets[state.multiIndex];
+    if (t.r) return {type:'r', val:t.r};
+    if (t.d) return {type:'d', val:t.d};
+  }
+  return null;
+}
+
+function updateTargetInfo() {
+  const cfg = levelConfigs[state.level];
+  const td = getTargetDisplay(cfg);
+  if (!td) return;
+  if (td.type === 'r') {
+    targetInfo.innerHTML = `🎯 目标：半径 ${td.val} cm<div class="dim">d = 2r = ${(td.val*2).toFixed(1)} cm</div>`;
+  } else {
+    targetInfo.innerHTML = `🎯 目标：直径 ${td.val} cm<div class="dim">r = d÷2 = ${(td.val/2).toFixed(1)} cm</div>`;
+  }
+}
+
+// ============================================
+// Mouse/Touch Events
+// ============================================
+function getCanvasPos(e) {
+  const rect = drawCanvas.getBoundingClientRect();
+  const scaleX = canvasW / rect.width;
+  const scaleY = canvasH / rect.height;
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY,
+  };
+}
+
+drawCanvas.addEventListener('mousedown', (e) => {
+  if (state.isConfirmed) return;
+  e.preventDefault();
+  const pos = getCanvasPos(e);
+  state.centerX = pos.x;
+  state.centerY = pos.y;
+  state.radius = null;
+  state.isDrawing = true;
+  updateButtons();
+  redraw();
+  currentR.textContent = '--';
+});
+
+drawCanvas.addEventListener('mousemove', (e) => {
+  if (!state.isDrawing || state.isConfirmed) return;
+  const pos = getCanvasPos(e);
+  const dx = pos.x - state.centerX;
+  const dy = pos.y - state.centerY;
+  state.radius = Math.sqrt(dx * dx + dy * dy);
+  const rCm = (state.radius / SCALE).toFixed(1);
+  currentR.textContent = rCm;
+  redraw();
+});
+
+drawCanvas.addEventListener('mouseup', () => {
+  if (!state.isDrawing) return;
+  state.isDrawing = false;
+  updateButtons();
+});
+
+drawCanvas.addEventListener('mouseleave', () => {
+  if (state.isDrawing) {
+    state.isDrawing = false;
+    updateButtons();
+  }
+});
+
+// Touch events
+drawCanvas.addEventListener('touchstart', (e) => {
+  if (state.isConfirmed) return;
+  e.preventDefault();
+  const pos = getCanvasPos(e.touches[0]);
+  state.centerX = pos.x;
+  state.centerY = pos.y;
+  state.radius = null;
+  state.isDrawing = true;
+  updateButtons();
+  redraw();
+  currentR.textContent = '--';
+});
+
+drawCanvas.addEventListener('touchmove', (e) => {
+  if (!state.isDrawing || state.isConfirmed) return;
+  e.preventDefault();
+  const pos = getCanvasPos(e.touches[0]);
+  const dx = pos.x - state.centerX;
+  const dy = pos.y - state.centerY;
+  state.radius = Math.sqrt(dx * dx + dy * dy);
+  const rCm = (state.radius / SCALE).toFixed(1);
+  currentR.textContent = rCm;
+  redraw();
+});
+
+drawCanvas.addEventListener('touchend', (e) => {
+  if (!state.isDrawing) return;
+  state.isDrawing = false;
+  updateButtons();
+});
+
+function updateButtons() {
+  const hasDrawing = state.centerX !== null && state.radius !== null && state.radius > 5 && !state.isDrawing;
+  retryBtn.disabled = state.centerX === null;
+  confirmBtn.disabled = !hasDrawing || state.isConfirmed;
+}
+
+// ============================================
+// Actions
+// ============================================
+retryBtn.addEventListener('click', () => {
+  state.centerX = null; state.centerY = null;
+  state.radius = null; state.isConfirmed = false; state.levelResult = null;
+  currentR.textContent = '--';
+  updateButtons();
+  redraw();
+});
+
+confirmBtn.addEventListener('click', () => {
+  if (state.radius === null || state.radius <= 5 || state.isConfirmed) return;
+  state.isConfirmed = true;
+  state.totalAttempts++;
+
+  const cfg = levelConfigs[state.level];
+  const targetR = getTargetRadius(cfg);
+  const actualR = state.radius / SCALE;
+  const error = Math.abs(actualR - targetR) / targetR * 100;
+
+  let rating, points, icon, title, msg;
+  if (error <= 3) {
+    rating = 'perfect'; points = 100; icon = '🌟'; title = '完美！';
+    msg = `目标半径 ${targetR}cm，你画了 ${actualR.toFixed(1)}cm\n误差仅 ${error.toFixed(1)}%，太精准了！`;
+    state.correctCount++;
+  } else if (error <= 8) {
+    rating = 'good'; points = 80; icon = '👍'; title = '很好！';
+    msg = `目标半径 ${targetR}cm，你画了 ${actualR.toFixed(1)}cm\n误差 ${error.toFixed(1)}%，不错！`;
+    state.correctCount++;
+  } else if (error <= 15) {
+    rating = 'ok'; points = 60; icon = '📏'; title = '还行！';
+    msg = `目标半径 ${targetR}cm，你画了 ${actualR.toFixed(1)}cm\n误差 ${error.toFixed(1)}%，再精准一点会更好！`;
+  } else {
+    rating = 'miss'; points = 30; icon = '🔄'; title = '差一点！';
+    msg = `目标半径 ${targetR}cm，你画了 ${actualR.toFixed(1)}cm\n误差 ${error.toFixed(1)}%，建议重画！`;
+  }
+
+  state.levelResult = { rating, points, actualR, targetR, error };
+  state.score += points;
+  scoreDisplay.textContent = state.score;
+  updateButtons();
+  redraw();
+
+  // Update action buttons
+  const actionRow = gameArea.querySelector('.action-row');
+  actionRow.innerHTML = '';
+
+  if (rating === 'miss') {
+    actionRow.innerHTML = `
+      <button class="action-btn retry" onclick="retryLevel()">🔄 重画</button>
+      <button class="action-btn next" onclick="nextLevel()">跳过 ➡️</button>`;
+  } else {
+    actionRow.innerHTML = `
+      <button class="action-btn next" onclick="nextLevel()">➡️ 下一关</button>`;
+  }
+
+  showFeedback(rating === 'miss' ? 'hint' : 'correct', title, msg);
+});
+
+function retryLevel() {
+  state.centerX = null; state.centerY = null;
+  state.radius = null; state.isConfirmed = false; state.levelResult = null;
+  currentR.textContent = '--';
+  updateButtons();
+  setupLevel();
+  redraw();
+
+  // Restore action buttons
+  const actionRow = gameArea.querySelector('.action-row');
+  actionRow.innerHTML = `
+    <button class="action-btn retry" id="retryBtn" disabled>🔄 重画</button>
+    <button class="action-btn confirm" id="confirmBtn" disabled>✅ 确认提交</button>`;
+  // Rebind
+  document.querySelector('#retryBtn').addEventListener('click', retryBtn.click.bind(retryBtn));
+}
+
+function nextLevel() {
+  state.level++;
+  const progress = (state.level - 1) / state.totalLevels;
+  progressBar.style.width = (progress * 100) + '%';
+  levelDisplay.textContent = `${state.level}/${state.totalLevels}`;
+
+  if (state.level > state.totalLevels) {
+    showVictory();
+    return;
+  }
+
+  state.centerX = null; state.centerY = null;
+  state.radius = null; state.isConfirmed = false; state.levelResult = null;
+  state.multiIndex = 0; state.multiResults = [];
+  currentR.textContent = '--';
+  setupLevel();
+  redraw();
+
+  const actionRow = gameArea.querySelector('.action-row');
+  actionRow.innerHTML = `
+    <button class="action-btn retry" id="retryBtn" disabled>🔄 重画</button>
+    <button class="action-btn confirm" id="confirmBtn" disabled>✅ 确认提交</button>`;
+
+  const nr = document.querySelector('#retryBtn');
+  const nc = document.querySelector('#confirmBtn');
+  if (nr) nr.addEventListener('click', () => {
+    state.centerX = null; state.centerY = null; state.radius = null; state.isConfirmed = false; state.levelResult = null;
+    currentR.textContent = '--'; updateButtons(); redraw();
+  });
+  if (nc) nc.addEventListener('click', confirmBtn.click.bind(confirmBtn));
+
+  updateButtons();
+}
+
+function setupLevel() {
+  const cfg = levelConfigs[state.level];
+  levelLabel.textContent = cfg.name;
+  questionText.innerHTML = cfg.desc;
+  questionHint.textContent = cfg.hint;
+  updateTargetInfo();
+}
+
+// Rebind retry/confirm after initial render
+retryBtn.addEventListener('click', () => {
+  state.centerX = null; state.centerY = null; state.radius = null; state.isConfirmed = false; state.levelResult = null;
+  currentR.textContent = '--'; updateButtons(); redraw();
+});
+
+// ============================================
+// Victory & Practice
+// ============================================
+function showVictory() {
+  const accuracy = state.totalAttempts > 0
+    ? Math.round((state.correctCount / state.totalAttempts) * 100) : 0;
+  const tier = determinePracticeTier();
+  const tierLabel = difficultyLabels[tier];
+
+  gameArea.innerHTML = `
+    <div class="victory-container">
+      <div class="victory-icon">🏆</div>
+      <div class="victory-title">大师认证！</div>
+      <div class="victory-stats">
+        <div>📋 完成关卡：${state.totalLevels} 关</div>
+        <div>⭐ 总得分：${state.score} 分</div>
+        <div>📊 精准度：${accuracy}%</div>
+        <div style="margin-top:6px;font-size:12px;color:var(--color-text-light);">
+          "圆，一中同长也。" —— 墨子
+        </div>
+      </div>
+      <button class="victory-btn" onclick="enterPracticeMode()">
+        📝 进入练习 <small>(${tierLabel.icon} ${tierLabel.name})</small>
+      </button>
+      <div style="margin-top:8px;">
+        <button class="restart-btn" onclick="restartGame()">🔄 重新开始</button>
+      </div>
+    </div>`;
+}
+
+// ============================================
+// Feedback
+// ============================================
+function showFeedback(type, title, msg) {
+  feedbackIcon.textContent = type === 'correct' ? '✅' : type === 'hint' ? '💡' : '❌';
+  feedbackTitle.textContent = title;
+  feedbackTitle.style.color = type === 'correct' ? 'var(--color-success)' : 'var(--color-warning)';
+  feedbackMessage.textContent = msg;
+  feedbackOverlay.classList.remove('hidden');
+  feedbackBtn.onclick = () => { feedbackOverlay.classList.add('hidden'); };
+}
+
+// ============================================
+// Practice System
+// ============================================
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '圆形中，最中心的那个点叫什么？', options: ['顶点', '中心点', '圆心', '圆点'], answer: 2, hint: '圆的中心，用字母 O 表示的那个点。' },
+    { type: 'choice', q: '从圆心到圆上任意一点的线段叫什么？', options: ['直径', '半径', '弦', '周长'], answer: 1, hint: '半径连接圆心和圆上任意一点，用字母 r 表示。' },
+    { type: 'choice', q: '通过圆心并且两端都在圆上的线段叫什么？', options: ['半径', '弧', '弦', '直径'], answer: 3, hint: '直径是最长的弦，它经过圆心，用字母 d 表示。' },
+    { type: 'fill', q: '圆心用字母 ___ 表示，半径用字母 ___ 表示，直径用字母 ___ 表示。（用大写字母，用逗号分隔，如：A,B,C）', answer: 'O,r,d', hint: '圆心是 O，半径是 r，直径是 d。' },
+  ],
+  2: [
+    { type: 'choice', q: '在同一个圆中，直径的长度是半径的几倍？', options: ['1倍', '2倍', '3倍', '一半'], answer: 1, hint: '直径 = 半径 × 2，即 d = 2r。' },
+    { type: 'choice', q: '一个圆的半径是4cm，它的直径是多少？', options: ['2cm', '4cm', '6cm', '8cm'], answer: 3, hint: 'd = 2r = 2 × 4 = 8cm。' },
+    { type: 'choice', q: '画圆时，圆规两脚之间的距离是圆的什么？', options: ['直径', '半径', '周长', '圆心'], answer: 1, hint: '圆规的针尖是圆心，针尖到笔尖的距离就是半径。' },
+    { type: 'fill', q: '一个圆的直径是10cm，它的半径是___cm。', answer: '5', hint: 'r = d ÷ 2 = 10 ÷ 2 = 5cm。' },
+  ],
+  3: [
+    { type: 'choice', q: '用圆规画一个直径6cm的圆，圆规两脚应张开多少？', options: ['3cm', '6cm', '12cm', '1.5cm'], answer: 0, hint: '圆规两脚距离 = 半径。直径6cm → 半径 = 6÷2 = 3cm。' },
+    { type: 'choice', q: '下面哪个说法是正确的？', options: ['半径一定比直径短', '同一个圆中所有半径都相等', '直径不经过圆心', '圆的对称轴只有2条'], answer: 1, hint: '同圆中所有半径确实都相等。' },
+    { type: 'fill', q: '一个圆的半径是3.5cm，它的直径是___cm。', answer: '7', hint: 'd = 2r = 2 × 3.5 = 7cm。' },
+    { type: 'choice', q: '小华用圆规画了一个圆，圆规两脚张开5cm。这个圆的直径是多少？', options: ['2.5cm', '5cm', '10cm', '15cm'], answer: 2, hint: '圆规两脚=半径=5cm，直径=2×5=10cm。' },
+  ],
+  4: [
+    { type: 'choice', q: '一个圆的直径是9cm，小明说"半径是4.5cm"，小红说"半径是18cm"。谁说得对？', options: ['小明对', '小红对', '都不对', '都对'], answer: 0, hint: 'r = d÷2 = 9÷2 = 4.5cm。小明对。' },
+    { type: 'choice', q: '下面哪一项不是判断一个图形是否为圆的必要条件？', options: ['所有半径相等', '有一个中心点', '有四条对称轴', '是封闭的曲线'], answer: 2, hint: '圆有无数条对称轴，不是"四条"。' },
+    { type: 'fill', q: '如果在一个圆中画了5条不同的半径，长度都是3cm。这个圆的直径是___cm。', answer: '6', hint: '直径 = 2×3 = 6cm。' },
+    { type: 'choice', q: '要在地上画一个直径20米的圆形操场，只用一根绳子和一根木桩，绳子应该多长？', options: ['10米', '20米', '40米', '5米'], answer: 0, hint: '绳子=半径。直径20米→半径=10米。' },
+  ],
+  5: [
+    { type: 'choice', q: '墨子说："圆，一中同长也。"这句话中的"一中"和"同长"分别指什么？', options: ['中=圆心，同长=半径都相等', '中=中心线，同长=直径都相等', '中=中点，同长=圆周长相等', '中=中间，同长=面积都相等'], answer: 0, hint: '"一中"指圆心；"同长"指半径都相等。' },
+    { type: 'fill', q: '一个圆可以画无数条对称轴。每条对称轴都通过圆的___。（填一个汉字+一个字母）', answer: '圆心O', hint: '每条对称轴都是直径所在直线，都经过圆心O。' },
+    { type: 'choice', q: '小明的圆规坏了——画圆时两脚距离会慢慢变大。他用这个圆规能画出真正的圆吗？', options: ['能，只要针尖固定就行', '不能，因为半径在变', '能，转一圈就是圆', '不能，因为针尖会移动'], answer: 1, hint: '圆要求"定长"。半径在变就不是真正的圆。' },
+    { type: 'choice', q: '大圆的半径是小圆半径的3倍。那么大圆的直径是小圆直径的几倍？', options: ['1.5倍', '3倍', '6倍', '9倍'], answer: 1, hint: '半径成比例，直径也成相同比例。' },
+  ],
+};
+
+function determinePracticeTier() {
+  const accuracy = state.totalAttempts > 0 ? state.correctCount / state.totalAttempts : 0;
+  if (accuracy < 0.4) return 1;
+  if (accuracy < 0.6) return 2;
+  if (accuracy < 0.8) return 3;
+  if (accuracy < 0.95) return 4;
+  return 5;
+}
+
+function enterPracticeMode() {
+  state.practiceTier = determinePracticeTier();
+  state.mode = 'practice'; state.practiceIndex = 0; state.practiceCorrect = 0;
+  gameContainer.classList.add('hidden');
+  practiceContainer.classList.remove('hidden');
+  practiceContainer.style.display = 'flex';
+  const tier = difficultyLabels[state.practiceTier];
+  practiceBadge.innerHTML = `${tier.icon} ${tier.name}`;
+  practiceBadge.className = `practice-badge ${tier.badgeClass}`;
+  practiceNextBtn.textContent = '开始答题 →';
+  practiceNextBtn.classList.remove('hidden');
+  practiceNextBtn.disabled = false;
+  renderPracticeQuestion();
+}
+
+function renderPracticeQuestion() {
+  const problems = practiceProblems[state.practiceTier];
+  if (!problems || state.practiceIndex >= problems.length) { showPracticeSummary(); return; }
+  const p = problems[state.practiceIndex];
+  const total = problems.length;
+  practiceProgress.textContent = `第 ${state.practiceIndex+1}/${total} 题`;
+  practiceQNum.textContent = `第 ${state.practiceIndex+1} 题`;
+  practiceQTitle.textContent = p.q;
+  practiceFeedback.classList.remove('show','correct','wrong');
+  practiceFeedback.textContent = '';
+  if (p.type === 'fill') {
+    practiceQContent.innerHTML = `
+      <div class="practice-input-area">
+        <input type="text" class="practice-input" id="practiceInput" placeholder="输入答案" autocomplete="off">
+        <button class="submit-btn-sm" id="practiceSubmitBtn">确认</button>
+      </div>`;
+    document.getElementById('practiceSubmitBtn').addEventListener('click', handlePracticeSubmit);
+    document.getElementById('practiceInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') handlePracticeSubmit(); });
+    document.getElementById('practiceInput').focus();
+  } else {
+    practiceQContent.innerHTML = '<div class="practice-options"></div>';
+    const opts = practiceQContent.querySelector('.practice-options');
+    p.options.forEach((opt,i) => {
+      const btn = document.createElement('button');
+      btn.className = 'practice-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => handlePracticeChoice(i, p.answer, p.options[p.answer]));
+      opts.appendChild(btn);
+    });
+  }
+  practiceNextBtn.textContent = state.practiceIndex < problems.length-1 ? '下一题 →' : '查看结果 📊';
+  practiceNextBtn.disabled = true;
+}
+
+function handlePracticeChoice(selected, correctIdx, correctText) {
+  const opts = practiceQContent.querySelectorAll('.practice-option');
+  opts.forEach(o => o.disabled = true);
+  if (selected === correctIdx) {
+    opts[selected].classList.add('selected-correct'); state.practiceCorrect++;
+    practiceFeedback.textContent = `✅ 正确！${correctText}`;
+    practiceFeedback.className = 'practice-feedback show correct';
+  } else {
+    opts[selected].classList.add('selected-wrong');
+    opts[correctIdx].classList.add('show-correct');
+    practiceFeedback.textContent = `❌ 正确答案是 ${correctText}。加油！`;
+    practiceFeedback.className = 'practice-feedback show wrong';
+  }
+  practiceNextBtn.disabled = false;
+}
+
+function handlePracticeSubmit() {
+  const input = document.getElementById('practiceInput');
+  const btn = document.getElementById('practiceSubmitBtn');
+  if (!input || btn.disabled) return;
+  const p = practiceProblems[state.practiceTier][state.practiceIndex];
+  const userAnswer = input.value.trim();
+  btn.disabled = true; input.disabled = true;
+  if (userAnswer === p.answer) {
+    state.practiceCorrect++;
+    practiceFeedback.textContent = `✅ 正确！答案就是 ${p.answer}`;
+    practiceFeedback.className = 'practice-feedback show correct';
+  } else {
+    practiceFeedback.textContent = `❌ 正确答案是 ${p.answer}。${p.hint||''}`;
+    practiceFeedback.className = 'practice-feedback show wrong';
+  }
+  practiceNextBtn.disabled = false;
+}
+
+function handlePracticeNext() {
+  const problems = practiceProblems[state.practiceTier];
+  if (state.practiceIndex >= problems.length-1) { showPracticeSummary(); return; }
+  state.practiceIndex++; renderPracticeQuestion();
+}
+
+function showPracticeSummary() {
+  const problems = practiceProblems[state.practiceTier];
+  const total = problems ? problems.length : 0;
+  const pct = total > 0 ? Math.round((state.practiceCorrect/total)*100) : 0;
+  let emoji, color;
+  if (pct >= 80) { emoji = '🌟'; color = 'var(--color-success)'; }
+  else if (pct >= 60) { emoji = '👍'; color = 'var(--color-primary)'; }
+  else { emoji = '💪'; color = 'var(--color-warning)'; }
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden');
+  practiceContainer.style.display = 'none';
+  gameArea.innerHTML = `
+    <div class="practice-summary">
+      <div class="practice-summary-icon">${emoji}</div>
+      <div class="practice-summary-title">练习完成！</div>
+      <div class="practice-summary-score" style="color:${color}">${state.practiceCorrect}/${total}</div>
+      <div class="practice-summary-detail">
+        <div>📊 正确率：${pct}%</div>
+        <div>🎮 游戏得分：${state.score} 分</div>
+        ${pct>=80?'<div>🏆 太棒了！你对圆的认识非常扎实！</div>':
+          pct>=60?'<div>📚 还不错，圆规的奥秘越练越清晰！</div>':
+          '<div>🌱 没关系，圆心、半径、直径多练几次就记住了！</div>'}
+      </div>
+      <button class="victory-btn" onclick="restartGame()">🔄 再来一次</button>
+    </div>`;
+}
+
+function restartGame() {
+  state.mode = 'game'; state.score = 0; state.level = 1;
+  state.correctCount = 0; state.totalAttempts = 0;
+  state.centerX = null; state.centerY = null;
+  state.radius = null; state.isConfirmed = false; state.levelResult = null;
+  state.multiIndex = 0; state.multiResults = [];
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden');
+  practiceContainer.style.display = 'none';
+  scoreDisplay.textContent = '0';
+  levelDisplay.textContent = '1/5';
+  progressBar.style.width = '0%';
+  currentR.textContent = '--';
+  setupLevel();
+  updateButtons();
+  redraw();
+  const actionRow = gameArea.querySelector('.action-row');
+  actionRow.innerHTML = `
+    <button class="action-btn retry" id="retryBtn" disabled>🔄 重画</button>
+    <button class="action-btn confirm" id="confirmBtn" disabled>✅ 确认提交</button>`;
+}
+
+// ============================================
+// Initialize
+// ============================================
+restartBtn.addEventListener('click', restartGame);
+practiceNextBtn.addEventListener('click', handlePracticeNext);
+setupLevel();
+redraw();
+updateButtons();
+</script>
+</body>
+</html>

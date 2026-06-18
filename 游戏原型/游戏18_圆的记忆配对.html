@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🃏 圆的记忆配对</title>
+<style>
+:root {
+  --color-primary: #7C3AED;
+  --color-primary-light: #A78BFA;
+  --color-primary-dark: #5B21B6;
+  --color-success: #10B981;
+  --color-success-light: #D1FAE5;
+  --color-error: #EF4444;
+  --color-error-light: #FEE2E2;
+  --color-warning: #F59E0B;
+  --color-warning-light: #FEF3C7;
+  --color-bg: #F5F3FF;
+  --color-card: #FFFFFF;
+  --color-text: #1F2937;
+  --color-text-light: #6B7280;
+  --color-border: #E5E7EB;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.06);
+  --font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-number: "Consolas", "Courier New", monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: var(--font-family);
+  background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 50%, #F5F3FF 100%);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.game-container {
+  width: 100%;
+  max-width: 500px;
+  background: var(--color-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card), 0 8px 40px rgba(124,58,237,0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 620px;
+}
+
+.game-header {
+  background: linear-gradient(135deg, #5B21B6, #7C3AED);
+  color: white;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.game-title { font-size: 19px; font-weight: 700; letter-spacing: 1px; }
+.game-stats { display: flex; gap: 14px; font-size: 13px; }
+.stat-item { display: flex; align-items: center; gap: 4px; }
+.stat-icon { font-size: 15px; }
+.stat-value { font-weight: 700; font-family: var(--font-number); }
+
+.level-indicator {
+  padding: 8px 20px;
+  background: #F5F3FF;
+  font-size: 13px; font-weight: 600;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-primary-dark);
+}
+
+.question-area { padding: 14px 20px; text-align: center; flex-shrink: 0; }
+.question-text { font-size: 16px; font-weight: 600; color: var(--color-text); margin-bottom: 4px; }
+.question-hint { font-size: 12px; color: var(--color-text-light); }
+
+.game-area {
+  flex: 1; padding: 12px 16px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+
+/* Card grid */
+.card-grid {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: 400px;
+  justify-content: center;
+}
+
+.card {
+  aspect-ratio: 3/4;
+  perspective: 800px;
+  cursor: pointer;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%; height: 100%;
+  transition: transform 0.5s ease;
+  transform-style: preserve-3d;
+}
+
+.card.flipped .card-inner { transform: rotateY(180deg); }
+.card.matched .card-inner { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute;
+  width: 100%; height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border: 2px solid var(--color-border);
+  overflow: hidden;
+}
+
+.card-back {
+  background: linear-gradient(135deg, #7C3AED, #A78BFA);
+  color: white;
+  font-size: 28px;
+}
+.card-back::after {
+  content: '?';
+  font-size: 36px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.3);
+}
+
+.card-front {
+  background: white;
+  transform: rotateY(180deg);
+  border: 2px solid #D1D5DB;
+  padding: 4px;
+  flex-direction: column;
+}
+.card.matched .card-front {
+  border-color: var(--color-success);
+  background: var(--color-success-light);
+}
+.card.mismatch .card-front {
+  border-color: var(--color-error);
+  background: var(--color-error-light);
+  animation: shake 0.5s ease;
+}
+
+.card-front-text {
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-primary-dark);
+  line-height: 1.3;
+}
+
+.card-front-canvas {
+  width: 90%;
+  height: 70%;
+}
+
+/* Stats bar */
+.stats-bar {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  padding: 8px;
+  font-size: 13px;
+  color: var(--color-text-light);
+}
+.stats-bar span { font-weight: 700; font-family: var(--font-number); color: var(--color-primary); }
+
+.progress-bar-container {
+  width: 100%; height: 5px; background: var(--color-border);
+  border-radius: 3px; margin-top: 6px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success), var(--color-primary));
+  border-radius: 3px; transition: width 0.5s ease;
+}
+
+/* Matched overlay effect */
+.match-sparkle {
+  position: fixed;
+  pointer-events: none;
+  font-size: 32px;
+  animation: sparkleFly 0.8s ease-out forwards;
+  z-index: 50;
+}
+@keyframes sparkleFly {
+  0% { opacity:1; transform: translate(0,0) scale(1); }
+  100% { opacity:0; transform: translate(0,-60px) scale(1.5); }
+}
+
+/* Feedback overlay */
+.feedback-overlay {
+  position: fixed; top:0;left:0;right:0;bottom:0;
+  background: rgba(0,0,0,0.4); display:flex;
+  justify-content:center; align-items:center;
+  z-index:100; animation:fadeIn 0.2s ease;
+}
+.feedback-modal {
+  background: white; border-radius: var(--radius-lg);
+  padding: 28px 24px; text-align: center;
+  max-width: 320px; width: 90%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  animation: scaleIn 0.3s ease;
+}
+.feedback-icon { font-size: 56px; margin-bottom: 10px; }
+.feedback-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.feedback-message { font-size: 14px; color: var(--color-text-light); margin-bottom: 18px; line-height: 1.5; }
+.feedback-btn {
+  padding: 10px 28px; font-size: 15px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: background 0.2s;
+}
+.feedback-btn:hover { background: var(--color-primary-dark); }
+
+.game-footer {
+  padding: 10px 20px; display: flex; justify-content: center;
+  border-top: 1px solid var(--color-border);
+}
+.restart-btn {
+  padding: 8px 20px; font-size: 14px; color: var(--color-text-light);
+  background: transparent; border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+}
+.restart-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+/* Victory */
+.victory-container { text-align: center; padding: 20px; }
+.victory-icon { font-size: 68px; margin-bottom: 10px; animation: bounce 0.6s ease infinite alternate; }
+.victory-title { font-size: 24px; font-weight: 700; color: var(--color-success); margin-bottom: 6px; }
+.victory-stats { font-size: 14px; color: var(--color-text-light); margin-bottom: 18px; line-height: 1.8; }
+.victory-btn {
+  padding: 12px 28px; font-size: 16px; font-weight: 700;
+  color: white; background: var(--color-primary);
+  border: none; border-radius: var(--radius-md);
+  cursor: pointer; margin: 0 5px; transition: background 0.2s;
+}
+.victory-btn:hover { background: var(--color-primary-dark); }
+
+/* Practice mode */
+.practice-container { display: none; flex-direction: column; height: 100%; }
+.practice-badge-bar {
+  padding: 12px 20px; background: #F8F9FA;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+}
+.practice-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700;
+}
+.badge-tier-1 { background: #E8F5E9; color: #2E7D32; }
+.badge-tier-2 { background: #E3F2FD; color: #1565C0; }
+.badge-tier-3 { background: #FFF3E0; color: #E65100; }
+.badge-tier-4 { background: #F3E5F5; color: #7B1FA2; }
+.badge-tier-5 { background: #FFEBEE; color: #C62828; }
+.practice-progress-text { font-size: 13px; color: var(--color-text-light); }
+
+.practice-question-card {
+  margin: 16px 20px; padding: 20px;
+  background: var(--color-card); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); flex: 1;
+}
+.practice-q-num { font-size: 12px; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
+.practice-q-title { font-size: 16px; font-weight: 600; color: var(--color-text); margin-bottom: 14px; line-height: 1.5; }
+.practice-options { display: flex; flex-direction: column; gap: 8px; }
+.practice-option {
+  padding: 12px 14px; font-size: 14px; text-align: left;
+  background: #F8F9FA; border: 2px solid var(--color-border);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: all 0.2s; line-height: 1.4;
+}
+.practice-option:hover { border-color: var(--color-primary); background: white; }
+.practice-option.selected-correct { border-color: var(--color-success); background: var(--color-success-light); }
+.practice-option.selected-wrong { border-color: var(--color-error); background: var(--color-error-light); }
+.practice-option.show-correct { border-color: var(--color-success); }
+.practice-option:disabled { pointer-events: none; }
+
+.practice-input-area { display: flex; gap: 8px; }
+.practice-input {
+  flex: 1; padding: 12px 14px; font-size: 18px; font-weight: 700;
+  font-family: var(--font-number); text-align: center;
+  border: 2px solid var(--color-border); border-radius: var(--radius-md); outline: none;
+}
+.practice-input:focus { border-color: var(--color-primary); }
+
+.practice-feedback {
+  margin: 0 20px 10px; padding: 10px 14px;
+  border-radius: var(--radius-md); font-size: 13px;
+  line-height: 1.5; display: none;
+}
+.practice-feedback.show { display: block; animation: fadeIn 0.3s ease; }
+.practice-feedback.correct { background: var(--color-success-light); color: #065F46; }
+.practice-feedback.wrong { background: var(--color-error-light); color: #991B1B; }
+
+.practice-nav {
+  padding: 10px 20px; display: flex; gap: 8px;
+  justify-content: center; border-top: 1px solid var(--color-border);
+}
+.practice-nav-btn {
+  padding: 10px 22px; font-size: 14px; font-weight: 700;
+  border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s;
+}
+.practice-nav-btn.primary { background: var(--color-primary); color: white; }
+.practice-nav-btn.primary:hover { background: var(--color-primary-dark); }
+.practice-nav-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.practice-nav-btn.secondary { background: transparent; color: var(--color-text-light); border: 1px solid var(--color-border); }
+.practice-nav-btn.secondary:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+.practice-summary { text-align: center; padding: 24px 16px; }
+.practice-summary-icon { font-size: 56px; margin-bottom: 10px; }
+.practice-summary-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.practice-summary-score { font-size: 32px; font-weight: 700; font-family: var(--font-number); margin-bottom: 10px; }
+.practice-summary-detail { font-size: 13px; color: var(--color-text-light); margin-bottom: 18px; line-height: 1.7; }
+
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes scaleIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+@keyframes shake { 0%,100%{transform:translateX(0) rotateY(180deg)}20%{transform:translateX(-4px) rotateY(180deg)}40%{transform:translateX(4px) rotateY(180deg)}60%{transform:translateX(-3px) rotateY(180deg)}80%{transform:translateX(3px) rotateY(180deg)} }
+@keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-10px)} }
+@keyframes matchPop { 0%{transform:rotateY(180deg) scale(1)}50%{transform:rotateY(180deg) scale(1.1)}100%{transform:rotateY(180deg) scale(1)} }
+
+.hidden { display: none !important; }
+
+@media (max-width: 360px) {
+  .card-grid { gap: 5px; }
+  .card-front-text { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<div class="game-container" id="gameContainer">
+  <div class="game-header">
+    <div class="game-title">🃏 圆的记忆配对</div>
+    <div class="game-stats">
+      <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-value" id="scoreDisplay">0</span></div>
+      <div class="stat-item"><span class="stat-icon">🃏</span><span class="stat-value" id="levelDisplay">1/5</span></div>
+    </div>
+  </div>
+
+  <div class="level-indicator">
+    <span id="levelName">第 1 关 · 入门配对</span>
+    <span id="pairStatus">已配对 0/3</span>
+  </div>
+
+  <div class="question-area">
+    <div class="question-text" id="questionText">翻开卡片，找到匹配的概念与图形！</div>
+    <div class="question-hint" id="questionHint">记住每张牌的位置</div>
+  </div>
+
+  <div class="stats-bar">
+    <span>翻牌：<span id="flipCount">0</span>次</span>
+    <span id="timerText"></span>
+  </div>
+
+  <div class="game-area" id="gameArea"></div>
+
+  <div style="padding: 0 20px;">
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="game-footer">
+    <button class="restart-btn" id="restartBtn">🔄 重新开始</button>
+  </div>
+</div>
+
+<div class="feedback-overlay hidden" id="feedbackOverlay">
+  <div class="feedback-modal">
+    <div class="feedback-icon" id="feedbackIcon">✅</div>
+    <div class="feedback-title" id="feedbackTitle">配对成功！</div>
+    <div class="feedback-message" id="feedbackMessage"></div>
+    <button class="feedback-btn" id="feedbackBtn">继续 →</button>
+  </div>
+</div>
+
+<!-- Practice Mode -->
+<div class="practice-container hidden" id="practiceContainer">
+  <div class="practice-badge-bar">
+    <span class="practice-badge" id="practiceBadge">📝 巩固练习</span>
+    <span class="practice-progress-text" id="practiceProgress">第 1/4 题</span>
+  </div>
+  <div class="practice-question-card">
+    <div class="practice-q-num" id="practiceQNum">第 1 题</div>
+    <div class="practice-q-title" id="practiceQTitle">题目内容</div>
+    <div id="practiceQContent"></div>
+  </div>
+  <div class="practice-feedback" id="practiceFeedback"></div>
+  <div class="practice-nav">
+    <button class="practice-nav-btn secondary hidden" id="practiceSkipBtn">跳过</button>
+    <button class="practice-nav-btn primary" id="practiceNextBtn">下一题 →</button>
+  </div>
+</div>
+
+<script>
+// ============================================
+// DOM
+// ============================================
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+const gameContainer = $('#gameContainer');
+const scoreDisplay = $('#scoreDisplay');
+const levelDisplay = $('#levelDisplay');
+const levelName = $('#levelName');
+const pairStatus = $('#pairStatus');
+const questionText = $('#questionText');
+const questionHint = $('#questionHint');
+const flipCountEl = $('#flipCount');
+const timerText = $('#timerText');
+const gameArea = $('#gameArea');
+const progressBar = $('#progressBar');
+const restartBtn = $('#restartBtn');
+const feedbackOverlay = $('#feedbackOverlay');
+const feedbackIcon = $('#feedbackIcon');
+const feedbackTitle = $('#feedbackTitle');
+const feedbackMessage = $('#feedbackMessage');
+const feedbackBtn = $('#feedbackBtn');
+
+const practiceContainer = $('#practiceContainer');
+const practiceBadge = $('#practiceBadge');
+const practiceProgress = $('#practiceProgress');
+const practiceQNum = $('#practiceQNum');
+const practiceQTitle = $('#practiceQTitle');
+const practiceQContent = $('#practiceQContent');
+const practiceFeedback = $('#practiceFeedback');
+const practiceNextBtn = $('#practiceNextBtn');
+const practiceSkipBtn = $('#practiceSkipBtn');
+
+// ============================================
+// State
+// ============================================
+const state = {
+  score: 0, level: 1, totalLevels: 5,
+  flips: 0, matchedPairs: 0, totalPairs: 3,
+  selected: [], busy: false,
+  correctCount: 0, totalAttempts: 0,
+  timerSeconds: 0, timerInterval: null,
+  mode: 'game', practiceTier: 1, practiceIndex: 0, practiceCorrect: 0,
+};
+
+// ============================================
+// Practice Problems
+// ============================================
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '圆形中，最中心的那个点叫什么？', options: ['顶点', '中心点', '圆心', '圆点'], answer: 2, hint: '圆的中心，用字母 O 表示的那个点。' },
+    { type: 'choice', q: '从圆心到圆上任意一点的线段叫什么？', options: ['直径', '半径', '弦', '周长'], answer: 1, hint: '半径连接圆心和圆上任意一点，用字母 r 表示。' },
+    { type: 'choice', q: '通过圆心并且两端都在圆上的线段叫什么？', options: ['半径', '弧', '弦', '直径'], answer: 3, hint: '直径是最长的弦，它经过圆心，用字母 d 表示。' },
+    { type: 'fill', q: '圆心用字母 ___ 表示，半径用字母 ___ 表示，直径用字母 ___ 表示。（用大写字母，用逗号分隔）', answer: 'O,r,d', hint: '圆心是 O，半径是 r，直径是 d。' },
+  ],
+  2: [
+    { type: 'choice', q: '在同一个圆中，直径的长度是半径的几倍？', options: ['1倍', '2倍', '3倍', '一半'], answer: 1, hint: '直径 = 半径 × 2，即 d = 2r。' },
+    { type: 'choice', q: '一个圆的半径是4cm，它的直径是多少？', options: ['2cm', '4cm', '6cm', '8cm'], answer: 3, hint: 'd = 2r = 2 × 4 = 8cm。' },
+    { type: 'choice', q: '画圆时，圆规两脚之间的距离是圆的什么？', options: ['直径', '半径', '周长', '圆心'], answer: 1, hint: '圆规的针尖到笔尖的距离就是半径。' },
+    { type: 'fill', q: '一个圆的直径是10cm，它的半径是___cm。', answer: '5', hint: 'r = d ÷ 2 = 10 ÷ 2 = 5cm。' },
+  ],
+  3: [
+    { type: 'choice', q: '用圆规画一个直径6cm的圆，圆规两脚应张开多少？', options: ['3cm', '6cm', '12cm', '1.5cm'], answer: 0, hint: '直径6cm → 半径 = 6÷2 = 3cm。' },
+    { type: 'choice', q: '下面哪个说法是正确的？', options: ['半径一定比直径短', '同一个圆中所有半径都相等', '直径不经过圆心', '圆的对称轴只有2条'], answer: 1, hint: '同圆中所有半径都相等——"一中同长"。' },
+    { type: 'fill', q: '一个圆的半径是3.5cm，它的直径是___cm。', answer: '7', hint: 'd = 2r = 2 × 3.5 = 7cm。' },
+    { type: 'choice', q: '小华用圆规画了一个圆，圆规两脚张开5cm。这个圆的直径是多少？', options: ['2.5cm', '5cm', '10cm', '15cm'], answer: 2, hint: '圆规两脚=半径=5cm，直径=2×5=10cm。' },
+  ],
+  4: [
+    { type: 'choice', q: '一个圆的直径是9cm，小明说半径是4.5cm，小红说半径是18cm。谁对？', options: ['小明对', '小红对', '都不对', '都对'], answer: 0, hint: 'r = d÷2 = 9÷2 = 4.5cm。' },
+    { type: 'choice', q: '下面哪一项不是判断一个图形是否为圆的必要条件？', options: ['所有半径相等', '有一个中心点', '有四条对称轴', '是封闭的曲线'], answer: 2, hint: '圆有无数条对称轴，不是"四条"。' },
+    { type: 'fill', q: '一个圆中5条半径都是3cm，直径是___cm。', answer: '6', hint: '直径 = 2×3 = 6cm。' },
+    { type: 'choice', q: '画直径20米的圆形操场，只用绳子和木桩，绳子多长？', options: ['10米', '20米', '40米', '5米'], answer: 0, hint: '绳子=半径。直径20米→半径=10米。' },
+  ],
+  5: [
+    { type: 'choice', q: '墨子说："圆，一中同长也。"这句话中"一中"和"同长"分别指什么？', options: ['中=圆心，同长=半径都相等', '中=中心线，同长=直径都相等', '中=中点，同长=圆周长相等', '中=中间，同长=面积都相等'], answer: 0, hint: '"一中"指圆心；"同长"指半径都相等。' },
+    { type: 'fill', q: '一个圆可以画无数条对称轴。每条对称轴都通过圆的___。', answer: '圆心O', hint: '对称轴都是直径所在直线，经过圆心O。' },
+    { type: 'choice', q: '圆规画圆时两脚距离慢慢变大，能画出真正的圆吗？', options: ['能', '不能，因为半径在变', '能转一圈就是', '不能针尖会移动'], answer: 1, hint: '圆要求"定长"。半径在变就不是圆。' },
+    { type: 'choice', q: '大圆半径是小圆的3倍，大圆直径是小圆的几倍？', options: ['1.5倍', '3倍', '6倍', '9倍'], answer: 1, hint: '半径成比例，直径也成相同比例。' },
+  ],
+};
+
+// ============================================
+// Card Pair Definitions
+// ============================================
+// Each pair has {id, type:'text'|'canvas', content|drawFn, pairId}
+function createPairData(pairId) {
+  const allPairs = {
+    'center': [
+      { type:'text', content:'圆心', sub:'圆的中心点' },
+      { type:'canvas', draw: (ctx,w,h)=>{
+        ctx.beginPath(); ctx.arc(w/2,h/2,Math.min(w,h)/3,0,2*Math.PI);
+        ctx.strokeStyle='#7C3AED'; ctx.lineWidth=2.5; ctx.stroke();
+        ctx.fillStyle='#EF4444'; ctx.beginPath(); ctx.arc(w/2,h/2,4,0,2*Math.PI); ctx.fill();
+        ctx.fillStyle='#1F2937'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
+        ctx.fillText('O', w/2, h/2-8);
+      }}
+    ],
+    'radius': [
+      { type:'text', content:'半径 r', sub:'圆心→圆上' },
+      { type:'canvas', draw: (ctx,w,h)=>{
+        const cx=w/2,cy=h/2,r=Math.min(w,h)/3;
+        ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI);
+        ctx.strokeStyle='#7C3AED'; ctx.lineWidth=2; ctx.stroke();
+        ctx.fillStyle='#EF4444'; ctx.beginPath(); ctx.arc(cx,cy,3,0,2*Math.PI); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+r,cy);
+        ctx.strokeStyle='#10B981'; ctx.lineWidth=2.5; ctx.stroke();
+        ctx.fillStyle='#10B981'; ctx.font='bold 12px sans-serif'; ctx.textAlign='left';
+        ctx.fillText('r', cx+r/2, cy-6);
+      }}
+    ],
+    'diameter': [
+      { type:'text', content:'直径 d', sub:'穿过圆心，两端在圆上' },
+      { type:'canvas', draw: (ctx,w,h)=>{
+        const cx=w/2,cy=h/2,r=Math.min(w,h)/3;
+        ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI);
+        ctx.strokeStyle='#7C3AED'; ctx.lineWidth=2; ctx.stroke();
+        ctx.fillStyle='#EF4444'; ctx.beginPath(); ctx.arc(cx,cy,3,0,2*Math.PI); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(cx-r,cy); ctx.lineTo(cx+r,cy);
+        ctx.strokeStyle='#F59E0B'; ctx.lineWidth=2.5; ctx.stroke();
+        ctx.fillStyle='#F59E0B'; ctx.font='bold 12px sans-serif'; ctx.textAlign='center';
+        ctx.fillText('d', cx, cy-6);
+      }}
+    ],
+    'd2r': [
+      { type:'text', content:'d = 2r', sub:'直径=半径×2' },
+      { type:'text', content:'半径2cm\n→直径4cm', sub:'2 × 2 = 4' },
+    ],
+    'compass': [
+      { type:'text', content:'圆规', sub:'画圆工具' },
+      { type:'canvas', draw: (ctx,w,h)=>{
+        const cx=w/2,cy=h/2;
+        // Simple compass drawing
+        ctx.beginPath(); ctx.arc(cx-10,cy+5,Math.min(w,h)/3.5,0,2*Math.PI);
+        ctx.strokeStyle='#7C3AED'; ctx.lineWidth=1.5; ctx.stroke();
+        // legs
+        ctx.beginPath(); ctx.moveTo(cx-10,cy+5); ctx.lineTo(cx-20,cy+40);
+        ctx.strokeStyle='#6B7280'; ctx.lineWidth=2; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx-10,cy+5); ctx.lineTo(cx+10,cy+38);
+        ctx.strokeStyle='#6B7280'; ctx.lineWidth=2; ctx.stroke();
+        // pencil tip
+        ctx.fillStyle='#F59E0B'; ctx.beginPath(); ctx.arc(cx+10,cy+38,3,0,2*Math.PI); ctx.fill();
+        // needle
+        ctx.fillStyle='#9CA3AF'; ctx.beginPath(); ctx.arc(cx-20,cy+40,2,0,2*Math.PI); ctx.fill();
+        ctx.fillStyle='#1F2937'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
+        ctx.fillText('圆规', cx, cy-30);
+      }}
+    ],
+    'symmetry': [
+      { type:'text', content:'对称轴', sub:'无数条，每条直径都是' },
+      { type:'canvas', draw: (ctx,w,h)=>{
+        const cx=w/2,cy=h/2,r=Math.min(w,h)/3;
+        ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI);
+        ctx.strokeStyle='#7C3AED'; ctx.lineWidth=2; ctx.stroke();
+        // fold lines (symmetry axes)
+        ctx.setLineDash([3,3]);
+        for(let a=0;a<8;a++){
+          const ang=a*Math.PI/8;
+          ctx.beginPath(); ctx.moveTo(cx-r*Math.cos(ang),cy-r*Math.sin(ang));
+          ctx.lineTo(cx+r*Math.cos(ang),cy+r*Math.sin(ang));
+          ctx.strokeStyle='rgba(16,185,129,0.4)'; ctx.lineWidth=1; ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        ctx.fillStyle='#1F2937'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
+        ctx.fillText('无数条对称轴', cx, cy-35);
+      }}
+    ],
+    'mohist': [
+      { type:'text', content:'一中同长', sub:'墨子·圆的定义' },
+      { type:'text', content:'圆心 + 半径\n处处相等', sub:'圆的核心本质' },
+    ],
+  };
+  return allPairs[pairId];
+}
+
+// Level configs
+const levelConfigs = {
+  1: { name:'第 1 关 · 入门配对', pairs:['center','radius','diameter'], cols:3, timer:0, hint:'翻开3对牌：概念↔图形' },
+  2: { name:'第 2 关 · 进阶配对', pairs:['center','radius','diameter','d2r'], cols:4, timer:0, hint:'4对牌，记住位置！' },
+  3: { name:'第 3 关 · 挑战配对', pairs:['center','radius','diameter','d2r','compass'], cols:5, timer:0, hint:'5对牌，新增圆规配对' },
+  4: { name:'第 4 关 · 限时速配', pairs:['center','radius','diameter','d2r','compass','symmetry'], cols:4, timer:60, hint:'⏱ 60秒限时！6对牌' },
+  5: { name:'第 5 关 · 终极配对', pairs:['center','radius','diameter','d2r','compass','symmetry','mohist'], cols:4, timer:90, hint:'⏱ 90秒！含"一中同长"墨子名句' },
+};
+
+// ============================================
+// Card Builders
+// ============================================
+function buildCards() {
+  const cfg = levelConfigs[state.level];
+  const cards = [];
+  cfg.pairs.forEach((pairId, idx) => {
+    const pairData = createPairData(pairId);
+    pairData.forEach(card => {
+      cards.push({ ...card, pairId: idx, id: Math.random().toString(36).substr(2,8) });
+    });
+  });
+  // Shuffle
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  return cards;
+}
+
+function renderCardGrid(cards) {
+  const cfg = levelConfigs[state.level];
+  const cols = cards.length <= 6 ? 3 : cfg.cols;
+  gameArea.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'card-grid';
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+  cards.forEach((card, i) => {
+    const cardEl = document.createElement('div');
+    cardEl.className = 'card';
+    cardEl.dataset.index = i;
+    cardEl.dataset.pairId = card.pairId;
+    cardEl.dataset.id = card.id;
+
+    cardEl.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-back"></div>
+        <div class="card-face card-front">
+          ${card.type === 'text'
+            ? `<div class="card-front-text">${card.content.replace(/\n/g,'<br>')}</div>
+               <div style="font-size:10px;color:#9CA3AF;margin-top:2px;">${card.sub||''}</div>`
+            : `<canvas class="card-front-canvas" width="100" height="80"></canvas>`
+          }
+        </div>
+      </div>`;
+
+    cardEl.addEventListener('click', () => onCardClick(cardEl, cards));
+    grid.appendChild(cardEl);
+  });
+
+  gameArea.appendChild(grid);
+
+  // Draw canvases after DOM insertion
+  requestAnimationFrame(() => {
+    cards.forEach((card, i) => {
+      if (card.type === 'canvas') {
+        const cardEl = grid.children[i];
+        const canvas = cardEl.querySelector('canvas');
+        if (canvas && card.draw) {
+          const ctx = canvas.getContext('2d');
+          card.draw(ctx, canvas.width, canvas.height);
+        }
+      }
+    });
+  });
+}
+
+// ============================================
+// Game Logic
+// ============================================
+function onCardClick(cardEl, cards) {
+  if (state.busy) return;
+  if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+
+  // Flip
+  cardEl.classList.add('flipped');
+  state.flips++;
+  flipCountEl.textContent = state.flips;
+
+  state.selected.push({ el: cardEl, pairId: parseInt(cardEl.dataset.pairId), id: cardEl.dataset.id });
+
+  if (state.selected.length === 2) {
+    state.busy = true;
+    state.totalAttempts++;
+    const [a, b] = state.selected;
+
+    if (a.pairId === b.pairId && a.id !== b.id) {
+      // Match!
+      state.correctCount++;
+      state.matchedPairs++;
+      setTimeout(() => {
+        a.el.classList.add('matched');
+        b.el.classList.add('matched');
+        // Sparkle effect
+        spawnSparkle(a.el);
+        spawnSparkle(b.el);
+        updateScore(20 * state.level);
+        pairStatus.textContent = `已配对 ${state.matchedPairs}/${state.totalPairs}`;
+        updateProgress2();
+        state.selected = [];
+        state.busy = false;
+        checkWin(cards);
+      }, 400);
+    } else {
+      // No match
+      setTimeout(() => {
+        a.el.classList.add('mismatch');
+        b.el.classList.add('mismatch');
+        setTimeout(() => {
+          a.el.classList.remove('flipped', 'mismatch');
+          b.el.classList.remove('flipped', 'mismatch');
+          state.selected = [];
+          state.busy = false;
+        }, 600);
+      }, 500);
+    }
+  }
+}
+
+function spawnSparkle(cardEl) {
+  const rect = cardEl.getBoundingClientRect();
+  const sparkle = document.createElement('div');
+  sparkle.className = 'match-sparkle';
+  sparkle.textContent = '✨';
+  sparkle.style.left = rect.left + rect.width/2 - 16 + 'px';
+  sparkle.style.top = rect.top + rect.height/2 - 16 + 'px';
+  document.body.appendChild(sparkle);
+  setTimeout(() => sparkle.remove(), 900);
+}
+
+function checkWin(cards) {
+  if (state.matchedPairs >= state.totalPairs) {
+    stopTimer();
+    if (state.level >= state.totalLevels) {
+      showVictory(state.score);
+    } else {
+      showFeedback('correct', '关卡完成！🎉',
+        `成功配对全部 ${state.totalPairs} 对！翻牌 ${state.flips} 次`,
+        () => { state.level++; state.currentQ=0; startLevel(); });
+    }
+  }
+}
+
+function updateScore(p) { state.score += p; scoreDisplay.textContent = state.score; }
+function updateProgress2() {
+  const total = levelConfigs[state.level].pairs.length;
+  progressBar.style.width = `${Math.round(state.matchedPairs/total*100)}%`;
+}
+
+function startTimer(sec) {
+  stopTimer();
+  state.timerSeconds = sec;
+  timerText.textContent = `⏱ ${sec}s`;
+  if (sec > 0) {
+    state.timerInterval = setInterval(() => {
+      state.timerSeconds--;
+      timerText.textContent = `⏱ ${state.timerSeconds}s`;
+      if (state.timerSeconds <= 10) timerText.style.color = '#EF4444';
+      if (state.timerSeconds <= 0) {
+        stopTimer();
+        showTimeUp();
+      }
+    }, 1000);
+  }
+}
+function stopTimer() {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = null;
+  timerText.style.color = '';
+}
+
+function showTimeUp() {
+  state.busy = true;
+  showFeedback('hint', '时间到！⏰',
+    `已配对 ${state.matchedPairs}/${state.totalPairs} 对。${state.level<state.totalLevels?'下一关加油！':'来看看总成绩吧！'}`,
+    () => {
+      if (state.level < state.totalLevels) { state.level++; startLevel(); }
+      else showVictory(state.score);
+    });
+}
+
+function startLevel() {
+  stopTimer();
+  const cfg = levelConfigs[state.level];
+  state.flips = 0; state.matchedPairs = 0; state.selected = []; state.busy = false;
+  state.totalPairs = cfg.pairs.length;
+  flipCountEl.textContent = '0';
+  levelName.textContent = cfg.name;
+  levelDisplay.textContent = `${state.level}/${state.totalLevels}`;
+  questionHint.textContent = cfg.hint;
+  pairStatus.textContent = `已配对 0/${state.totalPairs}`;
+  progressBar.style.width = '0%';
+  timerText.textContent = cfg.timer > 0 ? `⏱ ${cfg.timer}s` : '';
+  if (cfg.timer > 0) startTimer(cfg.timer);
+
+  const cards = buildCards();
+  renderCardGrid(cards);
+}
+
+// ============================================
+// Feedback
+// ============================================
+function showFeedback(type, title, msg, cb) {
+  feedbackIcon.textContent = type==='correct'?'✅':'💡';
+  feedbackTitle.textContent = title;
+  feedbackTitle.style.color = type==='correct'?'var(--color-success)':'var(--color-warning)';
+  feedbackMessage.textContent = msg;
+  feedbackOverlay.classList.remove('hidden');
+  feedbackBtn.onclick = () => { feedbackOverlay.classList.add('hidden'); if(cb) cb(); };
+}
+
+// ============================================
+// Victory
+// ============================================
+function showVictory(finalScore) {
+  stopTimer();
+  const acc = state.totalAttempts > 0 ? Math.round(state.correctCount/state.totalAttempts*100) : 0;
+  const tier = determinePracticeTier();
+  const tl = difficultyLabels[tier];
+
+  gameArea.innerHTML = `
+    <div class="victory-container">
+      <div class="victory-icon">🏆</div>
+      <div class="victory-title">记忆大师！</div>
+      <div class="victory-stats">
+        <div>🃏 完成关卡：${state.totalLevels} 关</div>
+        <div>✅ 配对正确率：${acc}%</div>
+        <div>👆 总翻牌次数：${state.flips}</div>
+        <div>⭐ 最终得分：${finalScore} 分</div>
+      </div>
+      <button class="victory-btn" onclick="enterPracticeMode()">📝 进入练习 <small>(${tl.icon} ${tl.name})</small></button>
+      <div style="margin-top:8px;"><button class="restart-btn" onclick="restartGame()">🔄 直接重玩</button></div>
+    </div>`;
+}
+
+// ============================================
+// Practice System
+// ============================================
+function determinePracticeTier() {
+  const acc = state.totalAttempts>0?state.correctCount/state.totalAttempts:0;
+  if(acc<0.4)return 1; if(acc<0.6)return 2; if(acc<0.8)return 3; if(acc<0.95)return 4; return 5;
+}
+function enterPracticeMode() {
+  state.practiceTier=determinePracticeTier(); state.mode='practice'; state.practiceIndex=0; state.practiceCorrect=0;
+  gameContainer.classList.add('hidden'); practiceContainer.classList.remove('hidden'); practiceContainer.style.display='flex';
+  const tl=difficultyLabels[state.practiceTier];
+  practiceBadge.innerHTML=`${tl.icon} ${tl.name}`; practiceBadge.className=`practice-badge ${tl.badgeClass}`;
+  practiceNextBtn.textContent='开始答题 →'; practiceNextBtn.classList.remove('hidden'); practiceNextBtn.disabled=false;
+  renderPracticeQuestion();
+}
+function renderPracticeQuestion() {
+  const probs=practiceProblems[state.practiceTier];
+  if(!probs||state.practiceIndex>=probs.length){showPracticeSummary();return;}
+  const p=probs[state.practiceIndex];
+  practiceProgress.textContent=`第 ${state.practiceIndex+1}/${probs.length} 题`;
+  practiceQNum.textContent=`第 ${state.practiceIndex+1} 题`; practiceQTitle.textContent=p.q;
+  practiceFeedback.classList.remove('show','correct','wrong'); practiceFeedback.textContent='';
+  if(p.type==='fill'){
+    practiceQContent.innerHTML=`<div class="practice-input-area"><input type="text" class="practice-input" id="practiceInput" placeholder="输入答案" inputmode="text"><button class="practice-nav-btn primary" id="practiceSubmitBtn">确认</button></div>`;
+    $('#practiceSubmitBtn').addEventListener('click',handlePracticeSubmit);
+    $('#practiceInput').addEventListener('keydown',(e)=>{if(e.key==='Enter')handlePracticeSubmit();});
+    setTimeout(()=>{const inp=$('#practiceInput');if(inp)inp.focus();},100);
+  }else{
+    practiceQContent.innerHTML='<div class="practice-options"></div>';
+    const opts=practiceQContent.querySelector('.practice-options');
+    p.options.forEach((opt,idx)=>{const btn=document.createElement('button');btn.className='practice-option';btn.textContent=opt;btn.addEventListener('click',()=>handlePracticeChoice(idx,p.answer,p.options[p.answer]));opts.appendChild(btn);});
+  }
+  practiceNextBtn.textContent=state.practiceIndex<probs.length-1?'下一题 →':'查看结果 📊'; practiceNextBtn.disabled=true;
+}
+function handlePracticeChoice(sel,corr,corrText){const opts=practiceQContent.querySelectorAll('.practice-option');opts.forEach(o=>o.disabled=true);if(sel===corr){opts[sel].classList.add('selected-correct');state.practiceCorrect++;practiceFeedback.textContent=`✅ 正确！${corrText}`;practiceFeedback.className='practice-feedback show correct';}else{opts[sel].classList.add('selected-wrong');opts[corr].classList.add('show-correct');practiceFeedback.textContent=`❌ 正确答案是 ${corrText}。加油！`;practiceFeedback.className='practice-feedback show wrong';}practiceNextBtn.disabled=false;}
+function handlePracticeSubmit(){const inp=$('#practiceInput'),btn=$('#practiceSubmitBtn');if(!inp||!btn||btn.disabled)return;const probs=practiceProblems[state.practiceTier];const p=probs[state.practiceIndex];const ans=inp.value.trim();if(!ans)return;btn.disabled=true;inp.disabled=true;if(ans===p.answer){state.practiceCorrect++;practiceFeedback.textContent=`✅ 正确！答案就是 ${p.answer}`;practiceFeedback.className='practice-feedback show correct';}else{practiceFeedback.textContent=`❌ 正确答案是 ${p.answer}。${p.hint||''}`;practiceFeedback.className='practice-feedback show wrong';}practiceNextBtn.disabled=false;}
+function handlePracticeNext(){const probs=practiceProblems[state.practiceTier];if(state.practiceIndex>=probs.length-1){showPracticeSummary();return;}state.practiceIndex++;renderPracticeQuestion();}
+function showPracticeSummary(){const probs=practiceProblems[state.practiceTier];const total=probs?probs.length:0;const pct=total>0?Math.round(state.practiceCorrect/total*100):0;let emoji,color;if(pct>=80){emoji='🌟';color='var(--color-success)';}else if(pct>=60){emoji='👍';color='var(--color-primary)';}else{emoji='💪';color='var(--color-warning)';}
+gameContainer.classList.remove('hidden');practiceContainer.classList.add('hidden');practiceContainer.style.display='none';
+gameArea.innerHTML=`<div class="practice-summary"><div class="practice-summary-icon">${emoji}</div><div class="practice-summary-title">练习完成！</div><div class="practice-summary-score" style="color:${color}">${state.practiceCorrect}/${total}</div><div class="practice-summary-detail"><div>📊 练习正确率：${pct}%</div><div>🎮 游戏得分：${state.score} 分</div>${pct>=80?'<div>🏆 太棒了，你对圆的概念掌握得很好！</div>':pct>=60?'<div>📚 还不错，继续加油会更好！</div>':'<div>🌱 没关系，多练习几次就能进步！</div>'}</div><button class="victory-btn" onclick="restartGame()">🔄 再玩一次</button></div>`;}
+
+function restartGame() {
+  stopTimer();
+  state.score=0; state.level=1; state.flips=0; state.matchedPairs=0; state.selected=[]; state.busy=false;
+  state.correctCount=0; state.totalAttempts=0;
+  state.mode='game';
+  scoreDisplay.textContent='0';
+  gameContainer.classList.remove('hidden');
+  practiceContainer.classList.add('hidden'); practiceContainer.style.display='none';
+  timerText.style.color='';
+  startLevel();
+}
+
+restartBtn.addEventListener('click', restartGame);
+practiceNextBtn.addEventListener('click', handlePracticeNext);
+
+// Init
+startLevel();
+</script>
+</body>
+</html>
