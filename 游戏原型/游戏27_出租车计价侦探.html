@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>出租车计价侦探｜分段计费错因推理</title>
+<style>
+:root{--ink:#253044;--muted:#68758a;--blue:#2563eb;--cyan:#08a7c7;--orange:#f97316;--red:#ef4444;--green:#16a34a;--gold:#f4b400;--bg:#eef7ff;--card:#fff;--line:#dbe7f5;--shadow:0 18px 45px rgba(36,68,110,.14);font-family:"Microsoft YaHei","PingFang SC",Arial,sans-serif}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top left,#fff3bd,transparent 28%),linear-gradient(135deg,#e9f7ff,#f7f0ff);color:var(--ink)}button,input,select{font:inherit}button{cursor:pointer;border:0}.wrap{max-width:1180px;margin:0 auto;padding:20px}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.card{background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.8);border-radius:24px;box-shadow:var(--shadow);padding:22px}.hero h1{font-size:42px;margin:12px 0 8px}.tag{display:inline-block;background:#eaf2ff;color:#1d4ed8;border-radius:99px;padding:7px 12px;font-weight:900}.hero p,.muted{color:var(--muted);line-height:1.75}.rule{background:#10253f;color:#fff;border-radius:20px;padding:16px;line-height:1.8}.rule b{color:#ffe38a}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f8fbff;border:1px solid var(--line);border-radius:18px;padding:13px;text-align:center}.stat b{font-size:26px;color:var(--blue);display:block}.layout{display:grid;grid-template-columns:320px 1fr;gap:18px;margin-top:18px}.cases{display:grid;gap:10px}.case{border:2px solid var(--line);background:#fbfdff;border-radius:18px;padding:12px;text-align:left}.case.active{border-color:var(--blue);background:#eef5ff}.case.solved{border-color:#86efac;background:#f0fdf4}.board{min-height:650px}.section-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:16px}.section-title h2{margin:0}.pill{background:#fff7d6;color:#7a4b00;border-radius:999px;padding:8px 12px;font-weight:900}.clues{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.clue{border:2px solid #dce7f6;border-radius:16px;background:#fbfdff;padding:12px}.clue.selected{border-color:var(--cyan);background:#e8fbff}.meters{display:grid;grid-template-columns:1fr 1fr;gap:14px}.route{padding:14px;background:#f8fbff;border:1px solid var(--line);border-radius:18px}.road{height:36px;border-radius:999px;overflow:hidden;background:#e6edf7;display:flex}.base{background:linear-gradient(90deg,#57b5ff,#2563eb)}.extra{background:linear-gradient(90deg,#ffbd72,#f97316)}.ticks{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px}.formula{background:#111827;color:#a7f3d0;border-radius:18px;padding:16px;text-align:center;font-size:24px;font-weight:900}.formula .bad{color:#fecaca;border:2px solid #ef4444;border-radius:10px;padding:2px 8px;background:#451a1a}.options{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.option{border:2px solid var(--line);border-radius:16px;background:#fff;padding:13px;font-weight:900;color:#34445a}.option.ok{border-color:var(--green);background:#ecfdf5}.option.no{border-color:var(--red);background:#fff1f2}.steps{display:grid;gap:10px}.step{display:grid;grid-template-columns:1fr 130px;gap:10px;align-items:center;background:#f8fbff;border:1px solid var(--line);border-radius:16px;padding:11px}.step input{border:2px solid #dbe7f5;border-radius:12px;padding:10px;width:100%}.btn{background:linear-gradient(135deg,#2563eb,#06b6d4);color:white;border-radius:14px;padding:12px 16px;font-weight:900;box-shadow:0 10px 20px rgba(37,99,235,.22)}.btn.secondary{background:#eef5ff;color:#245;border:1px solid #ccdaf0;box-shadow:none}.feedback{margin-top:13px;border-radius:16px;padding:13px;line-height:1.75}.okbox{background:#ecfdf5;border:1px solid #86efac;color:#166534}.badbox{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239}.hintbox{background:#fffbeb;border:1px solid #fde68a;color:#7c4a03}.hidden{display:none}.city{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.building{background:#eff4fb;border:1px solid #dbe7f5;border-radius:18px;padding:18px;text-align:center}.building.on{background:linear-gradient(135deg,#fff1a8,#ffffff);box-shadow:0 0 0 3px rgba(244,180,0,.18)}@media(max-width:900px){.hero,.layout,.meters{grid-template-columns:1fr}.clues{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="card">
+      <span class="tag">🕵️ 计价侦探事务所</span>
+      <h1>出租车计价侦探</h1>
+      <p>这不是普通刷题：你要调查乘客投诉，提取规则证据、拆分路线、定位错误公式，再写出公平车费。适合教师投屏讲“错在哪里”。</p>
+      <button class="btn" onclick="start()">开始破案</button>
+      <button class="btn secondary" onclick="openNotebook()">查看侦探笔记</button>
+    </div>
+    <div class="card">
+      <div class="stats">
+        <div class="stat"><b id="solvedCount">0/6</b>破案</div>
+        <div class="stat"><b id="trust">80</b>公信力</div>
+        <div class="stat"><b id="badges">0</b>徽章</div>
+      </div>
+      <div class="rule">规则证据：<b>3 km 以内 8 元</b>；超过 3 km 的部分 <b>2.5 元/km</b>；超过部分不足 1 km <b>按 1 km</b>计算。</div>
+    </div>
+  </section>
+  <section class="layout">
+    <aside class="card">
+      <h3>📂 投诉卷宗</h3>
+      <div class="cases" id="caseList"></div>
+    </aside>
+    <main class="card board" id="board"></main>
+  </section>
+</div>
+<script>
+const baseD=3, baseP=8, unit=2.5;
+const cases=[
+  {id:1,name:'刚好 3 km 被多收',d:3,shown:'8 + 1 × 2.5 = 10.5',wrong:'boundary_error'},
+  {id:2,name:'全程 7.2 km 直接乘单价',d:7.2,shown:'7.2 × 2.5 = 18',wrong:'use_total_distance'},
+  {id:3,name:'忘记加起步价',d:6.5,shown:'4 × 2.5 = 10',wrong:'forget_base_price'},
+  {id:4,name:'把整段都当超出',d:8.6,shown:'8 + 9 × 2.5 = 30.5',wrong:'extra_distance_error'},
+  {id:5,name:'没有进一计费',d:7.2,shown:'8 + 4.2 × 2.5 = 18.5',wrong:'forget_round_up'},
+  {id:6,name:'小数计算误差',d:3.1,shown:'8 + 1 × 2.5 = 11.5',wrong:'decimal_calculation_error'}
+].map(c=>({...c,actual:r1(Math.max(0,c.d-baseD)),billing:Math.max(0,Math.ceil(r1(c.d-baseD))),fee:fare(c.d)}));
+const wrongText={boundary_error:'把刚好 3 km 当成超出',use_total_distance:'直接用总路程乘超出单价',forget_base_price:'忘记加起步价',extra_distance_error:'实际超出路程计算错误',forget_round_up:'没有按不足 1 km 进一计算',decimal_calculation_error:'小数乘法或加法计算错误'};
+let state={caseIndex:0,phase:'home',solved:{},trust:80,badges:new Set(),selectedClues:new Set(),mistakes:{}};
+function r1(n){return Math.round(n*10)/10} function fare(d){return d<=baseD?baseP:baseP+Math.ceil(r1(d-baseD))*unit} function money(n){return Number.isInteger(n)?n:n.toFixed(1)}
+function logEvent(name,data={}){console.log('[侦探埋点]',name,{...data,time:new Date().toISOString()})}
+function start(){state.phase='clues';render()} function pick(i){state.caseIndex=i;state.phase='clues';state.selectedClues.clear();render()} function current(){return cases[state.caseIndex]}
+function render(){renderCases();updateStats(); if(state.phase==='home')home(); if(state.phase==='clues')clues(); if(state.phase==='diagnose')diagnose(); if(state.phase==='rebuild')rebuild(); if(state.phase==='summary')summary()}
+function renderCases(){caseList.innerHTML=cases.map((c,i)=>`<button class="case ${i===state.caseIndex?'active':''} ${state.solved[c.id]?'solved':''}" onclick="pick(${i})"><b>${c.id}. ${c.name}</b><br><span class="muted">全程 ${c.d} km · 计价仪显示：${c.shown}</span></button>`).join('')}
+function updateStats(){solvedCount.textContent=Object.keys(state.solved).length+'/6';trust.textContent=state.trust;badges.textContent=state.badges.size}
+function home(){board.innerHTML=`<div class="section-title"><div><h2>数智出租城出现投诉</h2><p class="muted">每个卷宗先找证据，再判断错因，最后重建正确算式。</p></div><span class="pill">错因推理玩法</span></div><div class="city"><div class="building on">出租车站</div><div class="building">学校</div><div class="building">图书馆</div><div class="building">科技馆</div><div class="building">商场</div><div class="building">机场</div></div>`}
+function route(c){const basePct=Math.min(100,baseD/c.d*100);return `<div class="route"><div class="road"><div class="base" style="width:${basePct}%"></div><div class="extra" style="width:${100-basePct}%"></div></div><div class="ticks"><span>0 km</span><span>起步线 3 km</span><span>终点 ${c.d} km</span></div></div>`}
+function clues(){const c=current();logEvent('case_start',{case_id:c.id,distance:c.d});board.innerHTML=`<div class="section-title"><div><h2>第 ${c.id} 案：${c.name}</h2><p class="muted">先选出破案需要的 4 条关键证据。</p></div><span class="pill">规则识别</span></div><div class="meters"><div>${route(c)}<div class="formula">故障计价仪：${c.shown.replace('4.2','<span class="bad">4.2</span>').replace('7.2','<span class="bad">7.2</span>')}</div></div><div><div class="clues" id="cluesBox">${['起步里程 3 km','起步价 8 元','超出单价 2.5 元/km','不足 1 km 按 1 km','司机心情很好','车身颜色是蓝色'].map((x,i)=>`<button class="clue" onclick="toggleClue(${i})">${x}</button>`).join('')}</div><button class="btn" style="margin-top:14px" onclick="checkClues()">提交证据</button><div id="fb" class="feedback hintbox">提示：数学证据必须能帮助判断起步段、超出段、单价和进一规则。</div></div></div>`}
+function toggleClue(i){const btn=document.querySelectorAll('.clue')[i];btn.classList.toggle('selected');state.selectedClues.has(i)?state.selectedClues.delete(i):state.selectedClues.add(i)}
+function checkClues(){const needed=[0,1,2,3];const ok=needed.every(i=>state.selectedClues.has(i))&&state.selectedClues.size===4; if(ok){fb.className='feedback okbox';fb.textContent='证据齐全！现在可以判断计价仪错在哪里。';setTimeout(()=>{state.phase='diagnose';render()},700)}else{state.trust-=2;fb.className='feedback badbox';fb.textContent='证据不完整或混入无关信息。请找出起步里程、起步价、超出单价和进一规则。';updateStats()}}
+function diagnose(){const c=current();board.innerHTML=`<div class="section-title"><div><h2>定位错因</h2><p class="muted">保留故障公式，点击最符合的错误类型。</p></div><span class="pill">错误诊断</span></div><div class="meters"><div>${route(c)}<p>实际超出路程：${c.d} - 3 = <b>${c.actual} km</b>；计费超出里程：<b>${c.billing} km</b>。</p><div class="formula">${c.shown}</div></div><div><div class="options">${Object.entries(wrongText).map(([k,v])=>`<button class="option" onclick="checkWrong('${k}',this)">${v}</button>`).join('')}</div><div id="fb" class="feedback hintbox">先看这条公式有没有：判断边界、减起步里程、进一、加起步价、算对小数。</div></div></div>`}
+function checkWrong(k,el){const c=current();logEvent('repair_submit',{case_id:c.id,wrong_type_selected:k,repair_success:k===c.wrong});if(k===c.wrong){el.classList.add('ok');fb.className='feedback okbox';fb.textContent='错因判断正确！请重建公平车费。';setTimeout(()=>{state.phase='rebuild';render()},700)}else{el.classList.add('no');state.trust-=3;state.mistakes[k]=(state.mistakes[k]||0)+1;fb.className='feedback badbox';fb.textContent='还不对。对照路线分段和计费规则，看看故障公式最先错在哪一步。';updateStats()}}
+function rebuild(){const c=current();board.innerHTML=`<div class="section-title"><div><h2>重建正确计价</h2><p class="muted">按“实际超出 → 计费超出 → 超出费用 → 总车费”写清过程。</p></div><span class="pill">分步计算</span></div><div class="meters"><div>${route(c)}<div class="formula">公平计价：8 + ${c.billing} × 2.5 = ${money(c.fee)}</div></div><div class="steps"><div class="step"><label>实际超出路程</label><input id="a" type="number" step="0.1"></div><div class="step"><label>计费超出里程</label><input id="b" type="number" step="1"></div><div class="step"><label>超出费用</label><input id="e" type="number" step="0.1"></div><div class="step"><label>最终车费</label><input id="f" type="number" step="0.1"></div><button class="btn" onclick="checkRebuild()">提交结案</button><div id="fb" class="feedback hintbox">如果全程不超过 3 km，超出部分就是 0。</div></div></div>`}
+function checkRebuild(){const c=current();const vals=[a.value,b.value,e.value,f.value].map(parseFloat), exp=[c.actual,c.billing,c.billing*unit,c.fee];const bad=exp.findIndex((x,i)=>Math.abs((vals[i]||0)-x)>.001);logEvent('answer_submit',{case_id:c.id,answer:vals[3]});if(bad<0){state.solved[c.id]=true;state.trust=Math.min(100,state.trust+5);if(Object.keys(state.solved).length>=3)state.badges.add('错因诊断师');if(c.wrong==='forget_round_up')state.badges.add('进一侦探');fb.className='feedback okbox';fb.textContent=`结案！正确车费 ${money(c.fee)} 元。乘客收到公平解释，城市公信力上升。`;updateStats();setTimeout(()=>{state.caseIndex=Math.min(state.caseIndex+1,cases.length-1);state.phase=Object.keys(state.solved).length===6?'summary':'clues';render()},900)}else{state.trust-=2;fb.className='feedback badbox';fb.textContent=`第 ${bad+1} 步还要修正。请按“先分段、再进一、后计算”的顺序检查。`;updateStats()}}
+function openNotebook(){state.phase='summary';render()} function summary(){const weak=Object.entries(state.mistakes).sort((a,b)=>b[1]-a[1])[0];board.innerHTML=`<div class="section-title"><div><h2>侦探笔记</h2><p class="muted">本玩法重点训练：读规则、找错因、修复公式。</p></div><span class="pill">学习总结</span></div><div class="meters"><div class="card"><h3>本局表现</h3><p>已结案：${Object.keys(state.solved).length}/6</p><p>公信力：${state.trust}</p><p>徽章：${[...state.badges].join('、')||'继续破案获得'}</p></div><div class="card"><h3>薄弱点建议</h3><p>${weak?`最常见误判：${wrongText[weak[0]]}。建议回到对应卷宗，口头解释每个数字的含义。`:'目前没有明显薄弱点。请尝试讲清楚“实际超出”和“计费超出”的区别。'}</p><button class="btn" onclick="state.phase='clues';render()">继续破案</button></div></div>`}
+render();
+</script>
+</body>
+</html>
