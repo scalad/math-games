@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>凑十幸运转盘 - 二年级数学游戏</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 30%, #FFF9C4 60%, #FFECB3 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  position: relative;
+  overflow-x: hidden;
+}
+/* Floating decorations */
+body::before {
+  content: '🎪🎠🎡🎈🎉';
+  position: fixed;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 28px;
+  opacity: 0.3;
+  pointer-events: none;
+  letter-spacing: 15px;
+  z-index: 0;
+}
+
+.game-container {
+  width: 100%;
+  max-width: 520px;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.15), 0 0 0 4px #FFD700;
+  padding: 20px 20px 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.game-header {
+  text-align: center;
+  margin-bottom: 12px;
+}
+.game-header h1 {
+  font-size: 26px;
+  color: #E65100;
+  text-shadow: 1px 1px 0 #FFD54F;
+  font-weight: 900;
+}
+.game-header h1 span { margin: 0 3px; }
+.level-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #FF6F00, #FF8F00);
+  color: white;
+  padding: 4px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 4px;
+  box-shadow: 0 2px 8px rgba(255,111,0,0.3);
+}
+
+/* Stats bar */
+.stats-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.stat-item {
+  background: #FFF8E1;
+  border: 2px solid #FFD54F;
+  border-radius: 12px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #E65100;
+}
+.stat-item .icon { font-size: 20px; }
+.stat-value {
+  font-size: 22px;
+  color: #FF6F00;
+  transition: all 0.3s;
+}
+.stat-value.pulse {
+  animation: statPulse 0.4s ease;
+}
+@keyframes statPulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.4); color: #F44336; }
+}
+
+/* Wheel area */
+.wheel-area {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  margin: 0 auto 16px;
+}
+/* Pointer */
+.pointer {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 0;
+  height: 0;
+  border-left: 18px solid transparent;
+  border-right: 18px solid transparent;
+  border-top: 28px solid #D32F2F;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+.pointer::after {
+  content: '';
+  position: absolute;
+  top: -31px;
+  left: -6px;
+  width: 12px;
+  height: 12px;
+  background: #FFD700;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255,215,0,0.8);
+}
+
+/* Wheel */
+.wheel {
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  position: relative;
+  border: 6px solid #FFD700;
+  box-shadow: 0 0 20px rgba(255,215,0,0.5), inset 0 0 30px rgba(0,0,0,0.1);
+  transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+  overflow: hidden;
+}
+.wheel.spinning {
+  transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+}
+
+/* Sectors drawn via JS canvas-overlay or conic-gradient approach */
+.wheel-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+}
+
+.wheel-sector {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  top: 50%;
+  left: 50%;
+  transform-origin: 0% 0%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 100%);
+}
+.wheel-sector .sector-label {
+  position: absolute;
+  left: 30%;
+  top: 45%;
+  transform: rotate(90deg);
+  text-align: center;
+  font-size: 13px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  line-height: 1.2;
+  pointer-events: none;
+}
+.wheel-sector .sector-icon {
+  position: absolute;
+  left: 30%;
+  top: 25%;
+  font-size: 24px;
+  pointer-events: none;
+}
+
+/* After-spin highlight */
+.wheel-sector.highlight {
+  animation: sectorGlow 0.5s ease 3;
+}
+@keyframes sectorGlow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.6) drop-shadow(0 0 8px white); }
+}
+
+/* Center knob */
+.center-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, #FFD700, #FF8F00);
+  border-radius: 50%;
+  z-index: 5;
+  border: 4px solid #E65100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+/* Spin button */
+.spin-btn {
+  display: block;
+  margin: 0 auto 10px;
+  padding: 12px 40px;
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(135deg, #FF6F00, #FF8F00);
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #BF360C, 0 6px 12px rgba(255,111,0,0.4);
+  transition: all 0.2s;
+  letter-spacing: 2px;
+}
+.spin-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #BF360C, 0 8px 16px rgba(255,111,0,0.5);
+}
+.spin-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #BF360C, 0 3px 6px rgba(255,111,0,0.4);
+}
+.spin-btn:disabled {
+  background: #BDBDBD;
+  box-shadow: 0 4px 0 #757575;
+  cursor: not-allowed;
+  animation: none;
+}
+
+/* Result banner */
+.result-banner {
+  text-align: center;
+  font-size: 15px;
+  color: #1565C0;
+  font-weight: bold;
+  min-height: 24px;
+  margin-bottom: 4px;
+}
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  justify-content: center;
+  align-items: center;
+}
+.modal-overlay.active { display: flex; }
+.modal-box {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  animation: modalIn 0.3s ease;
+}
+@keyframes modalIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.modal-box .sector-name {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+.modal-box .question {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin: 12px 0;
+}
+.modal-box .options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+.modal-box .option-btn {
+  padding: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  border: 3px solid #E0E0E0;
+  border-radius: 12px;
+  background: #FAFAFA;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.modal-box .option-btn:hover {
+  border-color: #42A5F5;
+  background: #E3F2FD;
+  transform: scale(1.03);
+}
+.modal-box .option-btn.correct {
+  background: #C8E6C9;
+  border-color: #4CAF50;
+  animation: correctPop 0.4s ease;
+}
+.modal-box .option-btn.wrong {
+  background: #FFCDD2;
+  border-color: #F44336;
+  animation: shake 0.4s ease;
+}
+.modal-box .fill-input {
+  width: 120px;
+  padding: 10px;
+  font-size: 22px;
+  text-align: center;
+  border: 3px solid #42A5F5;
+  border-radius: 12px;
+  margin: 10px 0;
+}
+.modal-box .submit-btn {
+  padding: 10px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(135deg, #43A047, #66BB6A);
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-top: 8px;
+  box-shadow: 0 3px 0 #2E7D32;
+}
+.modal-box .hint-text {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #FFF8E1;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #E65100;
+  display: none;
+}
+.modal-box .hint-text.show { display: block; }
+@keyframes correctPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* Stars display */
+.stars-row {
+  text-align: center;
+  font-size: 28px;
+  margin: 8px 0;
+  min-height: 40px;
+  line-height: 40px;
+}
+.stars-row .star {
+  display: inline-block;
+  animation: starAppear 0.4s ease;
+}
+@keyframes starAppear {
+  0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Victory screen */
+.victory-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 200;
+  justify-content: center;
+  align-items: center;
+}
+.victory-overlay.active { display: flex; }
+.victory-box {
+  background: linear-gradient(135deg, #FFF9C4, #FFFFFF, #FFF9C4);
+  border-radius: 24px;
+  padding: 30px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  border: 4px solid #FFD700;
+  animation: modalIn 0.4s ease;
+}
+.victory-box .rating-stars {
+  font-size: 36px;
+  margin: 12px 0;
+}
+.victory-box .rating-title {
+  font-size: 22px;
+  font-weight: bold;
+  color: #E65100;
+  margin-bottom: 6px;
+}
+.victory-box .rating-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+}
+.victory-box .primary-btn {
+  display: inline-block;
+  padding: 12px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(135deg, #FF6F00, #FF8F00);
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  margin: 6px;
+  box-shadow: 0 3px 0 #BF360C;
+}
+.victory-box .secondary-btn {
+  display: inline-block;
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #FF6F00;
+  background: white;
+  border: 2px solid #FF6F00;
+  border-radius: 25px;
+  cursor: pointer;
+  margin: 6px;
+}
+
+/* Practice mode */
+.practice-container {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #E3F2FD;
+  z-index: 300;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.practice-container.active { display: flex; }
+.practice-header {
+  background: linear-gradient(135deg, #1565C0, #1976D2);
+  color: white;
+  padding: 16px 20px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+.practice-body {
+  flex: 1;
+  padding: 16px;
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+}
+.practice-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  border-left: 5px solid #FFD700;
+}
+.practice-card .pq {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12px;
+}
+.practice-card .popts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.practice-card .popt {
+  padding: 10px;
+  font-size: 16px;
+  background: #F5F5F5;
+  border: 2px solid #E0E0E0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.practice-card .popt:hover { border-color: #42A5F5; background: #E3F2FD; }
+.practice-card .popt.selected-correct { background: #C8E6C9; border-color: #4CAF50; }
+.practice-card .popt.selected-wrong { background: #FFCDD2; border-color: #F44336; }
+.practice-card .pfill-input {
+  width: 100px; padding: 8px; font-size: 18px; text-align: center;
+  border: 2px solid #42A5F5; border-radius: 10px;
+}
+.practice-card .phint {
+  margin-top: 8px; padding: 8px 12px; background: #FFF8E1;
+  border-radius: 8px; font-size: 13px; color: #E65100; display: none;
+}
+.practice-card .phint.show { display: block; }
+.practice-tier-badge {
+  display: inline-block;
+  padding: 3px 12px; border-radius: 12px; font-size: 13px;
+  font-weight: bold; margin-bottom: 8px;
+}
+.badge-tier-1 { background: #E8F5E9; color: #2E7D32; }
+.badge-tier-2 { background: #FFF3E0; color: #E65100; }
+.badge-tier-3 { background: #E3F2FD; color: #1565C0; }
+.badge-tier-4 { background: #F3E5F5; color: #6A1B9A; }
+.badge-tier-5 { background: #FFEBEE; color: #C62828; }
+.practice-complete {
+  text-align: center; padding: 30px 20px;
+}
+.practice-complete h3 { font-size: 22px; color: #2E7D32; margin-bottom: 10px; }
+.practice-back-btn {
+  display: block; margin: 16px auto; padding: 12px 30px;
+  font-size: 16px; font-weight: bold; color: white;
+  background: #1565C0; border: none; border-radius: 25px;
+  cursor: pointer; box-shadow: 0 3px 0 #0D47A1;
+}
+
+/* Confetti */
+.confetti-piece {
+  position: fixed;
+  z-index: 250;
+  pointer-events: none;
+  animation: confettiFall 2s ease-out forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* Double choice modal */
+.double-choice-btn {
+  display: inline-block;
+  padding: 14px 20px;
+  font-size: 18px;
+  font-weight: bold;
+  border: 3px solid #E0E0E0;
+  border-radius: 16px;
+  background: #FAFAFA;
+  cursor: pointer;
+  margin: 6px;
+  transition: all 0.2s;
+}
+.double-choice-btn:hover {
+  border-color: #FFC107;
+  background: #FFF8E1;
+  transform: scale(1.05);
+}
+
+/* Footer buttons */
+.footer-btns {
+  text-align: center;
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.small-btn {
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: bold;
+  border: 2px solid #FF8F00;
+  border-radius: 20px;
+  background: white;
+  color: #E65100;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.small-btn:hover {
+  background: #FFF3E0;
+  transform: scale(1.03);
+}
+
+/* Responsive */
+@media (max-width: 400px) {
+  .wheel-area, .wheel { width: 260px; height: 260px; }
+}
+</style>
+</head>
+<body>
+
+<div class="game-container" id="gameContainer">
+  <div class="game-header">
+    <h1><span>🎡</span>凑十幸运转盘<span>🎡</span></h1>
+    <div class="level-badge" id="levelBadge">第 1 关</div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="icon">🎯</span>
+      <span>剩余:</span>
+      <span class="stat-value" id="spinsLeft">3</span>
+    </div>
+    <div class="stat-item">
+      <span class="icon">⭐</span>
+      <span>星星:</span>
+      <span class="stat-value" id="totalStars">0</span>
+    </div>
+    <div class="stat-item" id="roundInfo" style="display:none;">
+      <span class="icon">🎪</span>
+      <span>第</span>
+      <span class="stat-value" id="roundNum">1</span>
+      <span>轮</span>
+    </div>
+  </div>
+
+  <div class="result-banner" id="resultBanner"></div>
+
+  <div class="wheel-area">
+    <div class="pointer"></div>
+    <div class="wheel" id="wheel">
+      <div class="wheel-inner" id="wheelInner"></div>
+      <div class="center-knob">⭐</div>
+    </div>
+  </div>
+
+  <button class="spin-btn" id="spinBtn" onclick="spinWheel()">🎯 转动转盘！</button>
+
+  <div class="stars-row" id="starsRow"></div>
+
+  <div class="footer-btns">
+    <button class="small-btn" onclick="changeLevel(-1)">◀ 上一关</button>
+    <button class="small-btn" onclick="resetGame()">🔄 重新开始</button>
+    <button class="small-btn" onclick="changeLevel(1)">下一关 ▶</button>
+  </div>
+</div>
+
+<!-- Question Modal -->
+<div class="modal-overlay" id="questionModal">
+  <div class="modal-box">
+    <div class="sector-name" id="modalSectorName"></div>
+    <div class="question" id="modalQuestion"></div>
+    <div class="options" id="modalOptions"></div>
+    <input type="number" class="fill-input" id="modalFillInput" style="display:none;" placeholder="输入答案">
+    <button class="submit-btn" id="modalSubmitBtn" style="display:none;" onclick="submitFillAnswer()">确认 ✓</button>
+    <div class="hint-text" id="modalHint"></div>
+    <div class="stars-row" id="modalStarsEarned" style="font-size:20px;"></div>
+    <div id="modalDoubleChoice" style="display:none;"></div>
+    <p style="margin-top:12px;"><button class="small-btn" id="modalContinueBtn" style="display:none;" onclick="closeModal()">继续 ▶</button></p>
+  </div>
+</div>
+
+<!-- Victory Overlay -->
+<div class="victory-overlay" id="victoryOverlay">
+  <div class="victory-box">
+    <div style="font-size:48px;">🎉</div>
+    <div class="rating-stars" id="ratingStars"></div>
+    <div class="rating-title" id="ratingTitle"></div>
+    <div class="rating-subtitle" id="ratingSubtitle"></div>
+    <button class="primary-btn" onclick="showVictoryConfetti(); enterPracticeMode();">📚 进入练习</button>
+    <button class="secondary-btn" onclick="resetGame()">🔄 再玩一次</button>
+    <button class="secondary-btn" onclick="changeLevel(1)">▶ 下一关</button>
+  </div>
+</div>
+
+<!-- Practice Mode -->
+<div class="practice-container" id="practiceContainer">
+  <div class="practice-header">
+    <span id="practiceTierIcon"></span> 凑十练习 — <span id="practiceTierName"></span>
+  </div>
+  <div class="practice-body" id="practiceBody"></div>
+  <button class="practice-back-btn" onclick="closePracticeMode()">↩ 返回游戏</button>
+</div>
+
+<script>
+// ==================== Game Data ====================
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '9 + 4 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '用凑十法：从4里拿1给9，9+1=10，10+3=13' },
+    { type: 'choice', q: '8 + 3 = ?', options: ['10', '11', '12', '13'], answer: 1, hint: '8还差2凑10，从3里拿2，10+1=11' },
+    { type: 'choice', q: '9 + 6 = ?', options: ['14', '15', '16', '17'], answer: 1, hint: '9+1=10，10+5=15' },
+    { type: 'choice', q: '7 + 4 = ?', options: ['10', '11', '12', '13'], answer: 1, hint: '7+3=10，10+1=11' },
+  ],
+  2: [
+    { type: 'choice', q: '8 + 5 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '8+2=10，10+3=13' },
+    { type: 'choice', q: '7 + 6 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '7+3=10，10+3=13' },
+    { type: 'fill', q: '9 + 7 = ?', answer: '16', hint: '9+1=10，10+6=16' },
+    { type: 'choice', q: '6 + 5 用凑十法，从5里拿几？', options: ['3', '4', '5', '2'], answer: 1, hint: '6还差4凑10，所以要拿4' },
+  ],
+  3: [
+    { type: 'choice', q: '9 + 8 = ?', options: ['16', '17', '18', '19'], answer: 1, hint: '9+1=10，10+7=17' },
+    { type: 'fill', q: '8 + 7 = ?', answer: '15', hint: '8+2=10，10+5=15' },
+    { type: 'choice', q: '7 + 8 = ? 和 8 + 7 的答案一样吗？', options: ['一样，都是15', '不一样'], answer: 0, hint: '加法交换律：交换加数位置，和不变' },
+    { type: 'choice', q: '6 + 8 = ?', options: ['13', '14', '15', '16'], answer: 1, hint: '8+2=10，10+4=14' },
+  ],
+  4: [
+    { type: 'choice', q: '38 + 7 = ?', options: ['43', '44', '45', '46'], answer: 2, hint: '38+2=40，7拆成2+5，40+5=45' },
+    { type: 'fill', q: '47 + 6 = ?', answer: '53', hint: '47+3=50，6拆成3+3，50+3=53' },
+    { type: 'choice', q: '小明有8块糖，又买了5块。一共有几块？', options: ['12', '13', '14', '15'], answer: 1, hint: '8+2=10，5拆成2+3，10+3=13' },
+    { type: 'choice', q: '29 + 8 = ?', options: ['36', '37', '38', '39'], answer: 1, hint: '29+1=30，8拆成1+7，30+7=37' },
+  ],
+  5: [
+    { type: 'fill', q: '想一想：9+5=14，那19+5=？', answer: '24', hint: '19+1=20，20+4=24' },
+    { type: 'choice', q: '下面哪组不是凑十好朋友？', options: ['9和1', '8和2', '7和4', '6和4'], answer: 2, hint: '7的好朋友是3，不是4' },
+    { type: 'choice', q: '小猫钓了9条鱼，小狗比小猫多5条。小狗钓了几条？', options: ['13', '14', '15', '16'], answer: 1, hint: '9+5=14，用凑十：9+1=10，10+4=14' },
+    { type: 'fill', q: '8+6除了用凑十法，还有其他方法吗？写出答案。', answer: '14', hint: '多种方法都能得到14' },
+  ],
+};
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+// Sector definitions
+const sectorDefs = {
+  red: { name: '红·9找1', icon: '🔴', color: '#F44336', stars: 1, type: 'base9' },
+  blue: { name: '蓝·8找2', icon: '🔵', color: '#2196F3', stars: 1, type: 'base8' },
+  green: { name: '绿·7找3', icon: '🟢', color: '#4CAF50', stars: 2, type: 'advance' },
+  gold: { name: '金·双倍', icon: '🟡', color: '#FFC107', stars: 'double', type: 'double' },
+  purple: { name: '紫·凑整', icon: '🟣', color: '#9C27B0', stars: 3, type: 'challenge' },
+  black: { name: '黑·连击', icon: '⚫', color: '#424242', stars: 'combo', type: 'combo' },
+  orange: { name: '橙·加5', icon: '🟠', color: '#FF9800', stars: 2, type: 'bonus1' },
+  pink: { name: '粉·超级×3', icon: '💗', color: '#E91E63', stars: 'super3', type: 'super3' },
+};
+
+// Level configs
+const levelConfigs = {
+  1: { sectors: ['red','blue','green','gold'], spins: 3, label: '第 1 关' },
+  2: { sectors: ['red','blue','green','gold','purple'], spins: 4, label: '第 2 关' },
+  3: { sectors: ['red','blue','green','gold','purple','black'], spins: 5, label: '第 3 关' },
+  4: { sectors: ['red','blue','green','gold','purple','black','orange','pink'], spins: 5, label: '第 4 关' },
+  5: { sectors: ['red','blue','green','gold','purple','black','red','blue','orange','pink'], spins: 6, label: '第 5 关' },
+};
+
+// ==================== Game State ====================
+let currentLevel = 1;
+let spinsLeft = 3;
+let totalStars = 0;
+let currentSpin = 0;
+let wheelAngle = 0;
+let isSpinning = false;
+let landedSectorId = null;
+let pendingStarsEarned = 0;
+let comboQuestionIndex = 0;
+let comboCorrect = 0;
+let selectedDifficulty = null;
+let currentQuestionData = null;
+let currentCorrectAnswer = null;
+let fillAnswerCallback = null;
+
+// ==================== DOM refs ====================
+const $ = id => document.getElementById(id);
+const wheel = $('wheel');
+const wheelInner = $('wheelInner');
+const spinBtn = $('spinBtn');
+const spinsLeftEl = $('spinsLeft');
+const totalStarsEl = $('totalStars');
+const starsRow = $('starsRow');
+const resultBanner = $('resultBanner');
+const levelBadge = $('levelBadge');
+const questionModal = $('questionModal');
+const victoryOverlay = $('victoryOverlay');
+const practiceContainer = $('practiceContainer');
+
+// ==================== Question Bank ====================
+const Q = {
+  base9: [
+    { type: 'choice', q: '9 的好朋友是几？', options: ['1', '2', '3', '4'], answer: 0, hint: '9+1=10，所以1是9的好朋友' },
+    { type: 'choice', q: '9 + 4 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '9+1=10，10+3=13' },
+    { type: 'choice', q: '9 + 6 = ?', options: ['14', '15', '16', '17'], answer: 1, hint: '9+1=10，10+5=15' },
+    { type: 'fill', q: '9 + 7 = ?', answer: '16', hint: '9+1=10，10+6=16' },
+  ],
+  base8: [
+    { type: 'choice', q: '8 的好朋友是几？', options: ['1', '2', '3', '4'], answer: 1, hint: '8+2=10，所以2是8的好朋友' },
+    { type: 'choice', q: '8 + 5 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '8+2=10，10+3=13' },
+    { type: 'choice', q: '8 + 3 = ?', options: ['10', '11', '12', '13'], answer: 1, hint: '8+2=10，10+1=11' },
+    { type: 'fill', q: '8 + 7 = ?', answer: '15', hint: '8+2=10，10+5=15' },
+  ],
+  advance: [
+    { type: 'choice', q: '7 + 6 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '7+3=10，10+3=13' },
+    { type: 'choice', q: '6 + 5 = ?', options: ['10', '11', '12', '13'], answer: 1, hint: '6+4=10，10+1=11' },
+    { type: 'choice', q: '7 + 4 = ?', options: ['10', '11', '12', '13'], answer: 1, hint: '7+3=10，10+1=11' },
+    { type: 'fill', q: '8 + 6 = ?', answer: '14', hint: '8+2=10，10+4=14' },
+  ],
+  challenge: [
+    { type: 'choice', q: '38 + 7 = ?', options: ['43', '44', '45', '46'], answer: 2, hint: '38+2=40，7拆成2+5，40+5=45' },
+    { type: 'choice', q: '47 + 6 = ?', options: ['52', '53', '54', '55'], answer: 1, hint: '47+3=50，6拆成3+3，50+3=53' },
+    { type: 'fill', q: '29 + 8 = ?', answer: '37', hint: '29+1=30，8拆成1+7，30+7=37' },
+    { type: 'choice', q: '56 + 9 = ?', options: ['64', '65', '66', '67'], answer: 1, hint: '56+4=60，9拆成4+5，60+5=65' },
+  ],
+  bonus1: [
+    { type: 'choice', q: '9 + 8 = ?', options: ['16', '17', '18', '19'], answer: 1, hint: '9+1=10，10+7=17' },
+    { type: 'choice', q: '7 + 8 = ?', options: ['14', '15', '16', '17'], answer: 1, hint: '7+3=10，10+5=15' },
+    { type: 'choice', q: '18 + 5 = ?', options: ['22', '23', '24', '25'], answer: 1, hint: '18+2=20，5拆成2+3，20+3=23' },
+  ],
+  super3: [
+    { type: 'choice', q: '99 + 8 = ?', options: ['106', '107', '108', '109'], answer: 1, hint: '99+1=100，8拆成1+7，100+7=107' },
+    { type: 'choice', q: '48 + 24 = ?', options: ['70', '71', '72', '73'], answer: 2, hint: '48+2=50，24拆成2+22，50+22=72' },
+    { type: 'fill', q: '76 + 15 = ?', answer: '91', hint: '76+4=80，15拆成4+11，80+11=91' },
+  ],
+};
+
+const easyQuestions = [
+  { type: 'choice', q: '9 + 3 = ?', options: ['11', '12', '13', '14'], answer: 1, hint: '9+1=10，10+2=12' },
+  { type: 'choice', q: '8 + 2 = ?', options: ['9', '10', '11', '12'], answer: 1, hint: '8+2=10' },
+  { type: 'choice', q: '5 + 5 = ?', options: ['9', '10', '11', '12'], answer: 1, hint: '5+5=10' },
+];
+const hardQuestions = [
+  { type: 'choice', q: '8 + 7 = ?', options: ['14', '15', '16', '17'], answer: 1, hint: '8+2=10，10+5=15' },
+  { type: 'choice', q: '9 + 8 = ?', options: ['16', '17', '18', '19'], answer: 1, hint: '9+1=10，10+7=17' },
+  { type: 'fill', q: '7 + 9 = ?', answer: '16', hint: '7+3=10，10+6=16' },
+];
+
+function randomPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// ==================== Wheel Rendering ====================
+function renderWheel() {
+  const sectors = levelConfigs[currentLevel].sectors;
+  const n = sectors.length;
+  const anglePer = 360 / n;
+  wheelInner.innerHTML = '';
+
+  sectors.forEach((sid, i) => {
+    const def = sectorDefs[sid];
+    const startAngle = i * anglePer;
+    const rot = startAngle + anglePer / 2;
+
+    const sector = document.createElement('div');
+    sector.className = 'wheel-sector';
+    sector.setAttribute('data-sector', sid);
+    sector.setAttribute('data-index', i);
+    sector.style.transform = `rotate(${rot}deg)`;
+    sector.style.background = def.color;
+
+    // Build label area
+    const label = document.createElement('div');
+    label.className = 'sector-label';
+    label.innerHTML = `${def.icon}<br>${def.name}`;
+    sector.appendChild(label);
+
+    wheelInner.appendChild(sector);
+  });
+}
+
+function highlightSector(sid) {
+  const sectors = wheelInner.querySelectorAll('.wheel-sector');
+  sectors.forEach(s => s.classList.remove('highlight'));
+  sectors.forEach(s => {
+    if (s.getAttribute('data-sector') === sid) {
+      s.classList.add('highlight');
+    }
+  });
+}
+
+// ==================== Wheel Spin ====================
+function spinWheel() {
+  if (isSpinning) return;
+  if (spinsLeft <= 0) return;
+
+  isSpinning = true;
+  spinBtn.disabled = true;
+
+  const sectors = levelConfigs[currentLevel].sectors;
+  const n = sectors.length;
+  const anglePer = 360 / n;
+
+  // Random stop — pick a random sector index
+  const targetIndex = Math.floor(Math.random() * n);
+  const stopAngle = targetIndex * anglePer + anglePer / 2;
+
+  // Calculate total rotation: multiple full rotations + offset to land on pointer (top)
+  // Pointer is at top (0 degrees). The sector at index i has its center at i*anglePer + anglePer/2
+  // We need that sector center to align with the top after rotation
+  // If wheel current angle is wheelAngle, sector center at rot (original), after rotation by totalR,
+  // the sector appears at (rot - totalR) mod 360. We want rot - totalR ≡ 0 (mod 360), i.e., totalR ≡ rot (mod 360)
+  // So totalR = rot + k*360
+  const sectorCenterRot = targetIndex * anglePer + anglePer / 2;
+  const fullSpins = 5 + Math.floor(Math.random() * 3); // 5-7 full rotations
+  const totalRotation = fullSpins * 360 + sectorCenterRot;
+
+  wheelAngle = totalRotation;
+  wheel.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+  wheel.style.transform = `rotate(${wheelAngle}deg)`;
+
+  landedSectorId = sectors[targetIndex];
+
+  setTimeout(() => {
+    isSpinning = false;
+    highlightSector(landedSectorId);
+    handleLandedSector(landedSectorId);
+  }, 4100);
+}
+
+// ==================== Handle Landed Sector ====================
+function handleLandedSector(sid) {
+  const def = sectorDefs[sid];
+  resultBanner.textContent = `指针停在: ${def.icon} ${def.name}`;
+
+  switch (def.type) {
+    case 'base9': askQuestion('base9', 1); break;
+    case 'base8': askQuestion('base8', 1); break;
+    case 'advance': askQuestion('advance', 2); break;
+    case 'challenge': askQuestion('challenge', 3); break;
+    case 'bonus1': askQuestion('bonus1', 2); break;
+    case 'super3': askQuestion('super3', 3, 3); break;
+    case 'double': askDoubleChoice(); break;
+    case 'combo': askCombo(); break;
+  }
+}
+
+// ==================== Question Modal ====================
+function askQuestion(type, baseStars, multiplier = 1) {
+  const pool = Q[type];
+  if (!pool) return;
+  const q = randomPick(pool);
+  currentQuestionData = q;
+  currentCorrectAnswer = q.answer;
+  pendingStarsEarned = baseStars * multiplier;
+
+  showModal(def => {
+    $('modalSectorName').textContent = `${def.icon} ${def.name} (+${pendingStarsEarned}⭐)`;
+    $('modalQuestion').textContent = q.q;
+    $('modalHint').textContent = q.hint;
+    $('modalHint').classList.remove('show');
+    $('modalStarsEarned').textContent = '';
+    $('modalContinueBtn').style.display = 'none';
+    $('modalDoubleChoice').style.display = 'none';
+
+    if (q.type === 'choice') {
+      $('modalOptions').style.display = 'grid';
+      $('modalFillInput').style.display = 'none';
+      $('modalSubmitBtn').style.display = 'none';
+      $('modalOptions').innerHTML = q.options.map((opt, i) =>
+        `<button class="option-btn" onclick="checkChoiceAnswer(${i}, this)">${opt}</button>`
+      ).join('');
+    } else if (q.type === 'fill') {
+      $('modalOptions').style.display = 'none';
+      $('modalFillInput').style.display = 'inline-block';
+      $('modalFillInput').value = '';
+      $('modalSubmitBtn').style.display = 'inline-block';
+      $('modalFillInput').focus();
+      fillAnswerCallback = () => checkFillAnswer(q.answer);
+    }
+  });
+}
+
+function _checkChoiceAnswer(chosen, btn) {
+  if (!currentQuestionData) return;
+  const allBtns = $('modalOptions').querySelectorAll('.option-btn');
+  allBtns.forEach(b => b.disabled = true);
+
+  if (chosen === currentCorrectAnswer) {
+    btn.classList.add('correct');
+    correctAnswer();
+  } else {
+    btn.classList.add('wrong');
+    // Highlight correct one
+    allBtns[currentCorrectAnswer].classList.add('correct');
+    $('modalHint').classList.add('show');
+    wrongAnswer();
+  }
+}
+
+function _submitFillAnswer() {
+  if (!fillAnswerCallback) return;
+  fillAnswerCallback();
+}
+
+function checkFillAnswer(correctAnswer) {
+  const inputVal = $('modalFillInput').value.trim();
+  if (String(inputVal) === String(correctAnswer)) {
+    $('modalFillInput').style.borderColor = '#4CAF50';
+    correctAnswer();
+  } else {
+    $('modalFillInput').style.borderColor = '#F44336';
+    $('modalHint').classList.add('show');
+    wrongAnswer();
+  }
+  $('modalFillInput').disabled = true;
+  $('modalSubmitBtn').disabled = true;
+}
+
+function correctAnswer() {
+  $('modalStarsEarned').textContent = `太棒了！+${pendingStarsEarned}⭐`;
+  totalStars += pendingStarsEarned;
+  spinsLeft--;
+  updateUI();
+  addStarAnimation();
+  $('modalContinueBtn').style.display = 'inline-block';
+  resetSpinBtn();
+  checkRoundEnd();
+}
+
+function wrongAnswer() {
+  $('modalStarsEarned').textContent = '答错了，没有星星 😢';
+  spinsLeft--;
+  updateUI();
+  $('modalContinueBtn').style.display = 'inline-block';
+  resetSpinBtn();
+  checkRoundEnd();
+}
+
+function resetSpinBtn() {
+  spinBtn.disabled = false;
+  if (spinsLeft <= 0) spinBtn.disabled = true;
+}
+
+// ==================== Double Choice (Gold sector) ====================
+function askDoubleChoice() {
+  showModal(def => {
+    $('modalSectorName').textContent = `${def.icon} ${def.name}`;
+    $('modalQuestion').textContent = '选择难度：';
+    $('modalOptions').style.display = 'none';
+    $('modalFillInput').style.display = 'none';
+    $('modalSubmitBtn').style.display = 'none';
+    $('modalHint').classList.remove('show');
+    $('modalStarsEarned').textContent = '';
+    $('modalContinueBtn').style.display = 'none';
+    $('modalDoubleChoice').style.display = 'block';
+    $('modalDoubleChoice').innerHTML = `
+      <button class="double-choice-btn" onclick="chooseDouble('easy')">🟢 简单<br><small>答对 +2⭐</small><br><small style='color:red'>答错 -1⭐</small></button>
+      <button class="double-choice-btn" onclick="chooseDouble('hard')">🔴 困难<br><small>答对 +6⭐</small><br><small style='color:red'>答错 -1⭐</small></button>
+    `;
+  });
+}
+
+function chooseDouble(difficulty) {
+  selectedDifficulty = difficulty;
+  $('modalDoubleChoice').style.display = 'none';
+
+  let q;
+  if (difficulty === 'easy') {
+    q = randomPick(easyQuestions);
+    pendingStarsEarned = 2;
+  } else {
+    q = randomPick(hardQuestions);
+    pendingStarsEarned = 6;
+  }
+  currentQuestionData = q;
+  currentCorrectAnswer = q.answer;
+
+  $('modalQuestion').textContent = q.q;
+  $('modalHint').textContent = q.hint;
+
+  if (q.type === 'choice') {
+    $('modalOptions').style.display = 'grid';
+    $('modalOptions').innerHTML = q.options.map((opt, i) =>
+      `<button class="option-btn" onclick="checkChoiceAnswer(${i}, this)">${opt}</button>`
+    ).join('');
+  } else if (q.type === 'fill') {
+    $('modalOptions').style.display = 'none';
+    $('modalFillInput').style.display = 'inline-block';
+    $('modalFillInput').value = '';
+    $('modalSubmitBtn').style.display = 'inline-block';
+    $('modalFillInput').focus();
+    fillAnswerCallback = () => checkFillAnswer(q.answer);
+  }
+}
+
+// Override for double: wrong = penalty
+function wrongAnswerDouble() {
+  totalStars = Math.max(0, totalStars - 1);
+  $('modalStarsEarned').textContent = '答错了！-1⭐';
+  $('modalHint').classList.add('show');
+  spinsLeft--;
+  updateUI();
+}
+
+// Attach double-specific handlers
+function checkChoiceAnswerDouble(chosen, btn) {
+  if (!currentQuestionData) return;
+  const allBtns = $('modalOptions').querySelectorAll('.option-btn');
+  allBtns.forEach(b => b.disabled = true);
+  if (chosen === currentCorrectAnswer) {
+    btn.classList.add('correct');
+    $('modalStarsEarned').textContent = `太棒了！+${pendingStarsEarned}⭐`;
+    totalStars += pendingStarsEarned;
+    spinsLeft--;
+    updateUI();
+    addStarAnimation();
+  } else {
+    btn.classList.add('wrong');
+    allBtns[currentCorrectAnswer].classList.add('correct');
+    wrongAnswerDouble();
+  }
+  $('modalContinueBtn').style.display = 'inline-block';
+  resetSpinBtn();
+  checkRoundEnd();
+}
+
+function submitFillAnswerDouble() {
+  const inputVal = $('modalFillInput').value.trim();
+  if (String(inputVal) === String(currentCorrectAnswer)) {
+    $('modalFillInput').style.borderColor = '#4CAF50';
+    $('modalStarsEarned').textContent = `太棒了！+${pendingStarsEarned}⭐`;
+    totalStars += pendingStarsEarned;
+    spinsLeft--;
+    updateUI();
+    addStarAnimation();
+  } else {
+    $('modalFillInput').style.borderColor = '#F44336';
+    wrongAnswerDouble();
+  }
+  $('modalFillInput').disabled = true;
+  $('modalSubmitBtn').disabled = true;
+  $('modalContinueBtn').style.display = 'inline-block';
+  resetSpinBtn();
+  checkRoundEnd();
+}
+
+// Dispatch functions: route to regular or double handlers
+function checkChoiceAnswer(chosen, btn) {
+  if (landedSectorId && sectorDefs[landedSectorId].type === 'double') {
+    checkChoiceAnswerDouble(chosen, btn);
+  } else {
+    _checkChoiceAnswer(chosen, btn);
+  }
+}
+function submitFillAnswer() {
+  if (landedSectorId && sectorDefs[landedSectorId].type === 'double') {
+    submitFillAnswerDouble();
+  } else {
+    _submitFillAnswer();
+  }
+}
+
+// ==================== Combo (Black sector) ====================
+function askCombo() {
+  comboQuestionIndex = 0;
+  comboCorrect = 0;
+  askComboQuestion();
+}
+
+function askComboQuestion() {
+  const pool = comboQuestionIndex === 0 ? Q.base8 : Q.base9;
+  const q = randomPick(pool);
+  currentQuestionData = q;
+  currentCorrectAnswer = q.answer;
+  pendingStarsEarned = 5;
+
+  showModal(def => {
+    $('modalSectorName').textContent = `${def.icon} ${def.name} (第 ${comboQuestionIndex + 1}/2 题)`;
+    $('modalQuestion').textContent = q.q;
+    $('modalHint').textContent = q.hint;
+    $('modalHint').classList.remove('show');
+    $('modalStarsEarned').textContent = '';
+    $('modalContinueBtn').style.display = 'none';
+    $('modalDoubleChoice').style.display = 'none';
+
+    if (q.type === 'choice') {
+      $('modalOptions').style.display = 'grid';
+      $('modalFillInput').style.display = 'none';
+      $('modalSubmitBtn').style.display = 'none';
+      $('modalOptions').innerHTML = q.options.map((opt, i) =>
+        `<button class="option-btn" onclick="comboChoiceAnswer(${i}, this)">${opt}</button>`
+      ).join('');
+    } else if (q.type === 'fill') {
+      $('modalOptions').style.display = 'none';
+      $('modalFillInput').style.display = 'inline-block';
+      $('modalFillInput').value = '';
+      $('modalSubmitBtn').style.display = 'inline-block';
+      $('modalFillInput').focus();
+      fillAnswerCallback = () => comboFillAnswer(q.answer);
+    }
+  });
+}
+
+function comboChoiceAnswer(chosen, btn) {
+  const allBtns = $('modalOptions').querySelectorAll('.option-btn');
+  allBtns.forEach(b => b.disabled = true);
+  if (chosen === currentCorrectAnswer) {
+    btn.classList.add('correct');
+    comboCorrect++;
+  } else {
+    btn.classList.add('wrong');
+    allBtns[currentCorrectAnswer].classList.add('correct');
+    $('modalHint').classList.add('show');
+  }
+  finishComboStep();
+}
+
+function comboFillAnswer(correctAnswer) {
+  const inputVal = $('modalFillInput').value.trim();
+  if (String(inputVal) === String(correctAnswer)) {
+    $('modalFillInput').style.borderColor = '#4CAF50';
+    comboCorrect++;
+  } else {
+    $('modalFillInput').style.borderColor = '#F44336';
+    $('modalHint').classList.add('show');
+  }
+  $('modalFillInput').disabled = true;
+  $('modalSubmitBtn').disabled = true;
+  finishComboStep();
+}
+
+function finishComboStep() {
+  comboQuestionIndex++;
+  if (comboQuestionIndex < 2) {
+    setTimeout(() => askComboQuestion(), 800);
+  } else {
+    // Both done
+    if (comboCorrect === 2) {
+      $('modalStarsEarned').textContent = '超级连击！答对两题 +5⭐';
+      totalStars += 5;
+      addStarAnimation();
+    } else if (comboCorrect === 1) {
+      $('modalStarsEarned').textContent = '只答对一题，没有星星 😢';
+    } else {
+      $('modalStarsEarned').textContent = '两题都答错了，没有星星 😢';
+    }
+    spinsLeft--;
+    updateUI();
+    $('modalContinueBtn').style.display = 'inline-block';
+    resetSpinBtn();
+    checkRoundEnd();
+  }
+}
+
+// ==================== Modal Helpers ====================
+function showModal(setupFn) {
+  const def = sectorDefs[landedSectorId] || { icon: '❓', name: '未知' };
+  // Reset modal state
+  $('modalOptions').innerHTML = '';
+  $('modalOptions').style.display = 'none';
+  $('modalFillInput').style.display = 'none';
+  $('modalFillInput').disabled = false;
+  $('modalSubmitBtn').style.display = 'none';
+  $('modalSubmitBtn').disabled = false;
+  $('modalHint').classList.remove('show');
+  $('modalStarsEarned').textContent = '';
+  $('modalContinueBtn').style.display = 'none';
+  $('modalDoubleChoice').style.display = 'none';
+  $('modalFillInput').style.borderColor = '#42A5F5';
+
+  setupFn(def);
+  questionModal.classList.add('active');
+}
+
+function closeModal() {
+  questionModal.classList.remove('active');
+  currentQuestionData = null;
+  selectedDifficulty = null;
+  fillAnswerCallback = null;
+}
+
+// ==================== UI Updates ====================
+function updateUI() {
+  spinsLeftEl.textContent = spinsLeft;
+  totalStarsEl.textContent = totalStars;
+
+  // Animate star counter
+  totalStarsEl.classList.add('pulse');
+  setTimeout(() => totalStarsEl.classList.remove('pulse'), 400);
+
+  // Star display
+  starsRow.innerHTML = Array.from({ length: Math.min(totalStars, 20) }, () =>
+    '<span class="star">⭐</span>'
+  ).join('');
+
+  levelBadge.textContent = levelConfigs[currentLevel].label;
+  $('roundNum').textContent = levelConfigs[currentLevel].spins - spinsLeft + 1;
+
+  if (spinsLeft <= 0) {
+    spinBtn.textContent = '🎯 本轮已用完';
+    spinBtn.disabled = true;
+  } else {
+    spinBtn.textContent = '🎯 转动转盘！';
+    spinBtn.disabled = isSpinning;
+  }
+}
+
+function addStarAnimation() {
+  // Sparkle effect via confetti-like stars
+  for (let i = 0; i < 6; i++) {
+    const star = document.createElement('div');
+    star.textContent = '⭐';
+    star.style.cssText = `
+      position: fixed; z-index: 260; pointer-events: none;
+      font-size: ${20 + Math.random() * 20}px;
+      top: 40%; left: ${35 + Math.random() * 30}%;
+      animation: confettiFall ${1.5 + Math.random()}s ease-out forwards;
+      animation-delay: ${i * 0.1}s;
+    `;
+    document.body.appendChild(star);
+    setTimeout(() => star.remove(), 3000);
+  }
+}
+
+// ==================== Check Round End ====================
+function checkRoundEnd() {
+  if (spinsLeft <= 0) {
+    setTimeout(showVictoryScreen, 600);
+  }
+}
+
+function showVictoryScreen() {
+  let ratingStarsHtml, ratingTitle, ratingSubtitle;
+  if (totalStars >= 15) {
+    ratingStarsHtml = '🌟🌟🌟';
+    ratingTitle = '凑十魔法宗师';
+    ratingSubtitle = '你是凑十法的大师！';
+  } else if (totalStars >= 10) {
+    ratingStarsHtml = '🌟🌟';
+    ratingTitle = '凑十法师';
+    ratingSubtitle = '很不错，继续加油！';
+  } else if (totalStars >= 5) {
+    ratingStarsHtml = '🌟';
+    ratingTitle = '凑十学徒';
+    ratingSubtitle = '还需要多多练习哦！';
+  } else {
+    ratingStarsHtml = '';
+    ratingTitle = '继续加油！';
+    ratingSubtitle = '多练习凑十法，下次一定能拿星星！';
+  }
+
+  $('ratingStars').textContent = ratingStarsHtml;
+  $('ratingTitle').textContent = ratingTitle;
+  $('ratingSubtitle').textContent = `获得 ${totalStars} ⭐ — ${ratingSubtitle}`;
+  victoryOverlay.classList.add('active');
+
+  // Confetti
+  createConfetti();
+}
+
+function showVictoryConfetti() {
+  createConfetti();
+}
+
+function createConfetti() {
+  const colors = ['#F44336','#2196F3','#4CAF50','#FFC107','#9C27B0','#FF9800','#E91E63'];
+  for (let i = 0; i < 50; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.cssText = `
+      left: ${Math.random() * 100}%;
+      top: -20px;
+      width: ${6 + Math.random() * 8}px;
+      height: ${6 + Math.random() * 8}px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      animation-duration: ${1.5 + Math.random() * 2}s;
+      animation-delay: ${Math.random() * 0.5}s;
+    `;
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 3500);
+  }
+}
+
+// ==================== Practice Mode ====================
+function determinePracticeTier() {
+  // adaptive: based on totalStars performance
+  if (totalStars >= 15) return 5;
+  if (totalStars >= 10) return 4;
+  if (totalStars >= 7) return 3;
+  if (totalStars >= 3) return 2;
+  return 1;
+}
+
+function enterPracticeMode() {
+  victoryOverlay.classList.remove('active');
+  const tier = determinePracticeTier();
+  const label = difficultyLabels[tier];
+  const problems = practiceProblems[tier];
+
+  $('practiceTierIcon').textContent = label.icon;
+  $('practiceTierName').textContent = label.name;
+  $('practiceBody').innerHTML = '';
+
+  problems.forEach((p, idx) => {
+    const card = document.createElement('div');
+    card.className = 'practice-card';
+    card.innerHTML = `
+      <div class="practice-tier-badge ${label.badgeClass}">${label.icon} ${label.name}</div>
+      <div class="pq">${idx + 1}. ${p.q}</div>
+      ${p.type === 'choice' ? `
+        <div class="popts">
+          ${p.options.map((opt, oi) => `<button class="popt" onclick="checkPracticeChoice(${idx}, ${oi}, this)">${opt}</button>`).join('')}
+        </div>
+      ` : `
+        <input type="number" class="pfill-input" id="pfill_${idx}" placeholder="输入答案">
+        <button class="small-btn" style="margin-left:8px;" onclick="checkPracticeFill(${idx}, '${p.answer}')">确认</button>
+      `}
+      <div class="phint" id="phint_${idx}">💡 ${p.hint}</div>
+    `;
+    $('practiceBody').appendChild(card);
+  });
+
+  practiceContainer.classList.add('active');
+}
+
+function checkPracticeChoice(idx, chosen, btn) {
+  const problem = practiceProblems[determinePracticeTier()][idx];
+  const allBtns = btn.parentElement.querySelectorAll('.popt');
+  allBtns.forEach(b => b.disabled = true);
+  if (chosen === problem.answer) {
+    btn.classList.add('selected-correct');
+  } else {
+    btn.classList.add('selected-wrong');
+    allBtns[problem.answer].classList.add('selected-correct');
+    $('phint_' + idx).classList.add('show');
+  }
+  checkPracticeComplete();
+}
+
+function checkPracticeFill(idx, correctAnswer) {
+  const input = $('pfill_' + idx);
+  if (!input) return;
+  input.disabled = true;
+  const val = input.value.trim();
+  if (String(val) === String(correctAnswer)) {
+    input.style.borderColor = '#4CAF50';
+    input.style.background = '#C8E6C9';
+  } else {
+    input.style.borderColor = '#F44336';
+    input.style.background = '#FFCDD2';
+    $('phint_' + idx).classList.add('show');
+  }
+  checkPracticeComplete();
+}
+
+function checkPracticeComplete() {
+  const tier = determinePracticeTier();
+  const problems = practiceProblems[tier];
+  let allDone = true;
+  problems.forEach((p, idx) => {
+    if (p.type === 'choice') {
+      const opts = document.querySelectorAll(`#practiceBody .practice-card:nth-child(${idx + 1}) .popt`);
+      if (opts.length > 0 && !opts[0].disabled && !opts[0].classList.contains('selected-correct') && !opts[0].classList.contains('selected-wrong')) {
+        allDone = false;
+      }
+    } else {
+      const inp = $('pfill_' + idx);
+      if (inp && !inp.disabled) allDone = false;
+    }
+  });
+  if (allDone) {
+    setTimeout(() => {
+      const completeDiv = document.createElement('div');
+      completeDiv.className = 'practice-complete';
+      completeDiv.innerHTML = '<h3>🎉 练习完成！</h3><p>你做得真棒！继续加油！</p>';
+      $('practiceBody').appendChild(completeDiv);
+    }, 500);
+  }
+}
+
+function closePracticeMode() {
+  practiceContainer.classList.remove('active');
+}
+
+// ==================== Level & Reset ====================
+function changeLevel(dir) {
+  currentLevel += dir;
+  if (currentLevel < 1) currentLevel = 5;
+  if (currentLevel > 5) currentLevel = 1;
+  resetGame();
+}
+
+function resetGame() {
+  const config = levelConfigs[currentLevel];
+  spinsLeft = config.spins;
+  totalStars = 0;
+  currentSpin = 0;
+  wheelAngle = 0;
+  isSpinning = false;
+  landedSectorId = null;
+  comboQuestionIndex = 0;
+  comboCorrect = 0;
+  selectedDifficulty = null;
+  currentQuestionData = null;
+  fillAnswerCallback = null;
+
+  wheel.style.transition = 'none';
+  wheel.style.transform = 'rotate(0deg)';
+  // Force reflow
+  wheel.offsetHeight;
+  wheel.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+  wheel.style.transform = 'rotate(0deg)';
+
+  spinBtn.disabled = false;
+  spinBtn.textContent = '🎯 转动转盘！';
+  resultBanner.textContent = '';
+
+  questionModal.classList.remove('active');
+  victoryOverlay.classList.remove('active');
+  practiceContainer.classList.remove('active');
+
+  renderWheel();
+  updateUI();
+
+  // Clear highlights
+  const sectors = wheelInner.querySelectorAll('.wheel-sector');
+  sectors.forEach(s => s.classList.remove('highlight'));
+}
+
+// ==================== Init ====================
+function initGame() {
+  renderWheel();
+  updateUI();
+}
+
+// Handle Enter key in fill input (modal)
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && questionModal.classList.contains('active')) {
+    const fillInput = $('modalFillInput');
+    if (fillInput.style.display !== 'none' && !fillInput.disabled) {
+      submitFillAnswer();
+    }
+  }
+});
+
+initGame();
+</script>
+</body>
+</html>

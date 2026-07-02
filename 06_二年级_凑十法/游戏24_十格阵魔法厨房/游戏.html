@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>十格阵魔法厨房</title>
+<style>
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  background: linear-gradient(135deg, #FFF8E1 0%, #FFE0B2 30%, #FFCC80 60%, #FFF3E0 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+}
+#app {
+  width: 100%;
+  max-width: 680px;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ========== SCREENS ========== */
+.screen { display: none; flex-direction: column; align-items: center; padding: 20px; min-height: 100vh; }
+.screen.active { display: flex; }
+
+/* ========== WELCOME SCREEN ========== */
+#screen-welcome {
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(ellipse at center, #FFF8E1 0%, #FFE0B2 60%, #FFCC80 100%);
+}
+.welcome-chef {
+  font-size: 100px;
+  animation: chefBounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.2));
+  margin-bottom: 10px;
+}
+@keyframes chefBounce {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-15px) rotate(3deg); }
+}
+.welcome-title {
+  font-size: 2.6em;
+  color: #5D4037;
+  text-shadow: 2px 2px 0 #FFE0B2, 3px 3px 0 rgba(0,0,0,0.1);
+  margin-bottom: 8px;
+  font-weight: 900;
+  letter-spacing: 4px;
+}
+.welcome-subtitle {
+  font-size: 1.1em;
+  color: #8D6E63;
+  margin-bottom: 12px;
+}
+.welcome-stars { font-size: 2em; margin-bottom: 16px; letter-spacing: 6px; }
+.welcome-desc {
+  background: rgba(255,255,255,0.85);
+  border-radius: 16px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  color: #5D4037;
+  font-size: 0.95em;
+  line-height: 1.7;
+  max-width: 440px;
+  border: 2px dashed #FFCC80;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.welcome-features {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.welcome-feature {
+  background: #FFF;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 0.85em;
+  color: #6D4C41;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #FFE0B2;
+}
+
+/* ========== BUTTONS ========== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 36px;
+  font-size: 1.15em;
+  font-weight: 700;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: #FFF;
+  letter-spacing: 2px;
+}
+.btn:active { transform: scale(0.95); }
+.btn-primary { background: linear-gradient(135deg, #FF7043, #E64A19); box-shadow: 0 4px 0 #BF360C, 0 6px 16px rgba(230,74,25,0.3); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #BF360C, 0 8px 20px rgba(230,74,25,0.4); }
+.btn-primary:active { transform: translateY(2px); box-shadow: 0 2px 0 #BF360C, 0 4px 10px rgba(230,74,25,0.3); }
+.btn-secondary { background: linear-gradient(135deg, #66BB6A, #388E3C); box-shadow: 0 4px 0 #256B28, 0 6px 16px rgba(56,142,60,0.3); }
+.btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #256B28, 0 8px 20px rgba(56,142,60,0.4); }
+.btn-secondary:active { transform: translateY(2px); box-shadow: 0 2px 0 #256B28; }
+.btn-warning { background: linear-gradient(135deg, #FFA726, #F57C00); box-shadow: 0 4px 0 #C25C00, 0 6px 16px rgba(245,124,0,0.3); }
+.btn-outline {
+  background: #FFF;
+  color: #8D6E63;
+  border: 2px solid #8D6E63;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.08);
+}
+.btn-sm { padding: 8px 20px; font-size: 0.9em; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+/* ========== LEVEL INTRO SCREEN ========== */
+#screen-level-intro {
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(ellipse at center, #FFF8E1, #FFE0B2);
+}
+.level-intro-badge {
+  font-size: 60px;
+  margin-bottom: 8px;
+}
+.level-intro-title {
+  font-size: 1.8em;
+  color: #5D4037;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+.level-intro-mode {
+  font-size: 1em;
+  color: #795548;
+  background: rgba(255,255,255,0.8);
+  padding: 6px 18px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  display: inline-block;
+}
+.level-intro-desc {
+  font-size: 0.95em;
+  color: #8D6E63;
+  margin-bottom: 24px;
+  max-width: 400px;
+  line-height: 1.6;
+}
+.level-intro-target {
+  font-size: 0.85em;
+  color: #A1887F;
+  margin-bottom: 20px;
+}
+
+/* ========== GAME SCREEN ========== */
+#screen-game {
+  padding: 12px 16px;
+  gap: 10px;
+}
+.game-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.85);
+  border-radius: 14px;
+  padding: 10px 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.game-header-left { display: flex; align-items: center; gap: 8px; }
+.game-header-chef { font-size: 1.5em; }
+.game-header-level { font-size: 0.95em; color: #5D4037; font-weight: 700; }
+.game-header-order { font-size: 0.8em; color: #8D6E63; }
+.game-header-stars { font-size: 1.1em; }
+
+/* Order Recipe */
+.order-card {
+  width: 100%;
+  background: linear-gradient(135deg, #FFF9E6, #FFF3D4);
+  border: 3px solid #D7CCC8;
+  border-radius: 16px;
+  padding: 14px 20px;
+  text-align: center;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.06), inset 0 0 40px rgba(255,224,178,0.3);
+  position: relative;
+  overflow: hidden;
+}
+.order-card::before {
+  content: '';
+  position: absolute;
+  top: -10px; right: -10px;
+  width: 50px; height: 50px;
+  background: #FFE0B2;
+  transform: rotate(45deg);
+  opacity: 0.5;
+}
+.order-label { font-size: 0.8em; color: #8D6E63; margin-bottom: 4px; }
+.order-equation {
+  font-size: 2em;
+  font-weight: 900;
+  color: #5D4037;
+  letter-spacing: 2px;
+}
+.order-equation .qmark {
+  color: #E53935;
+  animation: qPulse 1.5s ease-in-out infinite;
+}
+@keyframes qPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+/* Ten-Frame Area */
+.frames-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.frame-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.frame-label {
+  font-size: 0.85em;
+  color: #8D6E63;
+  font-weight: 700;
+}
+.frame-label.frame1-label { color: #E53935; }
+.frame-label.frame2-label { color: #1E88E5; }
+
+.ten-frame {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 5px;
+  padding: 10px;
+  background: linear-gradient(180deg, #EFEBE9, #D7CCC8);
+  border: 4px solid #8D6E63;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.4);
+  transition: all 0.4s ease;
+  position: relative;
+}
+.ten-frame.full {
+  border-color: #FFD600;
+  box-shadow: 0 0 24px rgba(255,214,0,0.5), 0 4px 12px rgba(0,0,0,0.1), inset 0 0 20px rgba(255,214,0,0.1);
+  animation: glowPulse 0.8s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(255,214,0,0.4), 0 4px 12px rgba(0,0,0,0.1); }
+  50% { box-shadow: 0 0 30px rgba(255,214,0,0.7), 0 4px 12px rgba(0,0,0,0.1); }
+}
+.ten-frame-cell {
+  width: 48px;
+  height: 48px;
+  border: 2.5px dashed #BCAAA4;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+  background: rgba(255,255,255,0.3);
+}
+.ten-frame-cell.filled-red {
+  border-color: #E53935;
+  border-style: solid;
+  animation: popIn 0.35s ease-out;
+}
+.ten-frame-cell.filled-blue {
+  border-color: #1E88E5;
+  border-style: solid;
+  animation: popIn 0.35s ease-out;
+}
+@keyframes popIn {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.cell-content {
+  font-size: 1.6em;
+  line-height: 1;
+}
+.cell-content.red-cookie { color: #E53935; }
+.cell-content.blue-cookie { color: #1E88E5; }
+.cell-content.placeholder { color: #CCC; font-size: 0.8em; }
+.full-label {
+  position: absolute;
+  top: -20px;
+  right: -10px;
+  background: #FFD600;
+  color: #5D4037;
+  font-weight: 900;
+  font-size: 0.9em;
+  padding: 2px 10px;
+  border-radius: 10px;
+  animation: bounceLabel 0.5s ease-out;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+@keyframes bounceLabel {
+  0% { transform: scale(0) translateY(-20px); }
+  50% { transform: scale(1.3) translateY(5px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* Frame extra info for Level 4, 5 */
+.frame-extra-info {
+  font-size: 0.8em;
+  color: #795548;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Blue Cookies Area */
+.blue-cookies-section {
+  width: 100%;
+  background: rgba(255,255,255,0.7);
+  border-radius: 14px;
+  padding: 12px 16px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+.blue-cookies-label {
+  font-size: 0.85em;
+  color: #795548;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.blue-cookies-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 56px;
+  align-items: center;
+}
+.blue-cookie-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #42A5F5, #1E88E5);
+  border: 3px solid #1565C0;
+  cursor: pointer;
+  font-size: 1.5em;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 6px rgba(30,136,229,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  position: relative;
+}
+.blue-cookie-btn:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 16px rgba(30,136,229,0.5);
+}
+.blue-cookie-btn:active {
+  transform: scale(0.9);
+}
+.blue-cookie-btn.moved {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.3);
+  transition: all 0.3s ease;
+}
+.blue-cookie-btn.highlight {
+  animation: hlPulse 0.6s ease-in-out infinite;
+  border-color: #FFD600;
+  box-shadow: 0 0 20px rgba(255,214,0,0.7);
+}
+@keyframes hlPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(255,214,0,0.4); }
+  50% { box-shadow: 0 0 24px rgba(255,214,0,0.8); }
+}
+.arrow-hint {
+  position: absolute;
+  top: -30px;
+  font-size: 1.4em;
+  animation: arrowBounce 0.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes arrowBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Hint Area */
+.hint-area {
+  width: 100%;
+  text-align: center;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hint-text {
+  font-size: 0.95em;
+  color: #E65100;
+  background: rgba(255,224,178,0.8);
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: fadeInHint 0.3s ease;
+}
+@keyframes fadeInHint {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Equation Result Area */
+.equation-result {
+  width: 100%;
+  text-align: center;
+  padding: 10px;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+}
+.equation-text {
+  font-size: 1.3em;
+  font-weight: 700;
+  color: #2E7D32;
+  animation: eqAppear 0.5s ease-out;
+}
+@keyframes eqAppear {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+.equation-sub {
+  font-size: 0.85em;
+  color: #795548;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Stars Popup */
+.stars-popup {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.stars-popup-content {
+  background: #FFF;
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  animation: popUp 0.4s ease-out;
+}
+@keyframes popUp {
+  from { transform: scale(0.3); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.stars-popup-stars { font-size: 2.5em; letter-spacing: 4px; margin: 12px 0; }
+.stars-popup-text { font-size: 1.1em; color: #5D4037; margin-bottom: 8px; }
+.stars-popup-attempt { font-size: 0.85em; color: #8D6E63; margin-bottom: 16px; }
+
+/* ========== PRACTICE SCREEN ========== */
+#screen-practice {
+  justify-content: flex-start;
+  padding-top: 30px;
+}
+.practice-header {
+  text-align: center;
+  margin-bottom: 16px;
+  width: 100%;
+}
+.practice-badge {
+  font-size: 2em;
+  margin-bottom: 4px;
+}
+.practice-tier {
+  font-size: 0.85em;
+  color: #795548;
+  background: #FFE0B2;
+  padding: 4px 14px;
+  border-radius: 12px;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+.practice-progress {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.practice-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #D7CCC8;
+  transition: background 0.3s;
+}
+.practice-dot.done { background: #66BB6A; }
+.practice-dot.wrong { background: #EF5350; }
+.practice-dot.current { background: #FFA726; box-shadow: 0 0 8px rgba(255,167,38,0.5); }
+
+.practice-card {
+  width: 100%;
+  max-width: 480px;
+  background: #FFF;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  border: 2px solid #FFE0B2;
+}
+.practice-q-num { font-size: 0.8em; color: #8D6E63; margin-bottom: 8px; }
+.practice-q-text { font-size: 1.2em; color: #5D4037; font-weight: 700; margin-bottom: 16px; line-height: 1.5; }
+
+.practice-options { display: flex; flex-direction: column; gap: 8px; }
+.practice-option {
+  padding: 12px 18px;
+  background: #FFF8E1;
+  border: 2px solid #FFE0B2;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1em;
+  color: #5D4037;
+  transition: all 0.2s;
+  text-align: left;
+  font-family: inherit;
+}
+.practice-option:hover { background: #FFE0B2; border-color: #FFA726; }
+.practice-option.correct { background: #C8E6C9; border-color: #66BB6A; color: #2E7D32; }
+.practice-option.wrong { background: #FFCDD2; border-color: #EF5350; color: #C62828; }
+.practice-option:disabled { cursor: default; }
+
+.practice-fill-input {
+  width: 100%;
+  padding: 12px 18px;
+  font-size: 1.2em;
+  border: 2px solid #FFE0B2;
+  border-radius: 12px;
+  font-family: inherit;
+  text-align: center;
+  color: #5D4037;
+  outline: none;
+}
+.practice-fill-input:focus { border-color: #FFA726; }
+
+.practice-feedback {
+  text-align: center;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-top: 8px;
+}
+.practice-feedback.correct { color: #2E7D32; }
+.practice-feedback.wrong { color: #C62828; }
+
+.practice-hint {
+  background: #FFF3E0;
+  border: 1px solid #FFCC80;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-top: 10px;
+  color: #E65100;
+  font-size: 0.9em;
+  text-align: center;
+}
+.practice-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* ========== RESULT SCREEN ========== */
+#screen-result {
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(ellipse at center, #FFF8E1, #FFE0B2);
+}
+.result-title { font-size: 1.6em; color: #5D4037; font-weight: 900; margin-bottom: 8px; }
+.result-stars-row { font-size: 3em; letter-spacing: 8px; margin: 12px 0; }
+.result-stats {
+  font-size: 0.95em;
+  color: #795548;
+  margin-bottom: 20px;
+  line-height: 1.8;
+}
+.result-order-review {
+  width: 100%;
+  max-width: 400px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.result-order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 0.9em;
+  color: #5D4037;
+  border-bottom: 1px dashed #D7CCC8;
+}
+.result-order-item:last-child { border-bottom: none; }
+
+/* ========== FINAL SCREEN ========== */
+#screen-final {
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(ellipse at center, #FFFDE7, #FFF9C4, #FFE082);
+}
+.final-chef { font-size: 80px; margin-bottom: 8px; animation: chefBounce 1.5s ease-in-out infinite; }
+.final-title { font-size: 2em; color: #5D4037; font-weight: 900; margin-bottom: 4px; }
+.final-stars { font-size: 2.5em; letter-spacing: 6px; margin: 12px 0; }
+.final-rating { font-size: 1.2em; color: #795548; margin-bottom: 8px; font-weight: 700; }
+.final-level-summary {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+.final-level-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 0.9em;
+  color: #5D4037;
+  border-bottom: 1px dashed #D7CCC8;
+}
+.final-level-row:last-child { border-bottom: none; }
+.final-encouragement {
+  font-size: 0.95em;
+  color: #8D6E63;
+  margin-bottom: 20px;
+  line-height: 1.6;
+  max-width: 420px;
+}
+
+/* ========== PROGRESS BAR ========== */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #D7CCC8;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 4px 0;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FFA726, #FF7043);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+/* ========== ROUNDING VISUAL (Level 5) ========== */
+.rounding-visual {
+  width: 100%;
+  background: rgba(255,255,255,0.7);
+  border-radius: 14px;
+  padding: 14px 18px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.rounding-numbers {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.4em;
+  font-weight: 900;
+  color: #5D4037;
+  margin-bottom: 8px;
+}
+.rounding-arrow { color: #FFA726; font-size: 0.8em; }
+.rounding-progress {
+  height: 16px;
+  background: #D7CCC8;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 8px 0;
+  position: relative;
+}
+.rounding-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #66BB6A);
+  border-radius: 8px;
+  transition: width 0.4s ease;
+}
+.rounding-gap {
+  font-size: 0.9em;
+  color: #E65100;
+  font-weight: 600;
+}
+
+/* ========== UTILITY ========== */
+.text-center { text-align: center; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+
+/* Confetti */
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: confettiFall 2s ease-out forwards;
+  z-index: 200;
+  pointer-events: none;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .ten-frame-cell { width: 36px; height: 36px; }
+  .cell-content { font-size: 1.2em; }
+  .blue-cookie-btn { width: 40px; height: 40px; font-size: 1.2em; }
+  .ten-frame { gap: 3px; padding: 6px; }
+  .frames-container { gap: 12px; }
+  .order-equation { font-size: 1.5em; }
+  .welcome-title { font-size: 1.8em; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- WELCOME SCREEN -->
+<div class="screen active" id="screen-welcome">
+  <div class="welcome-chef">🦉</div>
+  <div class="welcome-title">十格阵魔法厨房</div>
+  <div class="welcome-subtitle">和小猫头鹰大厨一起学凑十法！</div>
+  <div class="welcome-stars">⭐ 🌟 ✨</div>
+  <div class="welcome-desc">
+    🍪 用魔法十格阵完成食谱订单<br>
+    🔢 学会"凑十法"让加法更简单<br>
+    🏆 5个关卡等你来挑战！
+  </div>
+  <div class="welcome-features">
+    <div class="welcome-feature">🧭 引导模式</div>
+    <div class="welcome-feature">💡 半引导</div>
+    <div class="welcome-feature">🆓 自由模式</div>
+    <div class="welcome-feature">🔢 双十格阵</div>
+    <div class="welcome-feature">🏗️ 凑整厨房</div>
+  </div>
+  <button class="btn btn-primary" onclick="startGame()">🍳 开始烹饪！</button>
+</div>
+
+<!-- LEVEL INTRO SCREEN -->
+<div class="screen" id="screen-level-intro">
+  <div class="level-intro-badge" id="level-intro-icon"></div>
+  <div class="level-intro-title" id="level-intro-title"></div>
+  <div class="level-intro-mode" id="level-intro-mode"></div>
+  <div class="level-intro-desc" id="level-intro-desc"></div>
+  <div class="level-intro-target" id="level-intro-target"></div>
+  <button class="btn btn-primary" onclick="loadLevel()">🍪 开始做订单！</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen" id="screen-game">
+  <div class="game-header">
+    <div class="game-header-left">
+      <span class="game-header-chef">🦉</span>
+      <div>
+        <div class="game-header-level" id="game-header-level"></div>
+        <div class="game-header-order" id="game-header-order"></div>
+      </div>
+    </div>
+    <div class="game-header-stars" id="game-header-stars"></div>
+  </div>
+
+  <div class="order-card">
+    <div class="order-label">📜 魔法食谱订单</div>
+    <div class="order-equation" id="order-equation"></div>
+  </div>
+
+  <!-- Normal ten-frame view -->
+  <div id="tenframe-view">
+    <div class="frames-container">
+      <div class="frame-wrapper">
+        <div class="frame-label frame1-label">🔴 Frame 1 · 凑十格</div>
+        <div class="ten-frame" id="frame1"></div>
+        <div class="frame-extra-info" id="frame1-extra"></div>
+      </div>
+      <div class="frame-wrapper">
+        <div class="frame-label frame2-label">🔵 Frame 2 · 剩余格</div>
+        <div class="ten-frame" id="frame2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level 5 rounding view -->
+  <div id="rounding-view" style="display:none;">
+    <div class="rounding-visual">
+      <div class="rounding-numbers">
+        <span id="rounding-start">38</span>
+        <span class="rounding-arrow">→</span>
+        <span id="rounding-target">40</span>
+      </div>
+      <div class="rounding-progress">
+        <div class="rounding-fill" id="rounding-fill" style="width:0%"></div>
+      </div>
+      <div class="rounding-gap" id="rounding-gap-text"></div>
+    </div>
+    <div class="frames-container mt-12">
+      <div class="frame-wrapper">
+        <div class="frame-label frame1-label">🔴 凑十格 (填满变成整十!)</div>
+        <div class="ten-frame" id="frame1-r"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="blue-cookies-section">
+    <div class="blue-cookies-label">
+      🔵 蓝色魔法饼干 · 点击添加
+      <span id="blue-count-label"></span>
+    </div>
+    <div class="blue-cookies-row" id="blue-cookies-row"></div>
+  </div>
+
+  <div class="hint-area" id="hint-area"></div>
+  <div class="equation-result" id="equation-result"></div>
+  <div class="action-buttons" id="action-buttons">
+    <button class="btn btn-outline btn-sm" id="btn-undo" onclick="undoLast()">↩ 撤销</button>
+    <button class="btn btn-secondary btn-sm" id="btn-submit" onclick="submitOrder()" style="display:none;">✅ 确认提交</button>
+    <button class="btn btn-warning btn-sm" id="btn-next" onclick="nextOrder()" style="display:none;">➡ 下一单</button>
+  </div>
+</div>
+
+<!-- PRACTICE SCREEN -->
+<div class="screen" id="screen-practice">
+  <div class="practice-header">
+    <div class="practice-badge" id="practice-icon"></div>
+    <div class="practice-tier" id="practice-tier"></div>
+    <div class="practice-progress" id="practice-progress"></div>
+  </div>
+  <div class="practice-card" id="practice-card">
+    <div class="practice-q-num" id="practice-q-num"></div>
+    <div class="practice-q-text" id="practice-q-text"></div>
+    <div class="practice-options" id="practice-options"></div>
+    <input class="practice-fill-input" id="practice-fill-input" style="display:none;" type="text" inputmode="numeric" placeholder="输入答案...">
+    <div class="practice-feedback" id="practice-feedback"></div>
+    <div class="practice-hint" id="practice-hint" style="display:none;"></div>
+    <div class="practice-actions" id="practice-actions">
+      <button class="btn btn-outline btn-sm" onclick="showPracticeHint()">💡 查看提示</button>
+      <button class="btn btn-primary btn-sm" onclick="checkPracticeAnswer()">✅ 提交答案</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div class="screen" id="screen-result">
+  <div class="welcome-chef" style="font-size:60px;">🦉</div>
+  <div class="result-title" id="result-title"></div>
+  <div class="result-stars-row" id="result-stars"></div>
+  <div class="result-stats" id="result-stats"></div>
+  <div class="result-order-review" id="result-order-review"></div>
+  <button class="btn btn-secondary" onclick="startPractice()">📝 进入练习</button>
+  <button class="btn btn-outline btn-sm mt-8" onclick="restartLevel()">🔄 重新本关</button>
+</div>
+
+<!-- FINAL SCREEN -->
+<div class="screen" id="screen-final">
+  <div class="final-chef">🦉</div>
+  <div class="final-title">🎉 厨房大冒险完成！</div>
+  <div class="final-stars" id="final-stars"></div>
+  <div class="final-rating" id="final-rating"></div>
+  <div class="final-level-summary" id="final-level-summary"></div>
+  <div class="final-encouragement" id="final-encouragement"></div>
+  <button class="btn btn-primary" onclick="resetGame()">🔄 重新开始</button>
+</div>
+
+</div><!-- #app -->
+
+<!-- Stars Popup container -->
+<div id="stars-popup-container"></div>
+
+<script>
+// ======================================================================
+// DATA DEFINITIONS
+// ======================================================================
+
+const LEVELS = [
+  {
+    id: 1,
+    name: '引导模式',
+    icon: '🧭',
+    desc: '小箭头会指引你哦~跟着箭头点击蓝色饼干就对了！',
+    mode: '引导模式',
+    hintMode: 'full',
+    type: 'tenframe',
+    orders: [
+      { a: 9, b: 4, result: 13 },
+      { a: 9, b: 6, result: 15 },
+      { a: 9, b: 3, result: 12 },
+    ]
+  },
+  {
+    id: 2,
+    name: '半引导模式',
+    icon: '💡',
+    desc: '看看提示词，自己动手点击吧！',
+    mode: '半引导模式',
+    hintMode: 'partial',
+    type: 'tenframe',
+    orders: [
+      { a: 8, b: 5, result: 13 },
+      { a: 8, b: 6, result: 14 },
+      { a: 8, b: 4, result: 12 },
+    ]
+  },
+  {
+    id: 3,
+    name: '自由模式',
+    icon: '🆓',
+    desc: '没有提示啦，靠你自己完成订单！',
+    mode: '自由模式',
+    hintMode: 'none',
+    type: 'tenframe',
+    orders: [
+      { a: 7, b: 5, result: 12 },
+      { a: 7, b: 6, result: 13 },
+      { a: 6, b: 5, result: 11 },
+      { a: 6, b: 7, result: 13 },
+    ]
+  },
+  {
+    id: 4,
+    name: '双十格阵',
+    icon: '🔢',
+    desc: '两个十格阵一起看，学会看十位和个位！',
+    mode: '双十格阵',
+    hintMode: 'none',
+    type: 'tenframe',
+    orders: [
+      { a: 5, b: 7, result: 12 },
+      { a: 5, b: 8, result: 13 },
+      { a: 6, b: 9, result: 15 },
+      { a: 7, b: 8, result: 15 },
+    ]
+  },
+  {
+    id: 5,
+    name: '凑整厨房',
+    icon: '🏗️',
+    desc: '先把大数凑成整十！再算剩下的~',
+    mode: '凑整模式',
+    hintMode: 'rounding',
+    type: 'rounding',
+    orders: [
+      { a: 38, b: 7, result: 45, roundTo: 40, neededForRound: 2 },
+      { a: 47, b: 6, result: 53, roundTo: 50, neededForRound: 3 },
+      { a: 29, b: 5, result: 34, roundTo: 30, neededForRound: 1 },
+      { a: 56, b: 8, result: 64, roundTo: 60, neededForRound: 4 },
+    ]
+  },
+];
+
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '9 + 4 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '用凑十法：从4里拿1给9，9+1=10，10+3=13' },
+    { type: 'choice', q: '8 + 3 = ?', options: ['10', '11', '12', '13'], answer: 1, hint: '8还差2凑10，从3里拿2，10+1=11' },
+    { type: 'choice', q: '9 + 6 = ?', options: ['14', '15', '16', '17'], answer: 1, hint: '9+1=10，10+5=15' },
+    { type: 'choice', q: '7 + 4 = ?', options: ['10', '11', '12', '13'], answer: 1, hint: '7+3=10，10+1=11' },
+  ],
+  2: [
+    { type: 'choice', q: '8 + 5 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '8+2=10，10+3=13' },
+    { type: 'choice', q: '7 + 6 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '7+3=10，10+3=13' },
+    { type: 'fill', q: '9 + 7 = ?', answer: '16', hint: '9+1=10，10+6=16' },
+    { type: 'choice', q: '6 + 5 用凑十法，从5里拿几？', options: ['3', '4', '5', '2'], answer: 1, hint: '6还差4凑10，所以要拿4' },
+  ],
+  3: [
+    { type: 'choice', q: '9 + 8 = ?', options: ['16', '17', '18', '19'], answer: 1, hint: '9+1=10，10+7=17' },
+    { type: 'fill', q: '8 + 7 = ?', answer: '15', hint: '8+2=10，10+5=15' },
+    { type: 'choice', q: '7 + 8 = ? 和 8 + 7 的答案一样吗？', options: ['一样，都是15', '不一样'], answer: 0, hint: '加法交换律' },
+    { type: 'choice', q: '6 + 8 = ?', options: ['13', '14', '15', '16'], answer: 1, hint: '8+2=10，10+4=14' },
+  ],
+  4: [
+    { type: 'choice', q: '38 + 7 = ?', options: ['43', '44', '45', '46'], answer: 2, hint: '38+2=40，7拆成2+5，40+5=45' },
+    { type: 'fill', q: '47 + 6 = ?', answer: '53', hint: '47+3=50，6拆成3+3，50+3=53' },
+    { type: 'choice', q: '小明有8块糖，又买了5块。一共有几块？', options: ['12', '13', '14', '15'], answer: 1, hint: '8+2=10，5拆成2+3，10+3=13' },
+    { type: 'choice', q: '29 + 8 = ?', options: ['36', '37', '38', '39'], answer: 1, hint: '29+1=30，8拆成1+7，30+7=37' },
+  ],
+  5: [
+    { type: 'fill', q: '想一想：9+5=14，那19+5=？', answer: '24', hint: '19+1=20，20+4=24' },
+    { type: 'choice', q: '下面哪组不是凑十好朋友？', options: ['9和1', '8和2', '7和4', '6和4'], answer: 2, hint: '7的好朋友是3' },
+    { type: 'choice', q: '小猫钓了9条鱼，小狗比小猫多5条。小狗钓了几条？', options: ['13', '14', '15', '16'], answer: 1, hint: '9+5=14，9+1=10，10+4=14' },
+    { type: 'fill', q: '8+6除了用凑十法，还有其他方法吗？写出答案。', answer: '14', hint: '多种方法都能得到14' },
+  ],
+};
+
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+// ======================================================================
+// GAME STATE
+// ======================================================================
+
+let state = {
+  currentLevelIndex: 0,    // 0-4
+  currentOrderIndex: 0,    // index within level orders
+  attempts: 1,             // attempts for current order
+  totalStars: 0,           // accumulated stars across all levels
+  levelStars: [],          // stars per order in current level, e.g. [3,2,3,1]
+  levelStarTotals: [0,0,0,0,0], // total stars earned per level
+  bluePlaced: 0,           // number of blue cookies moved to frame1
+  blueRemaining: 0,        // available blue cookies not yet placed
+  orderComplete: false,    // whether current order is correctly filled
+  practiceResults: [],     // results from practice
+  practiceIndex: 0,        // current practice question index
+};
+
+// ======================================================================
+// SCREEN MANAGEMENT
+// ======================================================================
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const screen = document.getElementById('screen-' + name);
+  if (screen) screen.classList.add('active');
+  document.getElementById('stars-popup-container').innerHTML = '';
+}
+
+// ======================================================================
+// GAME FLOW
+// ======================================================================
+
+function startGame() {
+  state.currentLevelIndex = 0;
+  state.totalStars = 0;
+  state.levelStarTotals = [0,0,0,0,0];
+  showLevelIntro();
+}
+
+function showLevelIntro() {
+  const level = LEVELS[state.currentLevelIndex];
+  document.getElementById('level-intro-icon').textContent = level.icon;
+  document.getElementById('level-intro-title').textContent = '第' + level.id + '关 · ' + level.name;
+  document.getElementById('level-intro-mode').textContent = level.mode;
+  document.getElementById('level-intro-desc').textContent = level.desc;
+  document.getElementById('level-intro-target').textContent =
+    '共 ' + level.orders.length + ' 份订单等你完成！';
+  showScreen('level-intro');
+}
+
+function loadLevel() {
+  const level = LEVELS[state.currentLevelIndex];
+  state.currentOrderIndex = 0;
+  state.levelStars = [];
+  showScreen('game');
+  loadOrder();
+}
+
+function loadOrder() {
+  const level = LEVELS[state.currentLevelIndex];
+  const order = level.orders[state.currentOrderIndex];
+  state.attempts = 1;
+  state.bluePlaced = 0;
+  state.orderComplete = false;
+
+  if (level.type === 'rounding') {
+    state.blueRemaining = order.b;
+    state.bluePlaced = 0;
+  } else {
+    state.blueRemaining = order.b;
+    state.bluePlaced = 0;
+  }
+
+  // Update header
+  document.getElementById('game-header-level').textContent =
+    '第' + level.id + '关 · ' + level.name;
+  document.getElementById('game-header-order').textContent =
+    '第 ' + (state.currentOrderIndex + 1) + '/' + level.orders.length + ' 单';
+  document.getElementById('game-header-stars').textContent =
+    '⭐ ' + state.totalStars;
+
+  // Show equation
+  if (level.type === 'rounding') {
+    document.getElementById('order-equation').innerHTML =
+      '<span style="color:#E53935;">' + order.a + '</span> + <span style="color:#1E88E5;">' + order.b + '</span> = <span class="qmark">?</span>';
+  } else {
+    document.getElementById('order-equation').innerHTML =
+      '<span style="color:#E53935;">' + order.a + '</span> + <span style="color:#1E88E5;">' + order.b + '</span> = <span class="qmark">?</span>';
+  }
+
+  // Show correct view
+  if (level.type === 'rounding') {
+    document.getElementById('tenframe-view').style.display = 'none';
+    document.getElementById('rounding-view').style.display = 'block';
+    renderLevel5View();
+  } else {
+    document.getElementById('tenframe-view').style.display = 'block';
+    document.getElementById('rounding-view').style.display = 'none';
+    renderTenFrameView();
+  }
+
+  renderBlueCookies();
+  renderHints();
+
+  // Reset equation and buttons
+  document.getElementById('equation-result').innerHTML = '';
+  document.getElementById('btn-submit').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'none';
+  document.getElementById('btn-undo').style.display = 'inline-flex';
+}
+
+function renderTenFrameView() {
+  const level = LEVELS[state.currentLevelIndex];
+  const order = level.orders[state.currentOrderIndex];
+  const a = order.a; // red cookies pre-filled
+  const b = order.b; // total blue cookies
+
+  // Calculate state
+  const neededFor10 = 10 - a; // how many blue needed to fill frame1 to 10
+  const bluesInFrame1 = Math.min(state.bluePlaced, neededFor10);
+  const totalInFrame1 = a + bluesInFrame1;
+  const autoComplete = totalInFrame1 >= 10;
+  const remainingBlues = autoComplete ? b - neededFor10 : b - state.bluePlaced;
+
+  // Render Frame 1
+  const frame1 = document.getElementById('frame1');
+  frame1.innerHTML = '';
+  frame1.classList.remove('full');
+  let fullLabelEl = frame1.querySelector('.full-label');
+  if (fullLabelEl) fullLabelEl.remove();
+
+  for (let i = 0; i < 10; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'ten-frame-cell';
+    const content = document.createElement('span');
+    content.className = 'cell-content';
+
+    if (i < a) {
+      cell.classList.add('filled-red');
+      content.classList.add('red-cookie');
+      content.textContent = '🍪';
+    } else if (i < a + bluesInFrame1) {
+      cell.classList.add('filled-blue');
+      content.classList.add('blue-cookie');
+      content.textContent = '🔵';
+    } else {
+      content.classList.add('placeholder');
+      content.textContent = '○';
+    }
+
+    cell.appendChild(content);
+    frame1.appendChild(cell);
+  }
+
+  if (autoComplete && totalInFrame1 === 10) {
+    frame1.classList.add('full');
+    // Add "10!" label
+    const label = document.createElement('div');
+    label.className = 'full-label';
+    label.textContent = '🎉 10!';
+    frame1.appendChild(label);
+  }
+
+  // Frame 1 extra info
+  const extra = document.getElementById('frame1-extra');
+  extra.textContent = a + ' + ' + bluesInFrame1 + ' = ' + totalInFrame1;
+
+  // Render Frame 2
+  const frame2 = document.getElementById('frame2');
+  frame2.innerHTML = '';
+  frame2.classList.remove('full');
+
+  for (let i = 0; i < 10; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'ten-frame-cell';
+    const content = document.createElement('span');
+    content.className = 'cell-content';
+
+    if (autoComplete && i < remainingBlues) {
+      cell.classList.add('filled-blue');
+      content.classList.add('blue-cookie');
+      content.textContent = '🔵';
+    } else {
+      content.classList.add('placeholder');
+      content.textContent = '○';
+    }
+
+    cell.appendChild(content);
+    frame2.appendChild(cell);
+  }
+
+  // Show equation if auto-complete
+  if (autoComplete && !state.orderComplete) {
+    state.orderComplete = true;
+    const equationDiv = document.getElementById('equation-result');
+    equationDiv.innerHTML =
+      '<div class="equation-text">' + a + ' + ' + b + ' = ' + '10' + ' + ' + remainingBlues + ' = ' + order.result + '</div>' +
+      '<div class="equation-sub">📐 凑十法完成！</div>';
+    document.getElementById('btn-submit').style.display = 'inline-flex';
+  }
+}
+
+function renderLevel5View() {
+  const level = LEVELS[state.currentLevelIndex];
+  const order = level.orders[state.currentOrderIndex];
+  const a = order.a;
+  const roundTo = order.roundTo;
+  const needed = order.neededForRound;
+  const tenFrameA = a % 10; // the partial part (e.g., 8 for 38)
+
+  // Update rounding visual
+  document.getElementById('rounding-start').textContent = a;
+  document.getElementById('rounding-target').textContent = roundTo;
+
+  const fillPct = state.bluePlaced >= needed ? 100 : (tenFrameA + state.bluePlaced) / 10 * 100;
+  document.getElementById('rounding-fill').style.width = Math.min(fillPct, 100) + '%';
+
+  const gap = needed - state.bluePlaced;
+  if (gap > 0) {
+    document.getElementById('rounding-gap-text').textContent =
+      '还差 ' + gap + ' 个蓝色饼干就能凑成 ' + roundTo + ' 啦！';
+  } else {
+    document.getElementById('rounding-gap-text').textContent =
+      '✅ 已凑成 ' + roundTo + '！';
+  }
+
+  // Render Frame 1 (showing the partial + added)
+  const frame1 = document.getElementById('frame1-r');
+  frame1.innerHTML = '';
+  frame1.classList.remove('full');
+
+  const totalInFrame = tenFrameA + Math.min(state.bluePlaced, needed);
+  const frameFilled = totalInFrame >= 10;
+
+  for (let i = 0; i < 10; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'ten-frame-cell';
+    const content = document.createElement('span');
+    content.className = 'cell-content';
+
+    if (i < tenFrameA) {
+      cell.classList.add('filled-red');
+      content.classList.add('red-cookie');
+      content.textContent = '🍪';
+    } else if (i < totalInFrame) {
+      cell.classList.add('filled-blue');
+      content.classList.add('blue-cookie');
+      content.textContent = '🔵';
+    } else {
+      content.classList.add('placeholder');
+      content.textContent = '○';
+    }
+
+    cell.appendChild(content);
+    frame1.appendChild(cell);
+  }
+
+  if (frameFilled) {
+    frame1.classList.add('full');
+    let label = frame1.querySelector('.full-label');
+    if (!label) {
+      label = document.createElement('div');
+      label.className = 'full-label';
+      label.textContent = '🎉 满!';
+      frame1.appendChild(label);
+    }
+  }
+
+  // Check if order is complete
+  if (state.bluePlaced >= needed && !state.orderComplete) {
+    state.orderComplete = true;
+    const remaining = order.b - needed;
+    const equationDiv = document.getElementById('equation-result');
+    equationDiv.innerHTML =
+      '<div class="equation-text">' + a + ' + ' + order.b + ' = ' + a + ' + ' + needed + ' + ' + remaining + ' = ' + roundTo + ' + ' + remaining + ' = ' + order.result + '</div>' +
+      '<div class="equation-sub">📐 凑整法完成！先凑成' + roundTo + '再算剩下的~</div>';
+    document.getElementById('btn-submit').style.display = 'inline-flex';
+  }
+}
+
+function renderBlueCookies() {
+  const level = LEVELS[state.currentLevelIndex];
+  const order = level.orders[state.currentOrderIndex];
+  const container = document.getElementById('blue-cookies-row');
+  container.innerHTML = '';
+
+  const neededFor10 = level.type === 'rounding' ? order.neededForRound : (10 - order.a);
+  const total = order.b;
+  const remaining = state.orderComplete ? 0 : total - state.bluePlaced;
+
+  // Update label
+  document.getElementById('blue-count-label').textContent =
+    '（共' + total + '个，剩余' + Math.max(0, remaining) + '个）';
+
+  for (let i = 0; i < total; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'blue-cookie-btn';
+    btn.textContent = '🔵';
+    btn.onclick = function() { handleBlueClick(i); };
+
+    if (i < state.bluePlaced) {
+      btn.classList.add('moved');
+    }
+
+    // Highlight for Level 1 (guided mode) - highlight the needed ones
+    if (level.hintMode === 'full' && !state.orderComplete) {
+      if (i < state.bluePlaced + neededFor10 && i >= state.bluePlaced) {
+        btn.classList.add('highlight');
+        const arrow = document.createElement('div');
+        arrow.className = 'arrow-hint';
+        arrow.textContent = '👇';
+        btn.appendChild(arrow);
+      }
+    }
+
+    container.appendChild(btn);
+  }
+
+  // Update undo button
+  document.getElementById('btn-undo').disabled = state.bluePlaced === 0 || state.orderComplete;
+}
+
+function renderHints() {
+  const level = LEVELS[state.currentLevelIndex];
+  const order = level.orders[state.currentOrderIndex];
+  const hintArea = document.getElementById('hint-area');
+  hintArea.innerHTML = '';
+
+  const neededFor10 = level.type === 'rounding' ? order.neededForRound : (10 - order.a);
+  const remaining = neededFor10 - Math.min(state.bluePlaced, neededFor10);
+
+  if (state.orderComplete) {
+    hintArea.innerHTML = '<div class="hint-text">✅ 太棒了！点击"确认提交"完成订单~</div>';
+    return;
+  }
+
+  if (level.hintMode === 'full') {
+    if (remaining > 0) {
+      hintArea.innerHTML = '<div class="hint-text">👆 ' + order.a + '还差<span style="color:#E53935;font-size:1.2em;">' + remaining + '</span>个就满10啦！点上面闪光的蓝色饼干~</div>';
+    }
+  } else if (level.hintMode === 'partial') {
+    if (remaining > 0) {
+      hintArea.innerHTML = '<div class="hint-text">💡 ' + order.a + '找' + neededFor10 + '，还差' + remaining + '个~</div>';
+    }
+  } else if (level.hintMode === 'rounding') {
+    if (remaining > 0) {
+      hintArea.innerHTML = '<div class="hint-text">💡 ' + order.a + '离' + order.roundTo + '还差' + neededFor10 + '，还需要' + remaining + '个~</div>';
+    }
+  }
+  // hintMode === 'none': no hint
+}
+
+function handleBlueClick(index) {
+  if (state.orderComplete) return;
+
+  const level = LEVELS[state.currentLevelIndex];
+  const order = level.orders[state.currentOrderIndex];
+  const neededFor10 = level.type === 'rounding' ? order.neededForRound : (10 - order.a);
+
+  // Only allow clicking the next available blue cookie
+  if (index !== state.bluePlaced) return;
+
+  state.bluePlaced++;
+
+  // Re-render
+  if (level.type === 'rounding') {
+    renderLevel5View();
+  } else {
+    renderTenFrameView();
+  }
+  renderBlueCookies();
+  renderHints();
+
+  // Check if order just completed
+  if (state.orderComplete && level.type === 'tenframe') {
+    // Auto-move remaining blues already handled in renderTenFrameView
+  }
+}
+
+function undoLast() {
+  if (state.bluePlaced === 0 || state.orderComplete) return;
+
+  state.bluePlaced--;
+  state.attempts++;
+
+  const level = LEVELS[state.currentLevelIndex];
+
+  // Reset order complete state if it was previously set
+  if (state.bluePlaced < (level.type === 'rounding' ? level.orders[state.currentOrderIndex].neededForRound : (10 - level.orders[state.currentOrderIndex].a))) {
+    state.orderComplete = false;
+    document.getElementById('btn-submit').style.display = 'none';
+    document.getElementById('equation-result').innerHTML = '';
+  }
+
+  if (level.type === 'rounding') {
+    renderLevel5View();
+  } else {
+    renderTenFrameView();
+  }
+  renderBlueCookies();
+  renderHints();
+}
+
+function submitOrder() {
+  if (!state.orderComplete) return;
+
+  const level = LEVELS[state.currentLevelIndex];
+  const stars = Math.max(1, 4 - state.attempts); // 1st try=3, 2nd=2, 3rd+=1
+  state.levelStars.push(stars);
+  state.totalStars += stars;
+  state.levelStarTotals[state.currentLevelIndex] += stars;
+
+  // Show stars popup
+  showStarsPopup(stars, state.attempts);
+
+  // Update UI
+  document.getElementById('game-header-stars').textContent = '⭐ ' + state.totalStars;
+  document.getElementById('btn-submit').style.display = 'none';
+  document.getElementById('btn-undo').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'inline-flex';
+}
+
+function showStarsPopup(stars, attempts) {
+  const starEmojis = ['', '⭐', '⭐⭐', '⭐⭐⭐'];
+  const attemptText = attempts === 1 ? '一次就成功！' : '第' + attempts + '次尝试';
+  const container = document.getElementById('stars-popup-container');
+  container.innerHTML =
+    '<div class="stars-popup">' +
+    '<div class="stars-popup-content">' +
+    '<div style="font-size:2em;">🦉</div>' +
+    '<div class="stars-popup-stars">' + starEmojis[stars] + '</div>' +
+    '<div class="stars-popup-text">' + (stars === 3 ? '完美！' : stars === 2 ? '不错！' : '继续加油！') + '</div>' +
+    '<div class="stars-popup-attempt">' + attemptText + '</div>' +
+    '<button class="btn btn-primary btn-sm" onclick="closeStarsPopup()">OK</button>' +
+    '</div></div>';
+
+  if (stars === 3) spawnConfetti();
+}
+
+function closeStarsPopup() {
+  document.getElementById('stars-popup-container').innerHTML = '';
+}
+
+function nextOrder() {
+  closeStarsPopup();
+
+  const level = LEVELS[state.currentLevelIndex];
+  state.currentOrderIndex++;
+
+  if (state.currentOrderIndex >= level.orders.length) {
+    // Level complete
+    showLevelResult();
+  } else {
+    loadOrder();
+  }
+}
+
+function showLevelResult() {
+  const level = LEVELS[state.currentLevelIndex];
+  const total = state.levelStars.reduce((a, b) => a + b, 0);
+  const max = level.orders.length * 3;
+  const starEmojis = ['☆', '⭐'];
+
+  document.getElementById('result-title').textContent =
+    '第' + level.id + '关 · ' + level.name + ' 完成！';
+
+  // Show stars for each order
+  let starsHtml = '';
+  for (let i = 0; i < level.orders.length; i++) {
+    const s = state.levelStars[i] || 0;
+    starsHtml += s === 3 ? '⭐' : s === 2 ? '🌟' : '✨';
+  }
+  document.getElementById('result-stars').textContent = starsHtml;
+
+  document.getElementById('result-stats').innerHTML =
+    '获得 <b>' + total + '</b> / ' + max + ' 颗星';
+
+  // Order review
+  let reviewHtml = '';
+  for (let i = 0; i < level.orders.length; i++) {
+    const o = level.orders[i];
+    const s = state.levelStars[i] || 0;
+    const starsStr = '⭐'.repeat(s);
+    reviewHtml += '<div class="result-order-item"><span>' + o.a + ' + ' + o.b + ' = ' + o.result + '</span><span>' + starsStr + '</span></div>';
+  }
+  document.getElementById('result-order-review').innerHTML = reviewHtml;
+
+  showScreen('result');
+}
+
+function restartLevel() {
+  const levelStarsEarned = state.levelStars.reduce((a, b) => a + b, 0);
+  state.totalStars -= levelStarsEarned;
+  state.levelStarTotals[state.currentLevelIndex] -= levelStarsEarned;
+  state.levelStars = [];
+  loadLevel();
+}
+
+// ======================================================================
+// PRACTICE SYSTEM
+// ======================================================================
+
+function startPractice() {
+  state.practiceIndex = 0;
+  state.practiceResults = [];
+  showScreen('practice');
+  renderPracticeScreen();
+  loadPracticeQuestion();
+}
+
+function renderPracticeScreen() {
+  const levelId = LEVELS[state.currentLevelIndex].id;
+  const label = difficultyLabels[levelId];
+  document.getElementById('practice-icon').textContent = label.icon;
+  document.getElementById('practice-tier').textContent = label.name + ' 练习';
+
+  // Progress dots
+  const problems = practiceProblems[levelId];
+  let dotsHtml = '';
+  for (let i = 0; i < problems.length; i++) {
+    let cls = 'practice-dot';
+    if (i < state.practiceIndex) {
+      cls += state.practiceResults[i] ? ' done' : ' wrong';
+    } else if (i === state.practiceIndex) {
+      cls += ' current';
+    }
+    dotsHtml += '<div class="' + cls + '"></div>';
+  }
+  document.getElementById('practice-progress').innerHTML = dotsHtml;
+}
+
+function loadPracticeQuestion() {
+  renderPracticeScreen();
+  const levelId = LEVELS[state.currentLevelIndex].id;
+  const problems = practiceProblems[levelId];
+
+  if (state.practiceIndex >= problems.length) {
+    finishPractice();
+    return;
+  }
+
+  const problem = problems[state.practiceIndex];
+  document.getElementById('practice-q-num').textContent =
+    '第 ' + (state.practiceIndex + 1) + '/' + problems.length + ' 题';
+  document.getElementById('practice-q-text').textContent = problem.q;
+  document.getElementById('practice-feedback').innerHTML = '';
+  document.getElementById('practice-feedback').className = 'practice-feedback';
+  document.getElementById('practice-hint').style.display = 'none';
+
+  const optionsDiv = document.getElementById('practice-options');
+  const fillInput = document.getElementById('practice-fill-input');
+
+  if (problem.type === 'choice') {
+    optionsDiv.style.display = 'flex';
+    fillInput.style.display = 'none';
+    optionsDiv.innerHTML = '';
+    for (let i = 0; i < problem.options.length; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'practice-option';
+      btn.textContent = problem.options[i];
+      btn.onclick = function() { selectPracticeOption(i); };
+      optionsDiv.appendChild(btn);
+    }
+  } else {
+    optionsDiv.style.display = 'none';
+    fillInput.style.display = 'block';
+    fillInput.value = '';
+    fillInput.focus();
+    fillInput.onkeydown = function(e) {
+      if (e.key === 'Enter') checkPracticeAnswer();
+    };
+  }
+
+  // Reset practice state
+  state._practiceAnswered = false;
+}
+
+let _selectedPracticeOption = -1;
+
+function selectPracticeOption(index) {
+  if (state._practiceAnswered) return;
+  _selectedPracticeOption = index;
+
+  // Highlight selected
+  const options = document.querySelectorAll('#practice-options .practice-option');
+  options.forEach((o, i) => {
+    o.style.background = i === index ? '#FFE0B2' : '#FFF8E1';
+    o.style.borderColor = i === index ? '#FFA726' : '#FFE0B2';
+  });
+}
+
+function checkPracticeAnswer() {
+  if (state._practiceAnswered) return;
+  state._practiceAnswered = true;
+
+  const levelId = LEVELS[state.currentLevelIndex].id;
+  const problem = practiceProblems[levelId][state.practiceIndex];
+  let isCorrect = false;
+
+  if (problem.type === 'choice') {
+    isCorrect = _selectedPracticeOption === problem.answer;
+    // Highlight correct/wrong
+    const options = document.querySelectorAll('#practice-options .practice-option');
+    options.forEach((o, i) => {
+      o.disabled = true;
+      if (i === problem.answer) o.classList.add('correct');
+      if (i === _selectedPracticeOption && !isCorrect) o.classList.add('wrong');
+    });
+  } else {
+    const input = document.getElementById('practice-fill-input');
+    const userAnswer = input.value.trim();
+    isCorrect = userAnswer === problem.answer;
+    input.disabled = true;
+    if (isCorrect) {
+      input.style.borderColor = '#66BB6A';
+      input.style.background = '#C8E6C9';
+    } else {
+      input.style.borderColor = '#EF5350';
+      input.style.background = '#FFCDD2';
+    }
+  }
+
+  const feedback = document.getElementById('practice-feedback');
+  if (isCorrect) {
+    feedback.innerHTML = '✅ 回答正确！太棒了！';
+    feedback.className = 'practice-feedback correct';
+  } else {
+    feedback.innerHTML = '❌ 不对哦~ 正确答案是：' + problem.answer;
+    feedback.className = 'practice-feedback wrong';
+  }
+
+  state.practiceResults.push(isCorrect);
+
+  // Update buttons
+  const actionsDiv = document.getElementById('practice-actions');
+  actionsDiv.innerHTML = '<button class="btn btn-primary btn-sm" onclick="nextPracticeQuestion()">➡ 下一题</button>';
+}
+
+function nextPracticeQuestion() {
+  state.practiceIndex++;
+  _selectedPracticeOption = -1;
+  state._practiceAnswered = false;
+  document.getElementById('practice-actions').innerHTML =
+    '<button class="btn btn-outline btn-sm" onclick="showPracticeHint()">💡 查看提示</button>' +
+    '<button class="btn btn-primary btn-sm" onclick="checkPracticeAnswer()">✅ 提交答案</button>';
+  loadPracticeQuestion();
+}
+
+function showPracticeHint() {
+  if (state._practiceAnswered) return;
+  const levelId = LEVELS[state.currentLevelIndex].id;
+  const problem = practiceProblems[levelId][state.practiceIndex];
+  const hintDiv = document.getElementById('practice-hint');
+  hintDiv.textContent = '💡 ' + problem.hint;
+  hintDiv.style.display = 'block';
+}
+
+function finishPractice() {
+  // Advance to next level or show final
+  state.currentLevelIndex++;
+
+  if (state.currentLevelIndex >= LEVELS.length) {
+    showFinalScreen();
+  } else {
+    state.levelStars = [];
+    showLevelIntro();
+  }
+}
+
+function showFinalScreen() {
+  const maxStars = LEVELS.reduce((sum, l) => sum + l.orders.length * 3, 0);
+  const pct = Math.round(state.totalStars / maxStars * 100);
+
+  let starDisplay = '';
+  const fullStars = Math.round(state.totalStars / maxStars * 5);
+  for (let i = 0; i < 5; i++) {
+    starDisplay += i < fullStars ? '⭐' : '☆';
+  }
+
+  let rating = '';
+  let encouragement = '';
+  if (pct >= 90) {
+    rating = '🏆 五星大厨！你是凑十法大师！';
+    encouragement = '太厉害了！你已经完全掌握了凑十法，可以教别的小朋友啦！';
+  } else if (pct >= 70) {
+    rating = '🥇 高级厨师！凑十法学得不错！';
+    encouragement = '很棒的成绩！再练习一下就能成为大师了！';
+  } else if (pct >= 50) {
+    rating = '🥈 见习厨师！继续加油！';
+    encouragement = '还不错哦~回去多多练习凑十法，下次表现会更好！';
+  } else {
+    rating = '🥉 厨房学徒！多多练习！';
+    encouragement = '别灰心！凑十法要多练习才能掌握，再来一次吧！';
+  }
+
+  document.getElementById('final-stars').textContent = starDisplay;
+  document.getElementById('final-rating').textContent =
+    state.totalStars + ' / ' + maxStars + ' 星 · ' + rating;
+  document.getElementById('final-encouragement').textContent = encouragement;
+
+  // Level summary
+  let summaryHtml = '';
+  for (let i = 0; i < LEVELS.length; i++) {
+    const l = LEVELS[i];
+    const earned = state.levelStarTotals[i] || 0;
+    const max = l.orders.length * 3;
+    summaryHtml += '<div class="final-level-row"><span>' + l.icon + ' 第' + l.id + '关 · ' + l.name + '</span><span>' + earned + ' / ' + max + ' ⭐</span></div>';
+  }
+  document.getElementById('final-level-summary').innerHTML = summaryHtml;
+
+  showScreen('final');
+  spawnConfetti();
+}
+
+function resetGame() {
+  state.currentLevelIndex = 0;
+  state.currentOrderIndex = 0;
+  state.attempts = 1;
+  state.totalStars = 0;
+  state.levelStars = [];
+  state.levelStarTotals = [0,0,0,0,0];
+  state.bluePlaced = 0;
+  state.blueRemaining = 0;
+  state.orderComplete = false;
+  state.practiceResults = [];
+  state.practiceIndex = 0;
+  showScreen('welcome');
+}
+
+// ======================================================================
+// EFFECTS
+// ======================================================================
+
+function spawnConfetti() {
+  const colors = ['#FF7043', '#FFD600', '#66BB6A', '#42A5F5', '#AB47BC', '#FFA726'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.top = -(Math.random() * 20 + 10) + 'px';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+    piece.style.animationDelay = Math.random() * 0.5 + 's';
+    piece.style.width = (Math.random() * 8 + 6) + 'px';
+    piece.style.height = (Math.random() * 8 + 6) + 'px';
+    document.body.appendChild(piece);
+    setTimeout(function() { piece.remove(); }, 3000);
+  }
+}
+
+// ======================================================================
+// INITIALIZATION
+// ======================================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+  showScreen('welcome');
+});
+</script>
+</body>
+</html>

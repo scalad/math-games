@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>凑十打地鼠 - 二年级数学游戏</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  background: linear-gradient(180deg, #a5d6a7 0%, #e8f5e9 30%, #c8e6c9 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  width: 100%;
+  max-width: 520px;
+  padding: 10px;
+}
+
+/* ===== Start Screen ===== */
+#start-screen {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+
+#start-screen h1 {
+  font-size: 2.4em;
+  color: #5D4037;
+  margin-bottom: 8px;
+  text-shadow: 2px 2px 0 rgba(139,90,43,0.2);
+}
+
+#start-screen .subtitle {
+  font-size: 1.2em;
+  color: #8D6E63;
+  margin-bottom: 20px;
+}
+
+#start-screen .moles-preview {
+  font-size: 3em;
+  margin: 16px 0;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+#start-screen .rules {
+  text-align: left;
+  background: #FFF8E1;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  font-size: 0.95em;
+  color: #5D4037;
+  line-height: 1.8;
+}
+
+#start-screen .rules span { font-size: 1.2em; }
+
+.btn {
+  display: inline-block;
+  padding: 14px 40px;
+  font-size: 1.2em;
+  font-weight: bold;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.25); }
+.btn:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+.btn-start {
+  background: linear-gradient(135deg, #FF6F00, #FF8F00);
+  color: #fff;
+  font-size: 1.4em;
+  padding: 16px 56px;
+}
+
+.btn-restart {
+  background: linear-gradient(135deg, #5D4037, #8D6E63);
+  color: #fff;
+  padding: 10px 28px;
+  font-size: 1em;
+}
+
+.btn-practice {
+  background: linear-gradient(135deg, #1565C0, #1E88E5);
+  color: #fff;
+  padding: 14px 40px;
+  font-size: 1.2em;
+}
+
+.btn-small {
+  padding: 8px 20px;
+  font-size: 0.95em;
+}
+
+/* ===== Game Area ===== */
+#game-area { display: none; }
+
+/* Header */
+#game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.85);
+  border-radius: 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.header-item {
+  text-align: center;
+  flex: 1;
+}
+
+.header-label {
+  font-size: 0.75em;
+  color: #8D6E63;
+}
+
+.header-value {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #5D4037;
+}
+
+.header-value.combo-active {
+  color: #FF6F00;
+  animation: comboGlow 0.5s ease;
+}
+
+@keyframes comboGlow {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+/* Target Board */
+#target-board {
+  text-align: center;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: linear-gradient(180deg, #DEB887, #C4A06A);
+  border: 4px solid #8B5A2B;
+  border-radius: 16px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.3);
+  position: relative;
+}
+
+#target-board::before {
+  content: '';
+  position: absolute;
+  top: 4px; left: 8px; right: 8px;
+  height: 2px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 1px;
+}
+
+#target-text {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #3E2723;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+}
+
+#target-nail {
+  position: absolute;
+  width: 10px; height: 10px;
+  background: #666;
+  border-radius: 50%;
+  box-shadow: inset 0 2px 2px rgba(0,0,0,0.5);
+}
+
+#target-nail.n1 { top: 6px; left: 12px; }
+#target-nail.n2 { top: 6px; right: 12px; }
+
+/* Mole Grid */
+#mole-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 16px;
+  padding: 10px;
+}
+
+.mole-hole {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.mole-hole-inner {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* The hole background (dirt mound around the hole) */
+.hole-dirt {
+  position: absolute;
+  bottom: 0;
+  width: 120px;
+  height: 55px;
+  background: radial-gradient(ellipse 100% 100% at 50% 50%, #6D4C41, #4E342E);
+  border-radius: 50%;
+  border: 3px solid #3E2723;
+  box-shadow: inset 0 4px 8px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.2);
+  z-index: 2;
+}
+
+/* Mole wrapper - clips the mole when it's below the hole */
+.mole-wrapper {
+  position: absolute;
+  bottom: 25px;
+  width: 130px;
+  height: 95px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* The mole itself */
+.mole {
+  position: absolute;
+  bottom: -75px;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: bottom 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mole.active {
+  bottom: -5px;
+}
+
+.mole-number {
+  display: inline-block;
+  background: #FFD54F;
+  color: #333;
+  font-weight: bold;
+  font-size: 1.4em;
+  padding: 4px 12px;
+  border-radius: 16px;
+  border: 2px solid #F9A825;
+  margin-bottom: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.mole-emoji {
+  font-size: 3em;
+  line-height: 1;
+}
+
+/* Correct animation */
+.mole.correct-anim .mole-emoji {
+  animation: correctPulse 0.6s ease;
+}
+.mole.correct-anim .mole-number {
+  background: #4CAF50;
+  color: #fff;
+  border-color: #388E3C;
+}
+
+@keyframes correctPulse {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.4); }
+  50% { transform: scale(0.9); }
+  75% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Wrong animation */
+.mole.wrong-anim {
+  animation: moleShake 0.5s ease;
+}
+
+@keyframes moleShake {
+  0%,100% { transform: translateX(-50%) translateX(0); }
+  15% { transform: translateX(-50%) translateX(-10px); }
+  30% { transform: translateX(-50%) translateX(10px); }
+  45% { transform: translateX(-50%) translateX(-8px); }
+  60% { transform: translateX(-50%) translateX(8px); }
+  75% { transform: translateX(-50%) translateX(-4px); }
+  90% { transform: translateX(-50%) translateX(4px); }
+}
+
+/* Star overlay on correct hit */
+.star-pop {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2.5em;
+  z-index: 10;
+  animation: starBurst 0.8s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes starBurst {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.3); }
+  30% { opacity: 1; transform: translateX(-50%) scale(1.2); }
+  100% { opacity: 0; transform: translateX(-50%) scale(1.5) translateY(-40px); }
+}
+
+/* Combo popup */
+#combo-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #FF6F00;
+  text-shadow: 0 0 20px rgba(255,111,0,0.8);
+  pointer-events: none;
+  z-index: 100;
+  animation: comboPop 1s ease forwards;
+  display: none;
+}
+
+@keyframes comboPop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+  40% { transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1) translateY(-60px); }
+}
+
+/* Hint Display */
+#hint-display {
+  text-align: center;
+  padding: 8px;
+  min-height: 36px;
+  font-size: 1em;
+  color: #E65100;
+  font-weight: bold;
+  transition: opacity 0.3s;
+}
+
+/* Progress Bar */
+#progress-container {
+  margin-top: 8px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 10px;
+  height: 14px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #66BB6A, #43A047);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+#progress-text {
+  text-align: center;
+  font-size: 0.85em;
+  color: #5D4037;
+  margin-top: 4px;
+}
+
+/* Ten Frame Overlay */
+#ten-frame-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+#ten-frame-overlay.show {
+  display: flex;
+}
+
+.ten-frame-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  animation: cardIn 0.3s ease;
+}
+
+@keyframes cardIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.ten-frame-title {
+  font-size: 1.2em;
+  color: #5D4037;
+  margin-bottom: 12px;
+}
+
+.ten-frame-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 6px;
+  margin: 12px auto;
+  max-width: 250px;
+}
+
+.ten-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px dashed #BDBDBD;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+  transition: all 0.3s;
+}
+
+.ten-dot.filled {
+  background: #4CAF50;
+  border-color: #388E3C;
+  color: #fff;
+  font-weight: bold;
+}
+
+.ten-dot.target {
+  background: #FF9800;
+  border-color: #F57C00;
+  color: #fff;
+  font-weight: bold;
+  animation: dotPop 0.5s ease;
+}
+
+@keyframes dotPop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.ten-frame-formula {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #333;
+  margin-top: 8px;
+}
+
+/* Level Transition */
+#level-transition {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 60;
+}
+
+#level-transition.show {
+  display: flex;
+}
+
+.level-trans-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  animation: cardIn 0.4s ease;
+}
+
+.level-trans-title {
+  font-size: 2em;
+  font-weight: bold;
+  color: #5D4037;
+  margin-bottom: 8px;
+}
+
+.level-trans-desc {
+  font-size: 1.1em;
+  color: #8D6E63;
+  margin-bottom: 16px;
+}
+
+/* ===== Practice Mode ===== */
+#practice-area { display: none; }
+
+#practice-area h2 {
+  text-align: center;
+  color: #1565C0;
+  margin-bottom: 8px;
+  font-size: 1.6em;
+}
+
+#practice-tier {
+  text-align: center;
+  font-size: 1.1em;
+  margin-bottom: 16px;
+  padding: 8px;
+  border-radius: 12px;
+  color: #fff;
+}
+
+.badge-tier-1 { background: #66BB6A; }
+.badge-tier-2 { background: #FFA726; }
+.badge-tier-3 { background: #42A5F5; }
+.badge-tier-4 { background: #AB47BC; }
+.badge-tier-5 { background: #EF5350; }
+
+#practice-question-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-bottom: 12px;
+}
+
+#practice-q-text {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+#practice-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.practice-opt-btn {
+  padding: 12px;
+  font-size: 1.1em;
+  border: 2px solid #BBDEFB;
+  border-radius: 12px;
+  background: #E3F2FD;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  color: #1565C0;
+}
+
+.practice-opt-btn:hover {
+  background: #BBDEFB;
+  border-color: #42A5F5;
+}
+
+.practice-opt-btn.correct-answer {
+  background: #C8E6C9;
+  border-color: #4CAF50;
+  color: #2E7D32;
+}
+
+.practice-opt-btn.wrong-answer {
+  background: #FFCDD2;
+  border-color: #F44336;
+  color: #C62828;
+}
+
+#practice-fill-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.2em;
+  border: 2px solid #BBDEFB;
+  border-radius: 12px;
+  text-align: center;
+  outline: none;
+}
+
+#practice-fill-input:focus {
+  border-color: #42A5F5;
+}
+
+#practice-submit-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+}
+
+#practice-feedback {
+  text-align: center;
+  font-size: 1.1em;
+  min-height: 28px;
+  margin-top: 8px;
+  font-weight: bold;
+}
+
+#practice-next-btn {
+  display: none;
+  margin: 8px auto;
+}
+
+/* ===== Victory Screen ===== */
+#victory-screen {
+  display: none;
+  text-align: center;
+  background: rgba(255,255,255,0.95);
+  border-radius: 24px;
+  padding: 32px 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+#victory-screen h2 {
+  font-size: 2em;
+  color: #FF6F00;
+  margin-bottom: 8px;
+}
+
+#victory-stats {
+  margin: 16px 0;
+  font-size: 1.1em;
+  color: #5D4037;
+  line-height: 2;
+}
+
+#victory-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Floating score pop */
+.score-pop {
+  position: absolute;
+  font-size: 1.3em;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 20;
+  animation: scoreFloat 1s ease forwards;
+}
+
+.score-pop.positive { color: #4CAF50; }
+.score-pop.negative { color: #F44336; }
+
+@keyframes scoreFloat {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-50px); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  #app { max-width: 100%; padding: 6px; }
+  #mole-grid { gap: 8px; padding: 4px; }
+  .mole-hole-inner { width: 100px; height: 110px; }
+  .hole-dirt { width: 90px; height: 45px; }
+  .mole-wrapper { width: 100px; height: 75px; bottom: 20px; }
+  .mole { bottom: -60px; }
+  .mole.active { bottom: -5px; }
+  .mole-emoji { font-size: 2.2em; }
+  .mole-number { font-size: 1.1em; padding: 3px 10px; }
+  #target-text { font-size: 1.4em; }
+  .ten-dot { width: 30px; height: 30px; font-size: 1em; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== Start Screen ===== -->
+  <div id="start-screen">
+    <h1>凑十打地鼠</h1>
+    <div class="subtitle">二年级数学游戏</div>
+    <div class="moles-preview">🐹🐹🐹</div>
+    <div class="rules">
+      <span>🎯</span> 看木牌：<b>9 + ? = 10</b>，找出答案！<br>
+      <span>🔨</span> 点击带着正确答案的小地鼠<br>
+      <span>⭐</span> 答对得分，连续答对3次触发<b>连击</b>！<br>
+      <span>❌</span> 答错扣2分，会提示凑十口诀哦<br>
+      <span>⏱️</span> 地鼠会躲回去，抓紧时间！
+    </div>
+    <button class="btn btn-start" onclick="startGame()">开始游戏 🎮</button>
+  </div>
+
+  <!-- ===== Game Area ===== -->
+  <div id="game-area">
+    <!-- Header -->
+    <div id="game-header">
+      <div class="header-item">
+        <div class="header-label">⭐ 得分</div>
+        <div class="header-value" id="score-val">0</div>
+      </div>
+      <div class="header-item">
+        <div class="header-label">📊 关卡</div>
+        <div class="header-value" id="level-val">1</div>
+      </div>
+      <div class="header-item">
+        <div class="header-label">🔥 连击</div>
+        <div class="header-value" id="combo-val">0</div>
+      </div>
+    </div>
+
+    <!-- Target Board -->
+    <div id="target-board">
+      <div id="target-nail" class="n1"></div>
+      <div id="target-nail" class="n2"></div>
+      <div id="target-text">9 + <span style="color:#D32F2F;">?</span> = 10</div>
+    </div>
+
+    <!-- Mole Grid -->
+    <div id="mole-grid"></div>
+
+    <!-- Hint -->
+    <div id="hint-display"></div>
+
+    <!-- Progress -->
+    <div id="progress-container">
+      <div id="progress-fill"></div>
+    </div>
+    <div id="progress-text">第 1 问 / 共 5 问</div>
+
+    <!-- Restart Button -->
+    <div style="text-align:center; margin-top:8px;">
+      <button class="btn btn-restart" onclick="restartGame()">🔄 重新开始</button>
+    </div>
+  </div>
+
+  <!-- ===== Ten Frame Overlay ===== -->
+  <div id="ten-frame-overlay">
+    <div class="ten-frame-card">
+      <div class="ten-frame-title">凑十法 ⭐</div>
+      <div class="ten-frame-grid" id="ten-frame-dots"></div>
+      <div class="ten-frame-formula" id="ten-frame-formula"></div>
+    </div>
+  </div>
+
+  <!-- ===== Level Transition ===== -->
+  <div id="level-transition">
+    <div class="level-trans-card">
+      <div class="level-trans-title" id="level-trans-title"></div>
+      <div class="level-trans-desc" id="level-trans-desc"></div>
+      <button class="btn btn-start" onclick="continueLevel()">准备好了！</button>
+    </div>
+  </div>
+
+  <!-- ===== Combo Popup ===== -->
+  <div id="combo-popup"></div>
+
+  <!-- ===== Victory Screen ===== -->
+  <div id="victory-screen">
+    <h2>🎉 太棒了！🎉</h2>
+    <div style="font-size:4em;">🏆</div>
+    <div id="victory-stats"></div>
+    <div id="victory-buttons">
+      <button class="btn btn-practice" onclick="enterPracticeMode()">📝 进入练习</button>
+      <button class="btn btn-restart" onclick="restartGame()">🔄 再来一次</button>
+    </div>
+  </div>
+
+  <!-- ===== Practice Area ===== -->
+  <div id="practice-area">
+    <h2>📝 凑十法练习</h2>
+    <div id="practice-tier"></div>
+    <div id="practice-question-card">
+      <div id="practice-q-text"></div>
+      <div id="practice-options"></div>
+      <input type="text" id="practice-fill-input" placeholder="输入你的答案" style="display:none;">
+      <button class="btn btn-practice btn-small" id="practice-submit-btn" style="display:none;">提交答案</button>
+      <div id="practice-feedback"></div>
+      <button class="btn btn-restart btn-small" id="practice-next-btn" onclick="nextPracticeQuestion()">下一题 ▶</button>
+    </div>
+    <div id="practice-progress" style="text-align:center; color:#666;"></div>
+  </div>
+
+</div>
+
+<script>
+// ===== Sound Effects =====
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+
+function initAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+}
+
+function playTone(freq, duration, type='sine', vol=0.15) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+function sfxCorrect() {
+  playTone(523, 0.1, 'sine', 0.15);
+  setTimeout(() => playTone(659, 0.1, 'sine', 0.15), 100);
+  setTimeout(() => playTone(784, 0.2, 'sine', 0.15), 200);
+}
+
+function sfxWrong() {
+  playTone(200, 0.15, 'square', 0.1);
+  setTimeout(() => playTone(160, 0.2, 'square', 0.1), 150);
+}
+
+function sfxCombo() {
+  playTone(523, 0.08, 'sine', 0.15);
+  setTimeout(() => playTone(659, 0.08, 'sine', 0.15), 80);
+  setTimeout(() => playTone(784, 0.08, 'sine', 0.15), 160);
+  setTimeout(() => playTone(1047, 0.3, 'sine', 0.2), 240);
+}
+
+function sfxLevelUp() {
+  const notes = [523, 659, 784, 1047];
+  notes.forEach((f, i) => setTimeout(() => playTone(f, 0.15, 'sine', 0.15), i * 120));
+}
+
+// ===== Game State =====
+const state = {
+  currentLevel: 1,
+  currentQuestion: 0,
+  score: 0,
+  combo: 0,
+  maxCombo: 0,
+  correctCount: 0,
+  totalAttempts: 0,
+  levelCorrect: 0,
+  gameActive: false,
+  roundActive: false,
+  correctMoleIndex: -1,
+  moleData: [],
+  roundTimer: null,
+  practiceMode: false,
+  practiceTier: 1,
+  practiceIndex: 0,
+  practiceCorrect: 0,
+  practiceData: null,
+  practiceAnswered: false,
+};
+
+// ===== Level Configs =====
+const levelConfigs = {
+  1: { targetNum: 9, targetSum: 10, correct: 1, moleDuration: 2500, name: '9找1', label: '第1关：好朋友 9和1', desc: '找到 1 就能和 9 凑成 10！' },
+  2: { targetNum: 8, targetSum: 10, correct: 2, moleDuration: 2000, name: '8找2', label: '第2关：好朋友 8和2', desc: '找到 2 就能和 8 凑成 10！' },
+  3: { targetNum: 7, targetSum: 10, correct: 3, moleDuration: 1800, name: '7找3', label: '第3关：好朋友 7和3', desc: '找到 3 就能和 7 凑成 10！' },
+  4: { moleDuration: 1500, name: '混合凑十', label: '第4关：混合挑战', desc: '6找4，5找5，看清题目哦！', mixed: true,
+    questions: [
+      { targetNum: 6, targetSum: 10, correct: 4 },
+      { targetNum: 5, targetSum: 10, correct: 5 },
+      { targetNum: 6, targetSum: 10, correct: 4 },
+      { targetNum: 5, targetSum: 10, correct: 5 },
+      { targetNum: 6, targetSum: 10, correct: 4 },
+    ]
+  },
+  5: { moleDuration: 1200, name: '凑整挑战', label: '第5关：凑整冲刺', desc: '38找2凑40，更难的凑整！', mixed: true,
+    questions: [
+      { targetNum: 38, targetSum: 40, correct: 2 },
+      { targetNum: 47, targetSum: 50, correct: 3 },
+      { targetNum: 29, targetSum: 30, correct: 1 },
+      { targetNum: 56, targetSum: 60, correct: 4 },
+      { targetNum: 83, targetSum: 90, correct: 7 },
+    ]
+  },
+};
+
+// Distractor pools for each level's target
+function getDistractorPool(level, targetNum) {
+  if (level === 1) return [3, 5, 2, 4, 6, 7, 8];
+  if (level === 2) return [1, 4, 3, 5, 6, 7];
+  if (level === 3) return [2, 5, 1, 4, 6, 8];
+  if (level === 4) {
+    if (targetNum === 6) return [1, 2, 3, 5, 7, 8];
+    return [1, 2, 3, 4, 6, 7, 8];
+  }
+  // Level 5: distractor numbers close to the correct answer
+  const correct = levelConfigs[5].questions.find(q => q.targetNum === targetNum)?.correct || 1;
+  const nearby = [correct - 1, correct + 1, correct - 2, correct + 2, correct + 3, correct - 3, correct + 4].filter(n => n > 0 && n !== correct);
+  return [...new Set(nearby)].slice(0, 7);
+}
+
+// ===== Practice Problems =====
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '9 + 4 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '用凑十法：从4里拿1给9，9+1=10，10+3=13' },
+    { type: 'choice', q: '8 + 3 = ?', options: ['10', '11', '12', '13'], answer: 1, hint: '8还差2凑10，从3里拿2，10+1=11' },
+    { type: 'choice', q: '9 + 6 = ?', options: ['14', '15', '16', '17'], answer: 1, hint: '9+1=10，10+5=15' },
+    { type: 'choice', q: '7 + 4 = ?', options: ['10', '11', '12', '13'], answer: 1, hint: '7+3=10，10+1=11' },
+  ],
+  2: [
+    { type: 'choice', q: '8 + 5 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '8+2=10，10+3=13，所以拆5成2和3' },
+    { type: 'choice', q: '7 + 6 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '7+3=10，10+3=13' },
+    { type: 'fill', q: '9 + 7 = ?', answer: '16', hint: '9+1=10，10+6=16' },
+    { type: 'choice', q: '6 + 5 用凑十法，从5里拿几？', options: ['3', '4', '5', '2'], answer: 1, hint: '6还差4凑10，所以要拿4' },
+  ],
+  3: [
+    { type: 'choice', q: '9 + 8 = ?', options: ['16', '17', '18', '19'], answer: 1, hint: '9+1=10，10+7=17' },
+    { type: 'fill', q: '8 + 7 = ?', answer: '15', hint: '8+2=10，10+5=15' },
+    { type: 'choice', q: '7 + 8 = ? 和 8 + 7 的答案一样吗？', options: ['一样，都是15', '不一样', '7+8=14', '8+7=16'], answer: 0, hint: '加法交换律：交换加数位置，和不变' },
+    { type: 'choice', q: '6 + 8 = ?', options: ['13', '14', '15', '16'], answer: 1, hint: '8+2=10，10+4=14' },
+  ],
+  4: [
+    { type: 'choice', q: '38 + 7 = ? 用凑整法', options: ['43', '44', '45', '46'], answer: 2, hint: '38+2=40，7拆成2+5，40+5=45' },
+    { type: 'fill', q: '47 + 6 = ?', answer: '53', hint: '47+3=50，6拆成3+3，50+3=53' },
+    { type: 'choice', q: '小明有8块糖，又买了5块。一共有几块？用凑十法算', options: ['12', '13', '14', '15'], answer: 1, hint: '8+2=10，5拆成2+3，10+3=13' },
+    { type: 'choice', q: '29 + 8 = ?', options: ['36', '37', '38', '39'], answer: 1, hint: '29+1=30，8拆成1+7，30+7=37' },
+  ],
+  5: [
+    { type: 'fill', q: '想一想：9+5=14，那19+5=？', answer: '24', hint: '19+1=20，20+4=24，和凑十法一样！' },
+    { type: 'choice', q: '下面哪组不是凑十好朋友？', options: ['9和1', '8和2', '7和4', '6和4'], answer: 2, hint: '7的好朋友是3，不是4。7+3=10' },
+    { type: 'choice', q: '小猫钓了9条鱼，小狗钓了比小猫多5条。小狗钓了几条？', options: ['13', '14', '15', '16'], answer: 1, hint: '9+5=14，用凑十：9+1=10，10+4=14' },
+    { type: 'fill', q: '你还能想到用凑十法算 8+6 以外的其他方法吗？写出答案就行。', answer: '14', hint: '除了8+2+4，也可以6+4+4，结果都是14。多种方法，只要能算对！' },
+  ],
+};
+
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+// 凑十口诀
+const tips = {
+  1: { 9: '9找1哦~', 8: '8找2哦~', 7: '7找3哦~', 6: '6找4哦~', 5: '5找5哦~' },
+};
+
+// ===== DOM References =====
+const $ = id => document.getElementById(id);
+const dom = {};
+
+function cacheDom() {
+  dom.startScreen = $('start-screen');
+  dom.gameArea = $('game-area');
+  dom.scoreVal = $('score-val');
+  dom.levelVal = $('level-val');
+  dom.comboVal = $('combo-val');
+  dom.targetText = $('target-text');
+  dom.moleGrid = $('mole-grid');
+  dom.hintDisplay = $('hint-display');
+  dom.progressFill = $('progress-fill');
+  dom.progressText = $('progress-text');
+  dom.tenFrameOverlay = $('ten-frame-overlay');
+  dom.tenFrameDots = $('ten-frame-dots');
+  dom.tenFrameFormula = $('ten-frame-formula');
+  dom.levelTransition = $('level-transition');
+  dom.levelTransTitle = $('level-trans-title');
+  dom.levelTransDesc = $('level-trans-desc');
+  dom.comboPopup = $('combo-popup');
+  dom.victoryScreen = $('victory-screen');
+  dom.victoryStats = $('victory-stats');
+  dom.practiceArea = $('practice-area');
+  dom.practiceTier = $('practice-tier');
+  dom.practiceQText = $('practice-q-text');
+  dom.practiceOptions = $('practice-options');
+  dom.practiceFillInput = $('practice-fill-input');
+  dom.practiceSubmitBtn = $('practice-submit-btn');
+  dom.practiceFeedback = $('practice-feedback');
+  dom.practiceNextBtn = $('practice-next-btn');
+  dom.practiceProgress = $('practice-progress');
+}
+
+cacheDom();
+
+// ===== Mole Grid =====
+function buildMoleGrid() {
+  dom.moleGrid.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const hole = document.createElement('div');
+    hole.className = 'mole-hole';
+    hole.innerHTML = `
+      <div class="mole-hole-inner">
+        <div class="hole-dirt"></div>
+        <div class="mole-wrapper">
+          <div class="mole" id="mole-${i}" data-index="${i}">
+            <span class="mole-number" id="mole-num-${i}">?</span>
+            <span class="mole-emoji">🐹</span>
+          </div>
+        </div>
+      </div>
+    `;
+    hole.addEventListener('click', () => handleMoleClick(i));
+    dom.moleGrid.appendChild(hole);
+  }
+}
+
+function getMoleEl(i) { return document.getElementById('mole-' + i); }
+function getMoleNumEl(i) { return document.getElementById('mole-num-' + i); }
+
+// ===== Game Logic =====
+function startGame() {
+  initAudio();
+  sfxCorrect(); // warm up audio context
+  state.currentLevel = 1;
+  state.currentQuestion = 0;
+  state.score = 0;
+  state.combo = 0;
+  state.maxCombo = 0;
+  state.correctCount = 0;
+  state.totalAttempts = 0;
+  state.gameActive = true;
+  state.roundActive = false;
+
+  dom.startScreen.style.display = 'none';
+  dom.gameArea.style.display = 'block';
+  dom.victoryScreen.style.display = 'none';
+  dom.practiceArea.style.display = 'none';
+  dom.hintDisplay.textContent = '';
+
+  buildMoleGrid();
+  updateScoreDisplay();
+  startLevel(1);
+}
+
+function restartGame() {
+  clearAllTimers();
+  dom.levelTransition.classList.remove('show');
+  dom.tenFrameOverlay.classList.remove('show');
+  dom.comboPopup.style.display = 'none';
+  dom.hintDisplay.textContent = '';
+  startGame();
+}
+
+function startLevel(level) {
+  state.currentLevel = level;
+  state.currentQuestion = 0;
+  state.levelCorrect = 0;
+
+  const cfg = levelConfigs[level];
+  dom.levelVal.textContent = level;
+  dom.levelTransTitle.textContent = cfg.label;
+  dom.levelTransDesc.textContent = cfg.desc;
+  dom.levelTransition.classList.add('show');
+}
+
+function continueLevel() {
+  initAudio();
+  dom.levelTransition.classList.remove('show');
+  state.currentQuestion = 0;
+  state.levelCorrect = 0;
+  updateProgress();
+  startRound();
+}
+
+function getCurrentQuestion() {
+  const cfg = levelConfigs[state.currentLevel];
+  if (cfg.mixed) {
+    return cfg.questions[state.currentQuestion];
+  }
+  // Randomize distractors but always use the same correct answer
+  const pool = getDistractorPool(state.currentLevel, cfg.targetNum);
+  const distractors = shuffleArray(pool).slice(0, 5);
+  return { targetNum: cfg.targetNum, targetSum: cfg.targetSum, correct: cfg.correct, distractors };
+}
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startRound() {
+  clearAllTimers();
+  state.roundActive = true;
+  dom.hintDisplay.textContent = '';
+
+  const cfg = levelConfigs[state.currentLevel];
+  const q = getCurrentQuestion();
+
+  // Build mole data: correct answer in random position, distractors in others
+  const correctPos = Math.floor(Math.random() * 6);
+  state.correctMoleIndex = correctPos;
+
+  let distractors;
+  if (cfg.mixed) {
+    const pool = getDistractorPool(state.currentLevel, q.targetNum);
+    distractors = shuffleArray(pool).slice(0, 5);
+  } else {
+    distractors = q.distractors || shuffleArray(getDistractorPool(state.currentLevel, cfg.targetNum)).slice(0, 5);
+  }
+
+  // Ensure we have exactly 5 distractors
+  if (distractors.length < 5) {
+    const extra = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(n => n !== q.correct && !distractors.includes(n));
+    while (distractors.length < 5) {
+      distractors.push(extra[distractors.length % extra.length]);
+    }
+  }
+  distractors = distractors.slice(0, 5);
+
+  state.moleData = [];
+  let dIdx = 0;
+  for (let i = 0; i < 6; i++) {
+    if (i === correctPos) {
+      state.moleData.push({ number: q.correct, isCorrect: true });
+    } else {
+      state.moleData.push({ number: distractors[dIdx], isCorrect: false });
+      dIdx++;
+    }
+  }
+
+  // Update target board
+  const targetText = `${q.targetNum} + <span style="color:#D32F2F;">?</span> = ${q.targetSum}`;
+  dom.targetText.innerHTML = targetText;
+
+  // Store current question data for later use
+  state.currentQuestionData = q;
+
+  // Pop up moles
+  for (let i = 0; i < 6; i++) {
+    const mel = getMoleEl(i);
+    const melNum = getMoleNumEl(i);
+    if (mel && melNum) {
+      melNum.textContent = state.moleData[i].number;
+      mel.className = 'mole';
+      // Stagger the pop-up slightly
+      setTimeout(() => {
+        mel.classList.add('active');
+      }, i * 60);
+    }
+  }
+
+  // Set timeout for mole disappearance
+  const duration = cfg.moleDuration;
+  state.roundTimer = setTimeout(() => {
+    if (state.roundActive) {
+      // Time's up - missed this question
+      hideAllMoles();
+      state.totalAttempts++;
+      state.combo = 0;
+      updateComboDisplay();
+      dom.hintDisplay.textContent = '⏰ 时间到！地鼠跑掉了~';
+      state.roundActive = false;
+      setTimeout(nextQuestion, 1000);
+    }
+  }, duration + 360); // add stagger time
+}
+
+function handleMoleClick(index) {
+  if (!state.roundActive || !state.gameActive) return;
+  initAudio();
+
+  state.totalAttempts++;
+  const isCorrect = state.moleData[index] && state.moleData[index].isCorrect;
+  const moleEl = getMoleEl(index);
+
+  if (isCorrect) {
+    // Correct!
+    state.roundActive = false;
+    state.correctCount++;
+    state.levelCorrect++;
+    state.combo++;
+    if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+
+    const level = state.currentLevel;
+    const basePoints = 10 * level;
+    const comboBonus = state.combo >= 3 ? Math.floor(basePoints * 0.5) : 0;
+    const points = basePoints + comboBonus;
+    state.score += points;
+
+    clearAllTimers();
+    sfxCorrect();
+
+    // Animate correct mole
+    moleEl.classList.add('correct-anim');
+
+    // Show star
+    const star = document.createElement('div');
+    star.className = 'star-pop';
+    star.textContent = '⭐';
+    moleEl.parentElement.parentElement.appendChild(star);
+    setTimeout(() => star.remove(), 800);
+
+    // Show score pop
+    showScorePop(moleEl, `+${points}`, 'positive');
+
+    // Show ten frame
+    showTenFrame(state.currentQuestionData);
+
+    // Combo check
+    if (state.combo >= 3) {
+      if (state.combo === 3) sfxCombo();
+      showComboPopup();
+      dom.hintDisplay.textContent = `🔥 连击 ×${state.combo}！+${comboBonus} 奖励分！`;
+    } else {
+      const correctNum = state.currentQuestionData.correct;
+      const targetNum = state.currentQuestionData.targetNum;
+      dom.hintDisplay.textContent = `✅ 答对了！${targetNum}找${correctNum}，凑成${state.currentQuestionData.targetSum}！`;
+    }
+
+    updateScoreDisplay();
+    updateComboDisplay();
+
+    // Hide moles after delay
+    setTimeout(() => {
+      hideAllMoles();
+      updateProgress();
+      setTimeout(nextQuestion, 600);
+    }, 1000);
+
+  } else {
+    // Wrong
+    state.combo = 0;
+    state.score = Math.max(0, state.score - 2);
+    sfxWrong();
+
+    if (moleEl) {
+      moleEl.classList.add('wrong-anim');
+      setTimeout(() => moleEl.classList.remove('wrong-anim'), 500);
+    }
+
+    showScorePop(moleEl, '-2', 'negative');
+    updateScoreDisplay();
+    updateComboDisplay();
+
+    // Show hint
+    const q = state.currentQuestionData;
+    const friend = q.targetSum - q.targetNum;
+    let hintText;
+    if (state.currentLevel <= 4) {
+      hintText = `💡 ${q.targetNum}找${friend}哦~ 再试试！`;
+    } else {
+      hintText = `💡 ${q.targetNum}找${friend}才能凑成${q.targetSum}~ 再试试！`;
+    }
+    dom.hintDisplay.textContent = hintText;
+  }
+}
+
+function hideAllMoles() {
+  for (let i = 0; i < 6; i++) {
+    const mel = getMoleEl(i);
+    if (mel) mel.classList.remove('active', 'correct-anim', 'wrong-anim');
+  }
+}
+
+function nextQuestion() {
+  state.currentQuestion++;
+  updateProgress();
+
+  const totalQuestions = 5;
+  if (state.currentQuestion >= totalQuestions) {
+    endLevel();
+  } else {
+    startRound();
+  }
+}
+
+function endLevel() {
+  state.roundActive = false;
+  clearAllTimers();
+
+  if (state.currentLevel >= 5) {
+    showVictory();
+  } else {
+    sfxLevelUp();
+    state.currentLevel++;
+    startLevel(state.currentLevel);
+  }
+}
+
+function showVictory() {
+  state.gameActive = false;
+  dom.gameArea.style.display = 'none';
+  dom.victoryScreen.style.display = 'block';
+
+  const stars = state.correctCount >= 20 ? '⭐⭐⭐' : state.correctCount >= 13 ? '⭐⭐' : '⭐';
+  dom.victoryStats.innerHTML = `
+    <p>总得分：<b style="color:#FF6F00;">${state.score}</b> 分 ${stars}</p>
+    <p>答对：<b>${state.correctCount}</b> / ${state.totalAttempts} 题</p>
+    <p>最高连击：<b>${state.maxCombo}</b> 次</p>
+  `;
+
+  hideAllMoles();
+}
+
+function showTenFrame(q) {
+  const targetSum = q.targetSum;
+  const targetNum = q.targetNum;
+  const correct = q.correct;
+
+  // Build ten-frame visual
+  dom.tenFrameDots.innerHTML = '';
+  for (let i = 0; i < targetSum; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'ten-dot';
+    if (i < targetNum) {
+      dot.classList.add('filled');
+      dot.textContent = '●';
+    } else if (i < targetNum + correct) {
+      dot.classList.add('target');
+      dot.textContent = '●';
+    } else {
+      dot.textContent = '○';
+    }
+    dom.tenFrameDots.appendChild(dot);
+  }
+
+  dom.tenFrameFormula.textContent = `${targetNum} + ${correct} = ${targetSum}`;
+  dom.tenFrameOverlay.classList.add('show');
+
+  setTimeout(() => {
+    dom.tenFrameOverlay.classList.remove('show');
+  }, 1200);
+}
+
+function showComboPopup() {
+  dom.comboPopup.textContent = `🔥 连击 ×${state.combo}！`;
+  dom.comboPopup.style.display = 'block';
+  dom.comboPopup.style.animation = 'none';
+  void dom.comboPopup.offsetWidth;
+  dom.comboPopup.style.animation = 'comboPop 1s ease forwards';
+  setTimeout(() => { dom.comboPopup.style.display = 'none'; }, 1000);
+}
+
+function showScorePop(moleEl, text, cls) {
+  const pop = document.createElement('div');
+  pop.className = `score-pop ${cls}`;
+  pop.textContent = text;
+  const holeInner = moleEl.closest('.mole-hole-inner');
+  if (holeInner) {
+    holeInner.appendChild(pop);
+    setTimeout(() => pop.remove(), 1000);
+  }
+}
+
+function clearAllTimers() {
+  if (state.roundTimer) {
+    clearTimeout(state.roundTimer);
+    state.roundTimer = null;
+  }
+}
+
+function updateScoreDisplay() {
+  dom.scoreVal.textContent = state.score;
+}
+
+function updateComboDisplay() {
+  dom.comboVal.textContent = state.combo;
+  if (state.combo >= 3) {
+    dom.comboVal.classList.add('combo-active');
+    setTimeout(() => dom.comboVal.classList.remove('combo-active'), 500);
+  }
+}
+
+function updateProgress() {
+  const pct = ((state.currentQuestion) / 5) * 100;
+  dom.progressFill.style.width = pct + '%';
+  dom.progressText.textContent = `第 ${Math.min(state.currentQuestion + 1, 5)} 问 / 共 5 问`;
+}
+
+// ===== Practice Mode =====
+function determinePracticeTier() {
+  const totalQ = state.totalAttempts || 1;
+  const accuracy = state.correctCount / totalQ;
+  const maxLevelReached = state.currentLevel >= 5 ? state.currentLevel : state.currentLevel;
+
+  if (maxLevelReached <= 1 || accuracy < 0.4) return 1;
+  if (maxLevelReached <= 2 || accuracy < 0.55) return 2;
+  if (maxLevelReached <= 3 || accuracy < 0.7) return 3;
+  if (maxLevelReached <= 4 || accuracy < 0.85) return 4;
+  return 5;
+}
+
+function enterPracticeMode() {
+  const tier = determinePracticeTier();
+  state.practiceTier = tier;
+  state.practiceIndex = 0;
+  state.practiceCorrect = 0;
+  state.practiceAnswered = false;
+  state.practiceData = practiceProblems[tier] || practiceProblems[1];
+
+  dom.victoryScreen.style.display = 'none';
+  dom.gameArea.style.display = 'none';
+  dom.practiceArea.style.display = 'block';
+
+  const dl = difficultyLabels[tier];
+  dom.practiceTier.innerHTML = `${dl.icon} ${dl.name}`;
+  dom.practiceTier.className = dl.badgeClass;
+  dom.practiceTier.style.padding = '8px 16px';
+  dom.practiceTier.style.borderRadius = '12px';
+  dom.practiceTier.style.color = '#fff';
+  dom.practiceTier.style.display = 'inline-block';
+
+  showPracticeQuestion();
+}
+
+function showPracticeQuestion() {
+  const data = state.practiceData;
+  if (state.practiceIndex >= data.length) {
+    showPracticeSummary();
+    return;
+  }
+
+  const q = data[state.practiceIndex];
+  state.practiceAnswered = false;
+
+  dom.practiceQText.innerHTML = `<span style="color:#999;">${state.practiceIndex + 1}/${data.length}</span> ${q.q}`;
+  dom.practiceOptions.innerHTML = '';
+  dom.practiceFillInput.style.display = 'none';
+  dom.practiceFillInput.value = '';
+  dom.practiceSubmitBtn.style.display = 'none';
+  dom.practiceFeedback.textContent = '';
+  dom.practiceNextBtn.style.display = 'none';
+  dom.practiceProgress.textContent = `进度：${state.practiceIndex + 1}/${data.length}`;
+
+  // Remove old feedback classes from options
+  document.querySelectorAll('.practice-opt-btn').forEach(b => {
+    b.classList.remove('correct-answer', 'wrong-answer');
+  });
+
+  if (q.type === 'choice') {
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'practice-opt-btn';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => handlePracticeAnswer(idx));
+      dom.practiceOptions.appendChild(btn);
+    });
+  } else if (q.type === 'fill') {
+    dom.practiceFillInput.style.display = 'block';
+    dom.practiceSubmitBtn.style.display = 'block';
+    dom.practiceSubmitBtn.textContent = '提交答案';
+    dom.practiceSubmitBtn.onclick = handlePracticeFillSubmit;
+    dom.practiceFillInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handlePracticeFillSubmit();
+    });
+  }
+}
+
+function handlePracticeAnswer(chosenIdx) {
+  if (state.practiceAnswered) return;
+  state.practiceAnswered = true;
+
+  const q = state.practiceData[state.practiceIndex];
+  const isCorrect = chosenIdx === q.answer;
+
+  if (isCorrect) {
+    state.practiceCorrect++;
+    sfxCorrect();
+    dom.practiceFeedback.innerHTML = '<span style="color:#4CAF50;">✅ 回答正确！</span>';
+  } else {
+    sfxWrong();
+    dom.practiceFeedback.innerHTML = `<span style="color:#F44336;">❌ 不对哦~ ${q.hint}</span>`;
+  }
+
+  // Highlight buttons
+  const buttons = dom.practiceOptions.querySelectorAll('.practice-opt-btn');
+  buttons.forEach((btn, idx) => {
+    btn.disabled = true;
+    if (idx === q.answer) btn.classList.add('correct-answer');
+    if (idx === chosenIdx && !isCorrect) btn.classList.add('wrong-answer');
+  });
+
+  dom.practiceNextBtn.style.display = 'inline-block';
+}
+
+function handlePracticeFillSubmit() {
+  if (state.practiceAnswered) return;
+  const q = state.practiceData[state.practiceIndex];
+  const userAnswer = dom.practiceFillInput.value.trim();
+
+  if (!userAnswer) {
+    dom.practiceFeedback.innerHTML = '<span style="color:#FF9800;">请输入答案哦~</span>';
+    return;
+  }
+
+  state.practiceAnswered = true;
+
+  if (userAnswer === q.answer) {
+    state.practiceCorrect++;
+    sfxCorrect();
+    dom.practiceFeedback.innerHTML = '<span style="color:#4CAF50;">✅ 回答正确！</span>';
+  } else {
+    sfxWrong();
+    dom.practiceFeedback.innerHTML = `<span style="color:#F44336;">❌ 答案是 ${q.answer}。${q.hint}</span>`;
+  }
+
+  dom.practiceFillInput.disabled = true;
+  dom.practiceSubmitBtn.style.display = 'none';
+  dom.practiceNextBtn.style.display = 'inline-block';
+}
+
+function nextPracticeQuestion() {
+  state.practiceIndex++;
+  state.practiceAnswered = false;
+  showPracticeQuestion();
+}
+
+function showPracticeSummary() {
+  const total = state.practiceData.length;
+  const correct = state.practiceCorrect;
+  const tier = state.practiceTier;
+  const dl = difficultyLabels[tier];
+
+  let emoji;
+  if (correct === total) emoji = '🎉🌟🏆';
+  else if (correct >= total * 0.75) emoji = '👍😊';
+  else if (correct >= total * 0.5) emoji = '💪';
+  else emoji = '📚';
+
+  dom.practiceQText.innerHTML = `${emoji} 练习完成！`;
+  dom.practiceOptions.innerHTML = '';
+  dom.practiceFillInput.style.display = 'none';
+  dom.practiceSubmitBtn.style.display = 'none';
+  dom.practiceNextBtn.style.display = 'none';
+  dom.practiceFeedback.innerHTML = '';
+  dom.practiceProgress.textContent = '';
+
+  dom.practiceFeedback.innerHTML = `
+    <div style="text-align:center; padding:16px; line-height:2;">
+      <p style="font-size:1.4em;">${dl.icon} ${dl.name}</p>
+      <p style="font-size:2em; font-weight:bold; color:#1565C0;">${correct}/${total}</p>
+      <p style="color:#666;">
+        ${correct === total ? '全部正确，太厉害了！🎉' :
+          correct >= total * 0.75 ? '做得很好，继续加油！' :
+          correct >= total * 0.5 ? '还有进步空间，多练练哦~' :
+          '没关系，多练习就一定能进步的！💪'}
+      </p>
+      <button class="btn btn-restart btn-small" style="margin-top:12px;" onclick="restartGame()">🔄 重新开始游戏</button>
+      <button class="btn btn-practice btn-small" style="margin:12px 0 0 8px;" onclick="retryPractice()">📝 再做一次练习</button>
+    </div>
+  `;
+}
+
+function retryPractice() {
+  state.practiceIndex = 0;
+  state.practiceCorrect = 0;
+  state.practiceAnswered = false;
+  showPracticeQuestion();
+}
+
+// ===== Initialize =====
+document.addEventListener('DOMContentLoaded', () => {
+  dom.startScreen.style.display = 'block';
+  dom.gameArea.style.display = 'none';
+  dom.victoryScreen.style.display = 'none';
+  dom.practiceArea.style.display = 'none';
+});
+</script>
+
+</body>
+</html>

@@ -6,12 +6,12 @@
 <title>数学游戏原型</title>
 <style>
 /* ============================================
-   Math Game Prototype Base Styles
-   Kid-friendly, responsive, touch-optimized
+   数学游戏原型基础样式
+   适合儿童、响应式、触控优化
    ============================================ */
 
 :root {
-  /* --- Color Palette (customize per game) --- */
+  /* --- 调色板（可按游戏自定义） --- */
   --color-primary: #4A90D9;
   --color-primary-light: #7AB3E8;
   --color-primary-dark: #2E6AB0;
@@ -27,7 +27,7 @@
   --color-text-light: #666666;
   --color-border: #E8E8E8;
 
-  /* --- Sizing --- */
+  /* --- 尺寸 --- */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -35,7 +35,7 @@
   --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
   --shadow-button: 0 4px 12px rgba(0,0,0,0.15);
 
-  /* --- Typography --- */
+  /* --- 字体排版 --- */
   --font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
   --font-number: "Consolas", "Courier New", monospace;
 }
@@ -56,7 +56,7 @@ body {
   -webkit-user-select: none;
 }
 
-/* --- Game Container --- */
+/* --- 游戏容器 --- */
 .game-container {
   width: 100%;
   max-width: 480px;
@@ -70,7 +70,7 @@ body {
   position: relative;
 }
 
-/* --- Header Bar --- */
+/* --- 顶部栏 --- */
 .game-header {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   color: white;
@@ -85,7 +85,7 @@ body {
 .stat-icon { font-size: 16px; }
 .stat-value { font-weight: 700; font-family: var(--font-number); }
 
-/* --- Level Indicator --- */
+/* --- 关卡指示器 --- */
 .level-indicator {
   padding: 8px 20px;
   background: var(--color-primary-light);
@@ -95,12 +95,12 @@ body {
   text-align: center;
 }
 
-/* --- Question Area --- */
+/* --- 题目区域 --- */
 .question-area { padding: 20px; text-align: center; flex-shrink: 0; }
 .question-text { font-size: 18px; font-weight: 600; color: var(--color-text); margin-bottom: 8px; line-height: 1.5; }
 .question-hint { font-size: 13px; color: var(--color-text-light); }
 
-/* --- Game Area --- */
+/* --- 游戏主区域 --- */
 .game-area {
   flex: 1; padding: 16px 20px;
   display: flex; flex-direction: column;
@@ -108,7 +108,7 @@ body {
   min-height: 200px;
 }
 
-/* --- Options Grid --- */
+/* --- 选项网格 --- */
 .options-grid {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 12px; width: 100%; max-width: 360px;
@@ -127,7 +127,7 @@ body {
 .option-btn.incorrect { border-color: var(--color-error); background: var(--color-error-light); color: var(--color-error); animation: shake 0.4s ease; }
 .option-btn:disabled { pointer-events: none; opacity: 0.7; }
 
-/* --- Input --- */
+/* --- 输入框 --- */
 .input-group { display: flex; gap: 12px; width: 100%; max-width: 360px; }
 .game-input {
   flex: 1; padding: 14px 16px; font-size: 22px; font-weight: 700;
@@ -144,7 +144,7 @@ body {
 }
 .submit-btn:hover { background: var(--color-primary-dark); }
 
-/* --- Progress Bar --- */
+/* --- 进度条 --- */
 .progress-bar-container {
   width: 100%; height: 8px; background: var(--color-border);
   border-radius: 4px; margin-top: 12px; overflow: hidden;
@@ -155,7 +155,7 @@ body {
   border-radius: 4px; transition: width 0.5s ease;
 }
 
-/* --- Feedback Modal --- */
+/* --- 反馈弹窗 --- */
 .feedback-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.4); display: flex;
@@ -180,7 +180,7 @@ body {
 }
 .feedback-btn:hover { background: var(--color-primary-dark); }
 
-/* --- Footer --- */
+/* --- 底部栏 --- */
 .game-footer {
   padding: 12px 20px; display: flex; justify-content: center;
   border-top: 1px solid var(--color-border);
@@ -192,7 +192,7 @@ body {
 }
 .restart-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
 
-/* --- Victory Screen --- */
+/* --- 胜利界面 --- */
 .victory-container { text-align: center; padding: 20px; }
 .victory-icon { font-size: 72px; margin-bottom: 12px; animation: bounce 0.6s ease infinite alternate; }
 .victory-title { font-size: 26px; font-weight: 700; color: var(--color-success); margin-bottom: 8px; }
@@ -206,16 +206,16 @@ body {
 .victory-btn:hover { background: var(--color-primary-dark); }
 
 /* ============================================
-   Practice Mode Styles
+   练习模式样式
    ============================================ */
 
-/* --- Practice Container (hidden by default) --- */
+/* --- 练习容器（默认隐藏） --- */
 .practice-container {
   display: none; flex-direction: column;
   height: 100%;
 }
 
-/* --- Difficulty Badge --- */
+/* --- 难度徽章 --- */
 .practice-badge-bar {
   padding: 12px 20px;
   background: var(--color-bg);
@@ -237,7 +237,7 @@ body {
   font-size: 13px; color: var(--color-text-light);
 }
 
-/* --- Practice Question Card --- */
+/* --- 练习题卡片 --- */
 .practice-question-card {
   margin: 20px; padding: 24px 20px;
   background: var(--color-card);
@@ -266,7 +266,7 @@ body {
 .practice-option.show-correct { border-color: var(--color-success); }
 .practice-option:disabled { pointer-events: none; }
 
-/* --- Practice Input (for fill-in problems) --- */
+/* --- 练习输入框（填空题） --- */
 .practice-input-area { display: flex; gap: 10px; }
 .practice-input {
   flex: 1; padding: 12px 16px; font-size: 18px; font-weight: 700;
@@ -276,7 +276,7 @@ body {
 }
 .practice-input:focus { border-color: var(--color-primary); }
 
-/* --- Practice Feedback --- */
+/* --- 练习反馈 --- */
 .practice-feedback {
   margin: 0 20px 12px; padding: 12px 16px;
   border-radius: var(--radius-md); font-size: 14px;
@@ -286,7 +286,7 @@ body {
 .practice-feedback.correct { background: var(--color-success-light); color: #2E7D32; }
 .practice-feedback.wrong { background: var(--color-error-light); color: #C62828; }
 
-/* --- Practice Navigation --- */
+/* --- 练习导航 --- */
 .practice-nav {
   padding: 12px 20px; display: flex; gap: 10px;
   justify-content: center; border-top: 1px solid var(--color-border);
@@ -302,14 +302,14 @@ body {
 .practice-nav-btn.secondary { background: transparent; color: var(--color-text-light); border: 1px solid var(--color-border); }
 .practice-nav-btn.secondary:hover { color: var(--color-primary); border-color: var(--color-primary); }
 
-/* --- Practice Summary --- */
+/* --- 练习总结 --- */
 .practice-summary { text-align: center; padding: 30px 20px; }
 .practice-summary-icon { font-size: 64px; margin-bottom: 12px; }
 .practice-summary-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
 .practice-summary-score { font-size: 36px; font-weight: 700; font-family: var(--font-number); margin-bottom: 12px; }
 .practice-summary-detail { font-size: 14px; color: var(--color-text-light); margin-bottom: 20px; line-height: 1.8; }
 
-/* --- Animations --- */
+/* --- 动画 --- */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes shake { 0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)} }
@@ -317,11 +317,11 @@ body {
 @keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-12px)} }
 @keyframes popIn { 0%{transform:scale(0);opacity:0}80%{transform:scale(1.1)}100%{transform:scale(1);opacity:1} }
 
-/* --- Utility --- */
+/* --- 工具类 --- */
 .hidden { display: none !important; }
 .text-center { text-align: center; }
 
-/* --- Responsive --- */
+/* --- 响应式 --- */
 @media (max-width: 360px) {
   .game-container { min-height: 500px; }
   .game-header { padding: 12px 16px; }
@@ -338,7 +338,7 @@ body {
 <body>
 
 <!-- ==============================
-     GAME MODE
+     游戏模式
      ============================== -->
 <div class="game-container" id="gameContainer">
   <div class="game-header">
@@ -356,7 +356,7 @@ body {
     <div class="question-hint" id="questionHint">选择正确的答案</div>
   </div>
 
-  <div class="game-area" id="gameArea"><!-- injected by JS --></div>
+  <div class="game-area" id="gameArea"><!-- 由 JS 动态注入 --></div>
 
   <div style="padding: 0 20px;">
     <div class="progress-bar-container">
@@ -369,7 +369,7 @@ body {
   </div>
 </div>
 
-<!-- Feedback Modal -->
+<!-- 反馈弹窗 -->
 <div class="feedback-overlay hidden" id="feedbackOverlay">
   <div class="feedback-modal">
     <div class="feedback-icon" id="feedbackIcon">✅</div>
@@ -380,7 +380,7 @@ body {
 </div>
 
 <!-- ==============================
-     PRACTICE MODE (hidden initially)
+     练习模式（初始隐藏）
      ============================== -->
 <div class="practice-container hidden" id="practiceContainer">
   <div class="practice-badge-bar">
@@ -392,7 +392,7 @@ body {
     <div class="practice-q-num" id="practiceQNum">第 1 题</div>
     <div class="practice-q-title" id="practiceQTitle">题目内容</div>
     <div id="practiceQContent">
-      <!-- Options or input injected by JS -->
+      <!-- 选项或输入框由 JS 注入 -->
     </div>
   </div>
 
@@ -406,16 +406,16 @@ body {
 
 
 <!-- ============================================
-     Game Logic
+     游戏逻辑
      ============================================ -->
 <script>
 // ============================================
-// DOM References
+// DOM 引用
 // ============================================
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
-// Game mode
+// 游戏模式
 const gameContainer = $('#gameContainer');
 const gameTitle = $('#gameTitle');
 const scoreDisplay = $('#scoreDisplay');
@@ -432,7 +432,7 @@ const feedbackTitle = $('#feedbackTitle');
 const feedbackMessage = $('#feedbackMessage');
 const feedbackBtn = $('#feedbackBtn');
 
-// Practice mode
+// 练习模式
 const practiceContainer = $('#practiceContainer');
 const practiceBadge = $('#practiceBadge');
 const practiceProgress = $('#practiceProgress');
@@ -444,10 +444,10 @@ const practiceNextBtn = $('#practiceNextBtn');
 const practiceSkipBtn = $('#practiceSkipBtn');
 
 // ============================================
-// Game State
+// 游戏状态
 // ============================================
 const state = {
-  // Game
+  // 游戏
   score: 0,
   level: 1,
   totalLevels: 3,
@@ -456,19 +456,19 @@ const state = {
   totalQuestions: 0,
   isAnswering: false,
 
-  // Performance tracking (used for adaptive practice)
+  // 表现追踪（用于自适应练习）
   correctCount: 0,
   totalAttempts: 0,
 
-  // Practice mode
+  // 练习模式
   mode: 'game',       // 'game' | 'practice'
-  practiceTier: 1,    // 1-5, determined by game performance
+  practiceTier: 1,    // 1-5，由游戏表现决定
   practiceIndex: 0,
   practiceCorrect: 0,
 };
 
 // ============================================
-// UI Utility Functions
+// 界面工具函数
 // ============================================
 
 function updateScore(points) {
@@ -497,25 +497,23 @@ function showFeedback(type, title, message, onContinue) {
 function setAnswering(v) { state.isAnswering = v; }
 
 // ============================================
-// PRACTICE SYSTEM
+// 练习系统
 // ============================================
 
 /**
- * ADAPTIVE PRACTICE PROBLEMS
- * ============================
- * This is where you define 5 tiers of practice problems.
- * After the game ends, the system calculates the player's
- * accuracy and selects the appropriate tier.
+ * 自适应练习题目
+ * ====================
+ * 在此处定义 5 档练习题目。
+ * 游戏结束后，系统根据玩家的正确率计算并选择合适的档位。
  *
- * Each tier contains 3-5 problems. The tier system:
- *   Tier 1 (< 40% accuracy)  → 基础巩固
- *   Tier 2 (40-60% accuracy)  → 查漏补缺
- *   Tier 3 (60-80% accuracy)  → 能力提升
- *   Tier 4 (80-95% accuracy)  → 思维拓展
- *   Tier 5 (>= 95% accuracy)  → 挑战冲刺
+ * 每档包含 3-5 道题目。分档规则：
+ *   第 1 档（< 40% 正确率）  → 基础巩固
+ *   第 2 档（40-60% 正确率）  → 查漏补缺
+ *   第 3 档（60-80% 正确率）  → 能力提升
+ *   第 4 档（80-95% 正确率）  → 思维拓展
+ *   第 5 档（>= 95% 正确率）  → 挑战冲刺
  *
- * REPLACE the example problems below with real ones
- * matching your knowledge point.
+ * 请将下方的示例题目替换为与你知识点匹配的真实题目。
  */
 
 const difficultyLabels = {
@@ -526,7 +524,7 @@ const difficultyLabels = {
   5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
 };
 
-// REPLACE: Define real practice problems per tier
+// 请替换：为每个档位定义真实的练习题目
 const practiceProblems = {
   1: [ // 基础巩固
     { type: 'choice', q: '3 + 5 = ?', options: ['6', '7', '8', '9'], answer: 2, hint: '3加5等于8' },
@@ -556,8 +554,8 @@ const practiceProblems = {
 };
 
 /**
- * Determine practice tier from game performance.
- * Called once at game completion.
+ * 根据游戏表现确定练习档位。
+ * 在游戏通关时调用一次。
  */
 function determinePracticeTier() {
   const accuracy = state.totalAttempts > 0
@@ -572,7 +570,7 @@ function determinePracticeTier() {
 }
 
 /**
- * Switch from game mode to practice mode.
+ * 从游戏模式切换到练习模式。
  */
 function enterPracticeMode() {
   state.practiceTier = determinePracticeTier();
@@ -580,27 +578,27 @@ function enterPracticeMode() {
   state.practiceIndex = 0;
   state.practiceCorrect = 0;
 
-  // Hide game, show practice
+  // 隐藏游戏，显示练习
   gameContainer.classList.add('hidden');
   practiceContainer.classList.remove('hidden');
   practiceContainer.style.display = 'flex';
 
-  // Update badge
+  // 更新徽章
   const tier = difficultyLabels[state.practiceTier];
   practiceBadge.innerHTML = `${tier.icon} ${tier.name}`;
   practiceBadge.className = `practice-badge ${tier.badgeClass}`;
 
-  // Set up next button
+  // 设置"下一题"按钮
   practiceNextBtn.textContent = '开始答题 →';
   practiceNextBtn.classList.remove('hidden');
   practiceNextBtn.disabled = false;
 
-  // Render first question
+  // 渲染第一道题
   renderPracticeQuestion();
 }
 
 /**
- * Render current practice question.
+ * 渲染当前练习题目。
  */
 function renderPracticeQuestion() {
   const problems = practiceProblems[state.practiceTier];
@@ -629,7 +627,7 @@ function renderPracticeQuestion() {
     $('#practiceInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') handlePracticeSubmit(); });
     $('#practiceInput').focus();
   } else {
-    // choice type
+    // 选择题
     practiceQContent.innerHTML = `<div class="practice-options"></div>`;
     const opts = practiceQContent.querySelector('.practice-options');
     p.options.forEach((opt, idx) => {
@@ -729,11 +727,11 @@ function showPracticeSummary() {
     </div>`;
 }
 
-// Practice next button
+// 练习"下一题"按钮
 practiceNextBtn.addEventListener('click', handlePracticeNext);
 
 // ============================================
-// Game Logic (REPLACE THIS SECTION)
+// 游戏逻辑（请替换本部分）
 // ============================================
 
 const questions = {
@@ -821,8 +819,8 @@ function handleAnswer(selected, correct, correctAnswer) {
 }
 
 /**
- * Victory screen — now includes "进入练习" button
- * that transitions to adaptive practice mode.
+ * 胜利界面 —— 现在包含"进入练习"按钮，
+ * 点击后转换到自适应练习模式。
  */
 function showVictory(finalScore) {
   state.correctCount = state.correctCount || 0;
@@ -855,7 +853,7 @@ function showVictory(finalScore) {
 }
 
 function restartGame() {
-  // Switch back to game mode if in practice
+  // 从练习模式切回游戏模式
   state.mode = 'game';
   gameContainer.classList.remove('hidden');
   practiceContainer.classList.add('hidden');
@@ -874,7 +872,7 @@ function restartGame() {
 }
 
 // ============================================
-// Initialize
+// 初始化
 // ============================================
 restartBtn.addEventListener('click', restartGame);
 gameTitle.textContent = '🧮 数学大挑战';

@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>凑十炸弹牌 - 二年级数学游戏</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: #1a0033;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  overflow-x: hidden;
+}
+
+.game-container {
+  width: 100%;
+  max-width: 500px;
+  background: linear-gradient(180deg, #2a0050 0%, #1a0033 100%);
+  border-radius: 20px;
+  padding: 16px;
+  border: 3px solid #FFD700;
+  box-shadow: 0 0 30px rgba(255,215,0,0.3), inset 0 0 30px rgba(255,215,0,0.05);
+  position: relative;
+}
+
+.game-header {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.game-header h1 {
+  font-size: 26px;
+  color: #FFD700;
+  text-shadow: 0 0 10px rgba(255,215,0,0.6);
+  margin-bottom: 4px;
+}
+
+.level-indicator {
+  font-size: 14px;
+  color: #ff9ff3;
+  margin-bottom: 4px;
+}
+
+.timer-display {
+  font-size: 22px;
+  color: #ff6b6b;
+  font-weight: bold;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.score-area {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.score-box {
+  flex: 1;
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 2px solid;
+}
+
+.score-current {
+  background: rgba(255,107,43,0.15);
+  border-color: #ff6b2b;
+}
+
+.score-safe {
+  background: rgba(255,215,0,0.1);
+  border-color: #FFD700;
+}
+
+.score-label {
+  font-size: 11px;
+  color: #aaa;
+  margin-bottom: 2px;
+}
+
+.score-value {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.score-current .score-value { color: #ff6b2b; }
+.score-safe .score-value { color: #FFD700; }
+
+.card-grid {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+
+.card-grid.grid-8 { grid-template-columns: repeat(4, 1fr); }
+.card-grid.grid-10 { grid-template-columns: repeat(5, 1fr); }
+.card-grid.grid-12 { grid-template-columns: repeat(4, 1fr); }
+.card-grid.grid-14 { grid-template-columns: repeat(5, 1fr); }
+.card-grid.grid-16 { grid-template-columns: repeat(4, 1fr); }
+
+.card-wrapper {
+  perspective: 600px;
+}
+
+.card {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.card.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: bold;
+  overflow: hidden;
+}
+
+.card-back {
+  background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #8B4513 100%);
+  border: 3px solid #FFD700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #FFD700;
+  font-size: 28px;
+}
+
+.card-back .star-pattern {
+  font-size: 24px;
+  letter-spacing: 4px;
+}
+
+.card-front {
+  background: linear-gradient(135deg, #f5f0e8 0%, #e8dcc8 100%);
+  border: 3px solid #FFD700;
+  transform: rotateY(180deg);
+  flex-direction: column;
+  padding: 6px;
+}
+
+.card-front.question-card { background: linear-gradient(135deg, #fff8e7 0%, #ffe0a0 100%); }
+.card-front.bomb-card { background: linear-gradient(135deg, #cc0000 0%, #660000 100%); color: white; }
+
+.card-emoji {
+  font-size: 32px;
+}
+
+.card-text {
+  font-size: 10px;
+  text-align: center;
+  color: #333;
+}
+
+.bomb-card .card-emoji { font-size: 36px; }
+
+.question-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.question-panel {
+  background: linear-gradient(145deg, #2a0050, #1a0033);
+  border: 3px solid #FFD700;
+  border-radius: 20px;
+  padding: 24px 20px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(255,215,0,0.3);
+}
+
+.question-panel .q-text {
+  font-size: 20px;
+  color: #FFD700;
+  margin-bottom: 16px;
+  font-weight: bold;
+}
+
+.question-panel .options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.question-panel .opt-btn {
+  padding: 14px;
+  font-size: 18px;
+  border-radius: 12px;
+  border: 2px solid #FFD700;
+  background: rgba(255,215,0,0.1);
+  color: #FFD700;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+  min-height: 44px;
+}
+
+.question-panel .opt-btn:hover {
+  background: rgba(255,215,0,0.25);
+  transform: scale(1.03);
+}
+
+.question-panel .opt-btn:active {
+  background: rgba(255,215,0,0.4);
+}
+
+.result-feedback {
+  margin-top: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  min-height: 28px;
+}
+
+.result-feedback.correct { color: #2ecc71; }
+.result-feedback.wrong { color: #e74c3c; }
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.btn {
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  min-height: 44px;
+  min-width: 44px;
+  transition: all 0.2s;
+}
+
+.btn:active { transform: scale(0.96); }
+
+.btn-save {
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  color: white;
+  font-size: 18px;
+  padding: 14px 28px;
+  box-shadow: 0 4px 15px rgba(46,204,113,0.4);
+}
+
+.btn-save:hover { box-shadow: 0 6px 20px rgba(46,204,113,0.6); }
+
+.btn-save:disabled {
+  background: #555;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background: #c0392b;
+  color: white;
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+}
+
+.btn-purple {
+  background: linear-gradient(135deg, #8e44ad, #9b59b6);
+  color: white;
+}
+
+.card-message {
+  text-align: center;
+  font-size: 13px;
+  color: #aaa;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.bomb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.bomb-popup {
+  background: linear-gradient(135deg, #cc0000, #ff4444);
+  color: white;
+  font-size: 36px;
+  font-weight: bold;
+  padding: 20px 40px;
+  border-radius: 20px;
+  animation: bombShake 0.6s ease-out;
+  box-shadow: 0 0 60px rgba(255,0,0,0.7);
+  text-align: center;
+  border: 3px solid #ff0000;
+}
+
+.bomb-popup .sub { font-size: 16px; margin-top: 4px; }
+
+@keyframes bombShake {
+  0%, 100% { transform: translateX(0) scale(1); }
+  10% { transform: translateX(-15px) scale(1.05); }
+  20% { transform: translateX(15px) scale(1.1); }
+  30% { transform: translateX(-10px) scale(1.05); }
+  40% { transform: translateX(10px) scale(1.08); }
+  50% { transform: translateX(-5px) scale(1.03); }
+  60% { transform: translateX(5px) scale(1.02); }
+  70%, 90% { transform: translateX(0) scale(1); }
+}
+
+.particles-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 201;
+}
+
+.particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  animation: particleFly 0.8s ease-out forwards;
+}
+
+@keyframes particleFly {
+  0% { opacity: 1; transform: translate(0,0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+
+.modal-panel {
+  background: linear-gradient(145deg, #2a0050, #1a0033);
+  border: 3px solid #FFD700;
+  border-radius: 20px;
+  padding: 28px 24px;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(255,215,0,0.4);
+}
+
+.modal-panel h2 {
+  font-size: 28px;
+  color: #FFD700;
+  margin-bottom: 12px;
+}
+
+.modal-panel .stats {
+  font-size: 16px;
+  color: #ddd;
+  margin-bottom: 8px;
+  line-height: 1.8;
+}
+
+.modal-panel .emoji-big {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+/* Practice Mode Styles */
+.practice-container {
+  display: none;
+}
+
+.practice-container.active {
+  display: block;
+}
+
+.practice-header {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.practice-header h2 {
+  font-size: 22px;
+  color: #FFD700;
+}
+
+.tier-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: bold;
+  color: white;
+  margin: 6px 0;
+}
+
+.badge-tier-1 { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+.badge-tier-2 { background: linear-gradient(135deg, #2980b9, #3498db); }
+.badge-tier-3 { background: linear-gradient(135deg, #8e44ad, #9b59b6); }
+.badge-tier-4 { background: linear-gradient(135deg, #e67e22, #f39c12); }
+.badge-tier-5 { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+
+.practice-progress {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.practice-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #444;
+  transition: background 0.3s;
+}
+
+.practice-dot.done-correct { background: #2ecc71; }
+.practice-dot.done-wrong { background: #e74c3c; }
+.practice-dot.current { background: #FFD700; box-shadow: 0 0 8px #FFD700; }
+
+.practice-question {
+  background: rgba(255,215,0,0.08);
+  border: 2px solid #FFD700;
+  border-radius: 14px;
+  padding: 18px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.practice-question .pq-text {
+  font-size: 19px;
+  color: #FFD700;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.practice-question .pq-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.practice-question .pq-opt {
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: 2px solid #aaa;
+  background: rgba(255,255,255,0.08);
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  min-height: 44px;
+  transition: all 0.2s;
+}
+
+.practice-question .pq-opt:hover { border-color: #FFD700; background: rgba(255,215,0,0.12); }
+
+.practice-fill {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.practice-fill input {
+  width: 80px;
+  padding: 10px;
+  font-size: 20px;
+  text-align: center;
+  border-radius: 10px;
+  border: 2px solid #FFD700;
+  background: rgba(0,0,0,0.3);
+  color: #FFD700;
+  font-weight: bold;
+}
+
+.practice-fill .pq-submit {
+  padding: 10px 18px;
+  font-size: 16px;
+  border-radius: 10px;
+  background: #2ecc71;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  min-height: 44px;
+}
+
+.practice-hint {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(255,215,0,0.1);
+  border-radius: 10px;
+  color: #FFD700;
+  font-size: 13px;
+  display: none;
+}
+
+.practice-hint.show { display: block; }
+
+.practice-result {
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  min-height: 24px;
+  margin: 8px 0;
+}
+
+.practice-result.correct { color: #2ecc71; }
+.practice-result.wrong { color: #e74c3c; }
+
+.hidden { display: none !important; }
+
+@media (max-width: 400px) {
+  .game-container { padding: 10px; }
+  .card-grid { gap: 5px; }
+  .card-back .star-pattern { font-size: 18px; }
+  .card-emoji { font-size: 24px; }
+  .game-header h1 { font-size: 20px; }
+  .score-value { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<div class="game-container" id="gameContainer">
+  <!-- Header -->
+  <div class="game-header">
+    <h1>凑十炸弹牌</h1>
+    <div class="level-indicator" id="levelIndicator">第 1 关</div>
+    <div class="timer-display" id="timerDisplay"></div>
+  </div>
+
+  <!-- Score Area -->
+  <div class="score-area">
+    <div class="score-box score-current">
+      <div class="score-label">当前分</div>
+      <div class="score-value" id="currentScore">0</div>
+    </div>
+    <div class="score-box score-safe">
+      <div class="score-label">保险分</div>
+      <div class="score-value" id="safeScore">0</div>
+    </div>
+  </div>
+
+  <!-- Card Grid -->
+  <div class="card-grid" id="cardGrid"></div>
+
+  <!-- Info -->
+  <div class="card-message" id="cardMessage"></div>
+
+  <!-- Buttons -->
+  <div class="btn-row">
+    <button class="btn btn-save" id="btnSave" onclick="saveToSafe()">存入保险</button>
+    <button class="btn btn-danger" onclick="restartGame()">重新开始</button>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-purple" onclick="showQuestionPreview()">查看题目</button>
+  </div>
+
+  <!-- Practice Mode -->
+  <div class="practice-container" id="practiceContainer">
+    <div class="practice-header">
+      <h2>练习模式</h2>
+      <div class="tier-badge" id="tierBadge">🌱 基础巩固</div>
+    </div>
+    <div class="practice-progress" id="practiceProgress"></div>
+    <div class="practice-question" id="practiceQuestion">
+      <div class="pq-text" id="pqText"></div>
+      <div class="pq-options" id="pqOptions"></div>
+      <div class="practice-fill hidden" id="pqFill">
+        <input type="text" inputmode="numeric" id="pqFillInput" placeholder="输入答案">
+        <button class="pq-submit" onclick="handlePracticeSubmit()">确认</button>
+      </div>
+    </div>
+    <div class="practice-hint" id="practiceHint"></div>
+    <div class="practice-result" id="practiceResult"></div>
+    <div class="btn-row">
+      <button class="btn btn-gold" onclick="showPracticeHint()">提示</button>
+      <button class="btn btn-danger" onclick="exitPractice()">返回游戏</button>
+    </div>
+  </div>
+</div>
+
+<!-- Question Modal (for game questions) -->
+<div class="question-overlay hidden" id="questionOverlay">
+  <div class="question-panel">
+    <div class="q-text" id="qText"></div>
+    <div class="options" id="qOptions"></div>
+    <div class="result-feedback" id="qFeedback"></div>
+  </div>
+</div>
+
+<!-- Bomb Overlay -->
+<div class="bomb-overlay hidden" id="bombOverlay">
+  <div class="bomb-popup">
+    💣 嘭！<br>
+    <span class="sub">当前分数归零！</span>
+  </div>
+</div>
+<div class="particles-container hidden" id="particlesContainer"></div>
+
+<!-- Level Complete / Victory Modal -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal-panel" id="modalPanel"></div>
+</div>
+
+<script>
+// ========== GAME DATA ==========
+
+const practiceProblems = {
+  1: [
+    { type: 'choice', q: '9 + 4 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '用凑十法：从4里拿1给9，9+1=10，10+3=13' },
+    { type: 'choice', q: '8 + 3 = ?', options: ['10', '11', '12', '13'], answer: 1, hint: '8还差2凑10，从3里拿2，10+1=11' },
+    { type: 'choice', q: '9 + 6 = ?', options: ['14', '15', '16', '17'], answer: 1, hint: '9+1=10，10+5=15' },
+    { type: 'choice', q: '7 + 4 = ?', options: ['10', '11', '12', '13'], answer: 1, hint: '7+3=10，10+1=11' },
+  ],
+  2: [
+    { type: 'choice', q: '8 + 5 = ? 请用凑十法计算', options: ['12', '13', '14', '15'], answer: 1, hint: '8+2=10，10+3=13，所以拆5成2和3' },
+    { type: 'choice', q: '7 + 6 = ?', options: ['12', '13', '14', '15'], answer: 1, hint: '7+3=10，10+3=13' },
+    { type: 'fill', q: '9 + 7 = ?', answer: '16', hint: '9+1=10，10+6=16' },
+    { type: 'choice', q: '6 + 5 用凑十法，从5里拿几？', options: ['3', '4', '5', '2'], answer: 1, hint: '6还差4凑10，所以要拿4' },
+  ],
+  3: [
+    { type: 'choice', q: '9 + 8 = ?', options: ['16', '17', '18', '19'], answer: 1, hint: '9+1=10，10+7=17' },
+    { type: 'fill', q: '8 + 7 = ?', answer: '15', hint: '8+2=10，10+5=15' },
+    { type: 'choice', q: '7 + 8 = ? 和 8 + 7 的答案一样吗？', options: ['一样，都是15', '不一样', '7+8=14', '8+7=16'], answer: 0, hint: '加法交换律：交换加数位置，和不变' },
+    { type: 'choice', q: '6 + 8 = ?', options: ['13', '14', '15', '16'], answer: 1, hint: '8+2=10，10+4=14' },
+  ],
+  4: [
+    { type: 'choice', q: '38 + 7 = ? 用凑整法', options: ['43', '44', '45', '46'], answer: 2, hint: '38+2=40，7拆成2+5，40+5=45' },
+    { type: 'fill', q: '47 + 6 = ?', answer: '53', hint: '47+3=50，6拆成3+3，50+3=53' },
+    { type: 'choice', q: '小明有8块糖，又买了5块。一共有几块？用凑十法算', options: ['12', '13', '14', '15'], answer: 1, hint: '8+2=10，5拆成2+3，10+3=13' },
+    { type: 'choice', q: '29 + 8 = ?', options: ['36', '37', '38', '39'], answer: 1, hint: '29+1=30，8拆成1+7，30+7=37' },
+  ],
+  5: [
+    { type: 'fill', q: '想一想：9+5=14，那19+5=？', answer: '24', hint: '19+1=20，20+4=24，和凑十法一样！' },
+    { type: 'choice', q: '下面哪组不是凑十好朋友？', options: ['9和1', '8和2', '7和4', '6和4'], answer: 2, hint: '7的好朋友是3，不是4。7+3=10' },
+    { type: 'choice', q: '小猫钓了9条鱼，小狗钓了比小猫多5条。小狗钓了几条？', options: ['13', '14', '15', '16'], answer: 1, hint: '9+5=14，用凑十：9+1=10，10+4=14' },
+    { type: 'fill', q: '你还能想到用凑十法算 8+6 以外的其他方法吗？写出答案就行。', answer: '14', hint: '除了8+2+4，也可以6+4+4，结果都是14。多种方法，只要能算对！' },
+  ],
+};
+
+const difficultyLabels = {
+  1: { name: '基础巩固', icon: '🌱', badgeClass: 'badge-tier-1' },
+  2: { name: '查漏补缺', icon: '🔍', badgeClass: 'badge-tier-2' },
+  3: { name: '能力提升', icon: '📈', badgeClass: 'badge-tier-3' },
+  4: { name: '思维拓展', icon: '🚀', badgeClass: 'badge-tier-4' },
+  5: { name: '挑战冲刺', icon: '🏆', badgeClass: 'badge-tier-5' },
+};
+
+// Level questions (凑十法)
+const levelQuestions = {
+  1: [
+    { q: '9 + 4 = ?', options: ['12','13','14','15'], answer: 1, hint: '从4里拿1给9凑10' },
+    { q: '8 + 5 = ?', options: ['12','13','14','15'], answer: 1, hint: '从5里拿2给8凑10' },
+    { q: '7 + 6 = ?', options: ['12','13','14','15'], answer: 1, hint: '从6里拿3给7凑10' },
+    { q: '6 + 5 = ?', options: ['11','12','13','14'], answer: 0, hint: '从5里拿4给6凑10' },
+    { q: '9 + 7 = ?', options: ['15','16','17','18'], answer: 1, hint: '从7里拿1给9凑10' },
+    { q: '5 + 7 = ?', options: ['11','12','13','14'], answer: 1, hint: '从7里拿5给5凑10' },
+  ],
+  2: [
+    { q: '8 + 7 = ?', options: ['14','15','16','17'], answer: 1, hint: '从7里拿2给8凑10' },
+    { q: '7 + 5 = ?', options: ['11','12','13','14'], answer: 1, hint: '从5里拿3给7凑10' },
+    { q: '9 + 8 = ?', options: ['16','17','18','19'], answer: 1, hint: '从8里拿1给9凑10' },
+    { q: '6 + 7 = ?', options: ['12','13','14','15'], answer: 1, hint: '从7里拿4给6凑10' },
+    { q: '8 + 6 = ?', options: ['13','14','15','16'], answer: 1, hint: '从6里拿2给8凑10' },
+    { q: '9 + 5 = ?', options: ['13','14','15','16'], answer: 1, hint: '从5里拿1给9凑10' },
+    { q: '7 + 4 = ?', options: ['10','11','12','13'], answer: 1, hint: '从4里拿3给7凑10' },
+    { q: '8 + 4 = ?', options: ['11','12','13','14'], answer: 1, hint: '从4里拿2给8凑10' },
+  ],
+  3: [
+    { q: '9 + 4 = ?', options: ['12','13','14','15'], answer: 1, hint: '从4里拿1给9凑10' },
+    { q: '8 + 5 = ?', options: ['12','13','14','15'], answer: 1, hint: '从5里拿2给8凑10' },
+    { q: '7 + 6 = ?', options: ['12','13','14','15'], answer: 1, hint: '从6里拿3给7凑10' },
+    { q: '6 + 5 = ?', options: ['11','12','13','14'], answer: 0, hint: '从5里拿4给6凑10' },
+    { q: '9 + 7 = ?', options: ['15','16','17','18'], answer: 1, hint: '从7里拿1给9凑10' },
+    { q: '8 + 7 = ?', options: ['14','15','16','17'], answer: 1, hint: '从7里拿2给8凑10' },
+    { q: '5 + 7 = ?', options: ['11','12','13','14'], answer: 1, hint: '从7里拿5给5凑10' },
+    { q: '7 + 5 = ?', options: ['11','12','13','14'], answer: 1, hint: '从5里拿3给7凑10' },
+    { q: '9 + 8 = ?', options: ['16','17','18','19'], answer: 1, hint: '从8里拿1给9凑10' },
+  ],
+  4: [
+    { q: '38 + 7 = ? 用凑整法', options: ['43','44','45','46'], answer: 2, hint: '38+2=40，7拆2+5，40+5=45' },
+    { q: '47 + 6 = ?', options: ['51','52','53','54'], answer: 2, hint: '47+3=50，6拆3+3，50+3=53' },
+    { q: '29 + 8 = ?', options: ['36','37','38','39'], answer: 1, hint: '29+1=30，8拆1+7，30+7=37' },
+    { q: '56 + 7 = ?', options: ['61','62','63','64'], answer: 2, hint: '56+4=60，7拆4+3，60+3=63' },
+    { q: '9 + 6 = ?', options: ['14','15','16','17'], answer: 1, hint: '从6里拿1给9凑10' },
+    { q: '8 + 4 = ?', options: ['11','12','13','14'], answer: 1, hint: '从4里拿2给8凑10' },
+    { q: '7 + 8 = ?', options: ['14','15','16','17'], answer: 1, hint: '从8里拿3给7凑10' },
+    { q: '68 + 5 = ?', options: ['72','73','74','75'], answer: 1, hint: '68+2=70，5拆2+3，70+3=73' },
+    { q: '6 + 9 = ?', options: ['14','15','16','17'], answer: 1, hint: '从9里拿4给6凑10' },
+    { q: '5 + 8 = ?', options: ['12','13','14','15'], answer: 1, hint: '从8里拿5给5凑10' },
+  ],
+};
+
+// ========== GAME STATE ==========
+const state = {
+  level: 1,
+  currentScore: 0,
+  safeScore: 0,
+  totalSafeScore: 0,
+  cards: [],
+  cardsRevealed: 0,
+  totalCards: 0,
+  currentCardIndex: -1,
+  gameOver: false,
+  timerInterval: null,
+  timerSeconds: 0,
+  questionTimedOut: false,
+  correctCount: 0,
+  totalAttempts: 0,
+  practiceTier: 1,
+  practiceIndex: 0,
+  practiceHistory: [],
+  practiceCurrent: null,
+  levelAnswers: [], // track answers within current level for tier calc
+  savedThisLevel: false,
+};
+
+const levelConfig = {
+  1: { totalCards: 8, questionCount: 6, bombCount: 1, timer: 0, saveHint: 1 },
+  2: { totalCards: 10, questionCount: 8, bombCount: 2, timer: 0 },
+  3: { totalCards: 12, questionCount: 9, bombCount: 3, timer: 10 },
+  4: { totalCards: 14, questionCount: 10, bombCount: 3, timer: 15, bonus: 1 },
+  5: { totalCards: 16, questionCount: 11, bombCount: 4, timer: 12, bonus: 1, noSave: true },
+};
+
+// ========== DOM REFS ==========
+const $ = (id) => document.getElementById(id);
+
+// ========== INITIALIZATION ==========
+function initGame() {
+  const cfg = levelConfig[state.level];
+  state.currentScore = 0;
+  state.cardsRevealed = 0;
+  state.totalCards = cfg.totalCards;
+  state.gameOver = false;
+  state.currentCardIndex = -1;
+  state.savedThisLevel = false;
+  updateScoreDisplay();
+  updateLevelIndicator();
+  generateCards();
+  renderCards();
+  updateSaveButton();
+  clearTimer();
+  if (cfg.timer > 0) {
+    state.timerSeconds = 0;
+    state.questionTimedOut = false;
+  }
+  hideQuestionModal();
+  hideBombOverlay();
+  hideModal();
+  $('cardMessage').textContent = '';
+  $('practiceContainer').classList.remove('active');
+  $('gameContainer').querySelector('.game-header').classList.remove('hidden');
+  $('gameContainer').querySelector('.score-area').classList.remove('hidden');
+  $('cardGrid').classList.remove('hidden');
+  document.querySelectorAll('.btn-row').forEach(r => r.classList.remove('hidden'));
+}
+
+function generateCards() {
+  const cfg = levelConfig[state.level];
+  // Get questions for this level
+  let qPool;
+  if (state.level <= 4) {
+    qPool = levelQuestions[state.level];
+  } else {
+    // Level 5: combine level 4 questions + extra harder ones
+    qPool = [...levelQuestions[4]];
+    const extra = levelQuestions[3];
+    while (qPool.length < cfg.questionCount) {
+      const r = extra[Math.floor(Math.random() * extra.length)];
+      if (!qPool.some(q => q.q === r.q)) qPool.push(r);
+    }
+  }
+
+  // Shuffle and pick questions
+  const shuffled = [...qPool].sort(() => Math.random() - 0.5);
+  const selectedQuestions = shuffled.slice(0, cfg.questionCount);
+
+  // Create cards
+  state.cards = [];
+  // Add question cards
+  selectedQuestions.forEach((q, i) => {
+    state.cards.push({ type: 'question', data: q, id: `q${i}` });
+  });
+  // Add bomb cards
+  for (let i = 0; i < cfg.bombCount; i++) {
+    state.cards.push({ type: 'bomb', id: `b${i}` });
+  }
+  // Add save hint card for level 1
+  if (cfg.saveHint) {
+    state.cards.push({ type: 'savehint', id: 'savehint0' });
+  }
+  // Add bonus card if applicable
+  if (cfg.bonus) {
+    state.cards.push({ type: 'bonus', id: 'bonus0' });
+  }
+
+  // Shuffle all cards
+  state.cards = state.cards.sort(() => Math.random() - 0.5);
+}
+
+function renderCards() {
+  const grid = $('cardGrid');
+  const cfg = levelConfig[state.level];
+  grid.className = 'card-grid grid-' + cfg.totalCards;
+
+  let html = '';
+  state.cards.forEach((card, index) => {
+    html += `
+      <div class="card-wrapper" onclick="flipCard(${index})">
+        <div class="card" id="card${index}">
+          <div class="card-face card-back">
+            <div class="star-pattern">★☆★</div>
+            <div style="font-size:11px;color:#FFD700;margin-top:3px;">?</div>
+          </div>
+          <div class="card-face card-front ${card.type === 'bomb' ? 'bomb-card' : 'question-card'}" id="cardFront${index}">
+            ${card.type === 'bomb'
+              ? '<div class="card-emoji">💣</div>'
+              : card.type === 'savehint'
+              ? '<div class="card-emoji">🛡️</div><div class="card-text">存入保险可保护分数哦~</div>'
+              : card.type === 'bonus'
+              ? '<div class="card-emoji">⭐</div><div class="card-text">惊喜卡</div>'
+              : `<div class="card-emoji">📝</div><div class="card-text">${card.data.q}</div>`
+            }
+          </div>
+        </div>
+      </div>`;
+  });
+  grid.innerHTML = html;
+}
+
+// ========== CARD FLIP ==========
+function flipCard(index) {
+  if (state.gameOver) return;
+  const card = state.cards[index];
+  const cardEl = $(`card${index}`);
+  if (!cardEl || cardEl.classList.contains('flipped')) return;
+
+  state.currentCardIndex = index;
+  cardEl.classList.add('flipped');
+
+  if (card.type === 'bomb') {
+    handleBomb(index);
+  } else if (card.type === 'savehint') {
+    handleSaveHint(index);
+  } else if (card.type === 'bonus') {
+    handleBonus(index);
+  } else {
+    handleQuestion(index);
+  }
+}
+
+function handleBomb(index) {
+  // Reset current score to 0
+  state.currentScore = 0;
+  state.cardsRevealed++;
+  updateScoreDisplay();
+  showBombAnimation();
+
+  // After animation, check if game is over
+  setTimeout(() => {
+    checkLevelComplete();
+  }, 1000);
+}
+
+function handleSaveHint(index) {
+  state.cardsRevealed++;
+  $('cardMessage').textContent = '🛡️ 提示：先翻几题攒分，再用「存入保险」保护分数！';
+  const frontEl = $(`cardFront${index}`);
+  if (frontEl) {
+    const textEl = frontEl.querySelector('.card-text');
+    if (textEl) textEl.style.color = '#27ae60';
+  }
+  setTimeout(() => { $('cardMessage').textContent = ''; }, 3000);
+  checkLevelComplete();
+}
+
+function handleBonus(index) {
+  // Bonus card: auto-add some safe points
+  const bonusPoints = 15;
+  state.currentScore += bonusPoints;
+  state.cardsRevealed++;
+  updateScoreDisplay();
+  $('cardMessage').textContent = '⭐ 惊喜！获得 ' + bonusPoints + ' 分！';
+  $(`cardFront${index}`).querySelector('.card-text').textContent = '+' + bonusPoints;
+  setTimeout(() => { $('cardMessage').textContent = ''; }, 1500);
+  checkLevelComplete();
+}
+
+function handleQuestion(index) {
+  const card = state.cards[index];
+  const cfg = levelConfig[state.level];
+  const qData = card.data;
+
+  showQuestionModal(qData, index);
+
+  // Start timer if level has one
+  if (cfg.timer > 0) {
+    state.timerSeconds = cfg.timer;
+    state.questionTimedOut = false;
+    startQuestionTimer();
+  }
+}
+
+function showQuestionModal(qData, cardIndex) {
+  $('qText').textContent = qData.q;
+  $('qFeedback').textContent = '';
+  $('qFeedback').className = 'result-feedback';
+
+  let optsHtml = '';
+  qData.options.forEach((opt, i) => {
+    optsHtml += `<button class="opt-btn" onclick="answerQuestion(${cardIndex}, ${i})">${opt}</button>`;
+  });
+  $('qOptions').innerHTML = optsHtml;
+  $('questionOverlay').classList.remove('hidden');
+}
+
+function hideQuestionModal() {
+  $('questionOverlay').classList.add('hidden');
+}
+
+function answerQuestion(cardIndex, chosenIndex) {
+  if (state.gameOver) return;
+  clearTimer();
+
+  const card = state.cards[cardIndex];
+  const correctIndex = card.data.answer;
+  const isCorrect = chosenIndex === correctIndex;
+  const qData = card.data;
+
+  // Disable further clicking on options
+  const allOpts = $('qOptions').querySelectorAll('.opt-btn');
+  allOpts.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === correctIndex) btn.style.background = 'rgba(46,204,113,0.5)';
+  });
+
+  if (isCorrect) {
+    state.currentScore += 10;
+    state.correctCount++;
+    $('qFeedback').textContent = '✓ 正确！+10分';
+    $('qFeedback').className = 'result-feedback correct';
+  } else {
+    state.currentScore = Math.max(0, state.currentScore - 5);
+    $('qFeedback').textContent = '✗ 错误！-5分，正确答案是 ' + qData.options[correctIndex];
+    $('qFeedback').className = 'result-feedback wrong';
+  }
+
+  state.totalAttempts++;
+  state.levelAnswers.push({ correct: isCorrect, q: qData.q });
+  state.cardsRevealed++;
+  updateScoreDisplay();
+
+  // Update card front to show result
+  const frontEl = $(`cardFront${cardIndex}`);
+  if (frontEl) {
+    const textEl = frontEl.querySelector('.card-text');
+    if (textEl) {
+      textEl.textContent = qData.q + ' = ' + qData.options[correctIndex] + (isCorrect ? ' ✓' : ' ✗');
+      textEl.style.color = isCorrect ? '#2ecc71' : '#e74c3c';
+    }
+  }
+
+  // Hide modal after delay
+  setTimeout(() => {
+    hideQuestionModal();
+    checkLevelComplete();
+  }, 800);
+}
+
+// ========== TIMER ==========
+function startQuestionTimer() {
+  clearTimer();
+  const cfg = levelConfig[state.level];
+  updateTimerDisplay();
+  state.timerInterval = setInterval(() => {
+    state.timerSeconds--;
+    updateTimerDisplay();
+    if (state.timerSeconds <= 0) {
+      clearTimer();
+      // Auto-fail if no answer
+      handleTimerExpired();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const cfg = levelConfig[state.level];
+  if (cfg.timer > 0) {
+    $('timerDisplay').innerHTML = '⏱ ' + state.timerSeconds + 's';
+    if (state.timerSeconds <= 3) {
+      $('timerDisplay').style.color = '#ff4444';
+    } else {
+      $('timerDisplay').style.color = '#ff6b6b';
+    }
+  } else {
+    $('timerDisplay').textContent = '';
+  }
+}
+
+function handleTimerExpired() {
+  state.currentScore = Math.max(0, state.currentScore - 5);
+  state.totalAttempts++;
+  state.cardsRevealed++;
+  state.questionTimedOut = true;
+  updateScoreDisplay();
+
+  const feedback = $('qFeedback');
+  feedback.textContent = '⏰ 超时！-5分';
+  feedback.className = 'result-feedback wrong';
+
+  const allOpts = $('qOptions').querySelectorAll('.opt-btn');
+  allOpts.forEach(b => b.disabled = true);
+
+  setTimeout(() => {
+    hideQuestionModal();
+    checkLevelComplete();
+  }, 800);
+}
+
+function clearTimer() {
+  if (state.timerInterval) {
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+  }
+}
+
+// ========== SCORE ==========
+function updateScoreDisplay() {
+  $('currentScore').textContent = state.currentScore;
+  $('safeScore').textContent = state.safeScore;
+}
+
+function saveToSafe() {
+  if (state.currentScore <= 0) {
+    $('cardMessage').textContent = '当前没有分数可以存入哦~';
+    setTimeout(() => { $('cardMessage').textContent = ''; }, 1500);
+    return;
+  }
+  if (state.savedThisLevel) {
+    $('cardMessage').textContent = '本关已经存入过了！';
+    setTimeout(() => { $('cardMessage').textContent = ''; }, 1500);
+    return;
+  }
+
+  state.safeScore += state.currentScore;
+  state.currentScore = 0;
+  state.savedThisLevel = true;
+  updateScoreDisplay();
+  updateSaveButton();
+  $('cardMessage').textContent = '已存入保险！继续翻牌或等待结算~';
+
+  setTimeout(() => {
+    nextLevel();
+  }, 1500);
+}
+
+function updateSaveButton() {
+  const cfg = levelConfig[state.level];
+  const btn = $('btnSave');
+  if (cfg.noSave) {
+    btn.disabled = true;
+    btn.textContent = '无保险模式';
+    btn.style.opacity = '0.5';
+  } else if (state.savedThisLevel) {
+    btn.disabled = true;
+    btn.textContent = '已存入';
+    btn.style.opacity = '0.6';
+  } else {
+    btn.disabled = false;
+    btn.textContent = '存入保险';
+    btn.style.opacity = '1';
+  }
+}
+
+// ========== BOMB ANIMATION ==========
+function showBombAnimation() {
+  const overlay = $('bombOverlay');
+  overlay.classList.remove('hidden');
+  showParticles();
+
+  setTimeout(() => {
+    overlay.classList.add('hidden');
+  }, 1200);
+}
+
+function showParticles() {
+  const container = $('particlesContainer');
+  container.classList.remove('hidden');
+  container.innerHTML = '';
+
+  const colors = ['#ff4444', '#ff8c00', '#FFD700', '#ff6b6b', '#ff0000'];
+  for (let i = 0; i < 30; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.style.left = '50%';
+    particle.style.top = '50%';
+    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+    particle.style.setProperty('--dx', (Math.random() - 0.5) * 300 + 'px');
+    particle.style.setProperty('--dy', (Math.random() - 0.5) * 300 + 'px');
+    particle.style.width = (6 + Math.random() * 10) + 'px';
+    particle.style.height = particle.style.width;
+    container.appendChild(particle);
+  }
+
+  setTimeout(() => {
+    container.classList.add('hidden');
+    container.innerHTML = '';
+  }, 1000);
+}
+
+function hideBombOverlay() {
+  $('bombOverlay').classList.add('hidden');
+  $('particlesContainer').classList.add('hidden');
+}
+
+// ========== LEVEL MANAGEMENT ==========
+function checkLevelComplete() {
+  if (state.savedThisLevel) return; // Already transitioning
+
+  const cfg = levelConfig[state.level];
+  if (state.cardsRevealed >= cfg.totalCards) {
+    // Level complete - current score auto-saved
+    state.safeScore += state.currentScore;
+    state.currentScore = 0;
+    updateScoreDisplay();
+    $('cardMessage').textContent = '本关结束！全部卡牌已翻开~';
+
+    // Calculate tier for this level
+    calculateLevelTier();
+
+    setTimeout(() => {
+      nextLevel();
+    }, 1500);
+  }
+}
+
+function calculateLevelTier() {
+  if (state.levelAnswers.length === 0) return;
+  const correct = state.levelAnswers.filter(a => a.correct).length;
+  const rate = correct / state.levelAnswers.length;
+  if (rate >= 0.9) state.practiceTier = Math.min(5, state.practiceTier + 1);
+  else if (rate >= 0.7) state.practiceTier = state.practiceTier;
+  else state.practiceTier = Math.max(1, state.practiceTier - 1);
+  state.levelAnswers = [];
+}
+
+function nextLevel() {
+  state.level++;
+  if (state.level > 5) {
+    // Victory
+    state.totalSafeScore = state.safeScore;
+    showVictoryScreen();
+  } else {
+    initGame();
+  }
+}
+
+function showVictoryScreen() {
+  state.gameOver = true;
+  clearTimer();
+  $('timerDisplay').textContent = '';
+  hideQuestionModal();
+  hideBombOverlay();
+
+  const modal = $('modalOverlay');
+  const panel = $('modalPanel');
+  panel.innerHTML = `
+    <div class="emoji-big">🎉</div>
+    <h2>恭喜通关！</h2>
+    <div class="stats">
+      <div>保险分：<span style="color:#FFD700;font-size:22px;">${state.totalSafeScore}</span></div>
+      <div>总共答对：<span style="color:#2ecc71;">${state.correctCount}</span> 题</div>
+      <div>适合你的练习等级：${difficultyLabels[state.practiceTier].icon} ${difficultyLabels[state.practiceTier].name}</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="enterPracticeMode()" style="min-width:140px;">进入练习</button>
+      <button class="btn btn-danger" onclick="completeRestart()">重新开始</button>
+    </div>
+  `;
+  modal.classList.remove('hidden');
+}
+
+// ========== MODAL ==========
+function hideModal() {
+  $('modalOverlay').classList.add('hidden');
+}
+
+function showQuestionPreview() {
+  state.gameOver = false; // Allow preview
+  const cfg = levelConfig[state.level];
+  let questions;
+  if (state.level <= 4) {
+    questions = levelQuestions[state.level];
+  } else {
+    questions = [...levelQuestions[4], ...levelQuestions[3]].slice(0, cfg.questionCount);
+  }
+  const modal = $('modalOverlay');
+  const panel = $('modalPanel');
+  panel.innerHTML = `
+    <h2>本关题目预览</h2>
+    <div class="stats" style="text-align:left;font-size:14px;">
+      ${questions.map((q, i) => `<div>${i+1}. ${q.q} → ${q.options[q.answer]} (${q.hint})</div>`).join('')}
+    </div>
+    <button class="btn btn-gold" onclick="hideModal();" style="margin-top:12px;">关闭</button>
+  `;
+  modal.classList.remove('hidden');
+}
+
+// ========== RESTART ==========
+function restartGame() {
+  clearTimer();
+  state.level = 1;
+  state.currentScore = 0;
+  state.safeScore = 0;
+  state.totalSafeScore = 0;
+  state.correctCount = 0;
+  state.totalAttempts = 0;
+  state.practiceTier = 1;
+  state.levelAnswers = [];
+  state.gameOver = false;
+  hideModal();
+  initGame();
+}
+
+function completeRestart() {
+  clearTimer();
+  state.level = 1;
+  state.currentScore = 0;
+  state.safeScore = 0;
+  state.totalSafeScore = 0;
+  state.correctCount = 0;
+  state.totalAttempts = 0;
+  state.practiceTier = 1;
+  state.levelAnswers = [];
+  state.practiceIndex = 0;
+  state.practiceHistory = [];
+  state.gameOver = false;
+  hideModal();
+  $('practiceContainer').classList.remove('active');
+  initGame();
+}
+
+// ========== PRACTICE MODE ==========
+function determinePracticeTier() {
+  if (state.totalAttempts === 0) return 1;
+  const rate = state.correctCount / state.totalAttempts;
+  if (rate >= 0.9) return Math.min(5, state.practiceTier + 1);
+  if (rate >= 0.7) return state.practiceTier;
+  return Math.max(1, state.practiceTier - 1);
+}
+
+function enterPracticeMode() {
+  hideModal();
+  state.practiceTier = determinePracticeTier();
+  state.practiceIndex = 0;
+  state.practiceHistory = [];
+
+  // Show practice container, hide game elements
+  $('practiceContainer').classList.add('active');
+  $('cardGrid').classList.add('hidden');
+  document.querySelectorAll('.btn-row').forEach(r => r.classList.add('hidden'));
+
+  const tier = difficultyLabels[state.practiceTier];
+  $('tierBadge').textContent = tier.icon + ' ' + tier.name;
+  $('tierBadge').className = 'tier-badge ' + tier.badgeClass;
+
+  renderPracticeProgress();
+  renderPracticeQuestion();
+}
+
+function renderPracticeProgress() {
+  const problems = practiceProblems[state.practiceTier];
+  const container = $('practiceProgress');
+  let html = '';
+  problems.forEach((_, i) => {
+    let cls = 'practice-dot';
+    if (i < state.practiceIndex) {
+      const h = state.practiceHistory[i];
+      cls += h && h.correct ? ' done-correct' : ' done-wrong';
+    } else if (i === state.practiceIndex) {
+      cls += ' current';
+    }
+    html += `<div class="${cls}"></div>`;
+  });
+  container.innerHTML = html;
+}
+
+function renderPracticeQuestion() {
+  const problems = practiceProblems[state.practiceTier];
+  if (state.practiceIndex >= problems.length) {
+    finishPractice();
+    return;
+  }
+
+  const problem = problems[state.practiceIndex];
+  state.practiceCurrent = problem;
+  $('practiceResult').textContent = '';
+  $('practiceResult').className = 'practice-result';
+  $('practiceHint').classList.remove('show');
+  $('pqText').textContent = problem.q;
+
+  if (problem.type === 'choice') {
+    $('pqOptions').classList.remove('hidden');
+    $('pqFill').classList.add('hidden');
+    let html = '';
+    problem.options.forEach((opt, i) => {
+      html += `<button class="pq-opt" onclick="handlePracticeChoice(${i})">${opt}</button>`;
+    });
+    $('pqOptions').innerHTML = html;
+  } else if (problem.type === 'fill') {
+    $('pqOptions').classList.add('hidden');
+    $('pqFill').classList.remove('hidden');
+    $('pqFillInput').value = '';
+    $('pqFillInput').focus();
+    // Allow Enter key to submit
+    $('pqFillInput').onkeydown = (e) => {
+      if (e.key === 'Enter') handlePracticeSubmit();
+    };
+  }
+}
+
+function handlePracticeChoice(chosen) {
+  if (!state.practiceCurrent) return;
+  const problem = state.practiceCurrent;
+  const isCorrect = chosen === problem.answer;
+
+  state.practiceHistory.push({ index: state.practiceIndex, correct: isCorrect });
+  state.totalAttempts++;
+  if (isCorrect) state.correctCount++;
+
+  const result = $('practiceResult');
+  if (isCorrect) {
+    result.textContent = '✓ 太棒了！';
+    result.className = 'practice-result correct';
+  } else {
+    result.textContent = '✗ 不对哦~ 正确答案是 ' + problem.options[problem.answer];
+    result.className = 'practice-result wrong';
+  }
+
+  // Disable options
+  const opts = $('pqOptions').querySelectorAll('.pq-opt');
+  opts.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === problem.answer) btn.style.background = 'rgba(46,204,113,0.4)';
+    else if (i === chosen) btn.style.background = 'rgba(231,76,60,0.4)';
+  });
+
+  // Auto-advance
+  setTimeout(() => {
+    state.practiceIndex++;
+    renderPracticeProgress();
+    renderPracticeQuestion();
+  }, 1200);
+}
+
+function handlePracticeSubmit() {
+  if (!state.practiceCurrent) return;
+  const problem = state.practiceCurrent;
+  const inputEl = $('pqFillInput');
+  const userAnswer = inputEl.value.trim();
+  const correctAnswer = problem.answer;
+  const isCorrect = userAnswer === correctAnswer;
+
+  state.practiceHistory.push({ index: state.practiceIndex, correct: isCorrect });
+  state.totalAttempts++;
+  if (isCorrect) state.correctCount++;
+
+  const result = $('practiceResult');
+  if (isCorrect) {
+    result.textContent = '✓ 太棒了！';
+    result.className = 'practice-result correct';
+  } else {
+    result.textContent = '✗ 不对哦~ 正确答案是 ' + correctAnswer;
+    result.className = 'practice-result wrong';
+  }
+
+  inputEl.disabled = true;
+  const submitBtn = $('pqFill').querySelector('.pq-submit');
+  if (submitBtn) submitBtn.disabled = true;
+
+  setTimeout(() => {
+    state.practiceIndex++;
+    renderPracticeProgress();
+    renderPracticeQuestion();
+  }, 1200);
+}
+
+function showPracticeHint() {
+  if (!state.practiceCurrent) return;
+  const hintEl = $('practiceHint');
+  hintEl.textContent = '💡 ' + state.practiceCurrent.hint;
+  hintEl.classList.add('show');
+}
+
+function finishPractice() {
+  state.practiceTier = determinePracticeTier();
+  const tier = difficultyLabels[state.practiceTier];
+  $('pqText').textContent = '练习结束！';
+  $('pqOptions').innerHTML = '';
+  $('pqOptions').classList.add('hidden');
+  $('pqFill').classList.add('hidden');
+  $('practiceResult').textContent = '';
+  $('practiceResult').className = 'practice-result';
+
+  const progress = state.practiceHistory;
+  const correctCount = progress.filter(h => h.correct).length;
+  $('practiceResult').textContent = `你答对了 ${correctCount}/${progress.length} 题！推荐难度：${tier.icon} ${tier.name}`;
+  $('practiceResult').className = 'practice-result correct';
+}
+
+function exitPractice() {
+  $('practiceContainer').classList.remove('active');
+  $('cardGrid').classList.remove('hidden');
+  document.querySelectorAll('.btn-row').forEach(r => r.classList.remove('hidden'));
+  state.gameOver = true;
+  // Re-init from level 1
+  completeRestart();
+}
+
+// ========== LEVEL INDICATOR ==========
+function updateLevelIndicator() {
+  const cfg = levelConfig[state.level];
+  let info = `第 ${state.level} 关 (${cfg.totalCards}张牌`;
+  if (cfg.bombCount > 0) info += `, ${cfg.bombCount}颗炸弹`;
+  if (cfg.timer > 0) info += `, 限时${cfg.timer}秒`;
+  if (cfg.noSave) info += ', 无保险';
+  info += ')';
+  $('levelIndicator').textContent = info;
+}
+
+// ========== START GAME ==========
+initGame();
+</script>
+</body>
+</html>
