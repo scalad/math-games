@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>公平分分岛 · 平均分练习</title>
+<style>
+:root {
+  --purple: #6C5CE7;
+  --purple-dark: #5A4BD1;
+  --purple-light: #A29BFE;
+  --teal: #00CEC9;
+  --teal-dark: #00B5B0;
+  --yellow: #FFD93D;
+  --pink: #FF6B9D;
+  --orange: #FF9F43;
+  --green: #55EFC4;
+  --green-dark: #00B894;
+  --red: #FF7675;
+  --bg-sky: #E8F4FD;
+  --bg-sea: #74B9FF;
+  --card: #FFFFFF;
+  --text: #2D3436;
+  --text-light: #636E72;
+  --shadow: 0 8px 32px rgba(108, 92, 231, 0.18);
+  --radius: 20px;
+  --font: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font);
+  min-height: 100vh;
+  background: linear-gradient(180deg, #DFE6FF 0%, var(--bg-sky) 35%, #B8E0FF 70%, #81ECEC 100%);
+  color: var(--text);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Screens ===== */
+.screen { display: none; flex-direction: column; flex: 1; animation: fadeUp .4s ease; }
+.screen.active { display: flex; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+@keyframes starPop {
+  0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+  70% { transform: scale(1.2) rotate(10deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* ===== Splash ===== */
+.splash-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.island-logo {
+  font-size: 88px;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.15));
+}
+
+.game-name {
+  font-size: 36px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--purple), var(--teal));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 12px 0 8px;
+  letter-spacing: 2px;
+}
+
+.tagline {
+  font-size: 15px;
+  color: var(--text-light);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.btn-primary {
+  min-width: 220px;
+  min-height: 56px;
+  padding: 14px 32px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(108, 92, 231, .45);
+  transition: transform .15s, box-shadow .15s;
+}
+
+.btn-primary:active { transform: scale(.96); }
+
+.btn-secondary {
+  min-height: 48px;
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--purple);
+  background: rgba(255,255,255,.85);
+  border: 2px solid var(--purple-light);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.btn-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,.9);
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+/* ===== Mission / Story ===== */
+.panel {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 12px;
+}
+
+.panel-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--purple);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mission-list { display: flex; flex-direction: column; gap: 10px; }
+
+.mission-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(90deg, #F8F9FF, #EEF2FF);
+  border-radius: 14px;
+  border: 2px solid transparent;
+}
+
+.mission-item .num {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--purple);
+  color: #fff;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mission-item .info { flex: 1; }
+.mission-item .info strong { display: block; font-size: 15px; margin-bottom: 2px; }
+.mission-item .info span { font-size: 12px; color: var(--text-light); }
+
+.story-mascot {
+  text-align: center;
+  font-size: 72px;
+  margin: 8px 0;
+  animation: bounce 2s ease infinite;
+}
+
+.story-bubble {
+  background: #FFF9E6;
+  border: 3px solid var(--yellow);
+  border-radius: 20px;
+  padding: 18px 20px;
+  font-size: 17px;
+  line-height: 1.7;
+  position: relative;
+}
+
+.story-bubble::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 12px solid transparent;
+  border-bottom-color: var(--yellow);
+}
+
+/* ===== Game Header ===== */
+.game-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px 12px;
+}
+
+.game-top .title-text {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--purple-dark);
+}
+
+.level-dots { display: flex; gap: 6px; }
+
+.level-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.6);
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+  transition: all .3s;
+}
+
+.level-dot.current {
+  background: var(--yellow);
+  color: var(--text);
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(255, 217, 61, .6);
+}
+
+.level-dot.done { background: var(--green-dark); color: #fff; }
+
+/* ===== Question ===== */
+.question-panel {
+  background: rgba(255,255,255,.92);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+
+.question-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.question-text {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
+.question-text .hl {
+  color: var(--purple);
+  background: linear-gradient(180deg, transparent 60%, rgba(255,217,61,.5) 60%);
+  padding: 0 2px;
+}
+
+.guide-text {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--teal-dark);
+  font-weight: 600;
+}
+
+/* ===== Play Area ===== */
+.play-area {
+  flex: 1;
+  background: rgba(255,255,255,.75);
+  border-radius: var(--radius);
+  padding: 16px;
+  min-height: 280px;
+  box-shadow: inset 0 2px 12px rgba(108,92,231,.08);
+}
+
+.section-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Level 1 - identify */
+.choice-cards { display: flex; flex-direction: column; gap: 12px; }
+
+.choice-card {
+  padding: 16px;
+  background: #fff;
+  border: 3px solid #E8ECFF;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.choice-card:active { transform: scale(.98); }
+.choice-card.selected { border-color: var(--purple); background: #F0EEFF; }
+.choice-card.correct { border-color: var(--green-dark); background: #E8FFF8; animation: pulse .5s; }
+.choice-card.wrong { border-color: var(--red); background: #FFF0F0; animation: shake .4s; }
+
+.choice-label {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--purple-light);
+  color: #fff;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.group-visual { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
+
+.group-pile {
+  min-width: 52px;
+  padding: 8px 10px;
+  background: #FFF8E7;
+  border-radius: 12px;
+  text-align: center;
+  border: 2px dashed #FFD93D;
+}
+
+.group-pile .count { font-size: 22px; font-weight: 900; color: var(--orange); }
+.group-pile .label { font-size: 10px; color: var(--text-light); }
+
+/* Level 2 - distribute */
+.distribute-layout { display: flex; flex-direction: column; gap: 14px; }
+
+.item-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 72px;
+  padding: 12px;
+  background: #FFF9F0;
+  border-radius: 14px;
+  border: 2px dashed var(--orange);
+}
+
+.draggable-item {
+  width: 52px;
+  height: 52px;
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 3px 10px rgba(0,0,0,.1);
+  cursor: grab;
+  touch-action: none;
+  transition: transform .15s;
+}
+
+.draggable-item.selected { outline: 3px solid var(--purple); transform: scale(1.08); }
+.draggable-item.used { opacity: .35; pointer-events: none; }
+.draggable-item.dragging { opacity: .7; z-index: 100; position: fixed; pointer-events: none; }
+
+.receivers {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.receiver {
+  background: #fff;
+  border: 3px solid #E0E7FF;
+  border-radius: 16px;
+  padding: 10px;
+  min-height: 100px;
+  transition: border-color .2s, background .2s;
+}
+
+.receiver.highlight { border-color: var(--teal); background: #E8FFFE; }
+.receiver.unfair { border-color: var(--red); animation: shake .4s; }
+
+.receiver-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.receiver-head .avatar { font-size: 28px; }
+.receiver-head .badge-count {
+  margin-left: auto;
+  background: var(--purple);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.receiver-items { display: flex; flex-wrap: wrap; gap: 4px; min-height: 36px; }
+
+.receiver-items .mini { font-size: 22px; }
+
+/* Level 3 - boxing */
+.boxing-layout { display: flex; flex-direction: column; gap: 12px; }
+
+.boxes-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.box-slot {
+  background: #fff;
+  border: 3px solid #C8F0E8;
+  border-radius: 16px;
+  padding: 10px;
+  min-height: 110px;
+  position: relative;
+}
+
+.box-slot.active { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(0,206,201,.25); }
+.box-slot.sealed {
+  border-color: var(--green-dark);
+  background: linear-gradient(135deg, #E8FFF8, #D4F5ED);
+}
+
+.box-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--teal-dark);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.box-header .seal { font-size: 16px; }
+
+.box-items { display: flex; flex-wrap: wrap; gap: 4px; min-height: 40px; }
+.box-items .mini { font-size: 24px; }
+
+/* Level 4 - method select */
+.method-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.method-btn {
+  min-height: 80px;
+  padding: 16px 20px;
+  border: 3px solid #E8ECFF;
+  border-radius: 18px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: all .2s;
+}
+
+.method-btn .icon { font-size: 32px; margin-bottom: 6px; }
+.method-btn strong { display: block; font-size: 17px; color: var(--purple-dark); }
+.method-btn span { font-size: 13px; color: var(--text-light); }
+
+.method-btn:active { transform: scale(.98); }
+.method-btn.correct { border-color: var(--green-dark); background: #E8FFF8; }
+.method-btn.wrong { border-color: var(--red); background: #FFF0F0; animation: shake .4s; }
+
+/* Level 5 - inspect plates */
+.plates-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.plate {
+  width: 100px;
+  min-height: 130px;
+  background: linear-gradient(180deg, #fff 0%, #F5F5FF 100%);
+  border: 3px solid #DDD6FE;
+  border-radius: 50% 50% 16px 16px;
+  padding: 10px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.plate.unfair { border-color: var(--red); }
+.plate.fair { border-color: var(--green-dark); }
+
+.plate-num {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--purple);
+  margin-bottom: 4px;
+}
+
+.plate-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  justify-content: center;
+  flex: 1;
+}
+
+.plate-items .mini {
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 2px;
+}
+.plate-items .mini.selected { outline: 3px solid var(--purple); background: #F0EEFF; }
+.plate-items .mini:active { transform: scale(1.2); }
+
+/* ===== Action Bar ===== */
+.action-bar {
+  display: flex;
+  gap: 10px;
+  padding: 12px 0 8px;
+  align-items: center;
+}
+
+.action-bar .btn-primary { flex: 1; font-size: 17px; min-height: 52px; }
+.action-bar .btn-hint {
+  min-width: 52px;
+  min-height: 52px;
+  border-radius: 14px;
+  border: 2px solid var(--yellow);
+  background: #FFFBE6;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(100px);
+  max-width: 90%;
+  padding: 14px 20px;
+  background: rgba(45, 52, 54, .92);
+  color: #fff;
+  border-radius: 14px;
+  font-size: 15px;
+  line-height: 1.5;
+  z-index: 200;
+  transition: transform .35s ease;
+  pointer-events: none;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { background: linear-gradient(135deg, var(--green-dark), var(--teal-dark)); }
+.toast.error { background: linear-gradient(135deg, #E17055, var(--red)); }
+.toast.info { background: linear-gradient(135deg, var(--purple), var(--purple-dark)); }
+
+/* ===== Level Complete Modal ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 52, 54, .5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 150;
+  padding: 20px;
+}
+
+.modal-overlay.show { display: flex; animation: fadeUp .3s ease; }
+
+.modal-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px 24px;
+  text-align: center;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+
+.modal-card .mascot { font-size: 64px; margin-bottom: 8px; }
+
+.modal-card h3 {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--purple-dark);
+  margin-bottom: 8px;
+}
+
+.modal-card p {
+  font-size: 15px;
+  color: var(--text-light);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.stars-row { display: flex; justify-content: center; gap: 8px; margin: 12px 0; }
+
+.star-icon {
+  font-size: 36px;
+  opacity: .25;
+  transition: all .3s;
+}
+
+.star-icon.lit {
+  opacity: 1;
+  animation: starPop .5s ease backwards;
+}
+
+.star-icon.lit:nth-child(2) { animation-delay: .15s; }
+.star-icon.lit:nth-child(3) { animation-delay: .3s; }
+
+.math-summary {
+  background: #F0EEFF;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--purple-dark);
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+/* ===== Settle & Report ===== */
+.settle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.settle-stat {
+  background: linear-gradient(135deg, #F8F9FF, #EEF2FF);
+  border-radius: 16px;
+  padding: 16px 8px;
+  text-align: center;
+}
+
+.settle-stat .val {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--purple);
+}
+
+.settle-stat .lbl { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+.badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+.badge-chip {
+  padding: 8px 14px;
+  background: linear-gradient(135deg, var(--yellow), var(--orange));
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.15);
+}
+
+.report-section {
+  margin-bottom: 14px;
+}
+
+.report-section h4 {
+  font-size: 14px;
+  color: var(--purple);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.skill-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.skill-bar span { font-size: 13px; width: 90px; flex-shrink: 0; }
+
+.skill-track {
+  flex: 1;
+  height: 12px;
+  background: #E8ECFF;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.skill-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--teal), var(--purple));
+  transition: width .6s ease;
+}
+
+.highlight-box {
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.highlight-box.good { background: #E8FFF8; border: 2px solid var(--green-dark); }
+.highlight-box.todo { background: #FFF9E6; border: 2px solid var(--yellow); }
+
+.energy-bar-wrap { margin: 16px 0; }
+
+.energy-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.energy-track {
+  height: 20px;
+  background: #E8ECFF;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.energy-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--pink), var(--purple), var(--teal));
+  border-radius: 999px;
+  transition: width 1s ease;
+}
+
+@media (max-width: 400px) {
+  .game-name { font-size: 28px; }
+  .question-text { font-size: 16px; }
+  .receivers { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- 启动页 -->
+  <div class="screen active" id="screenSplash">
+    <div class="splash-card">
+      <div class="island-logo">🏝️</div>
+      <h1 class="game-name">公平分分岛</h1>
+      <p class="tagline">帮助小动物公平分零食<br>学会「每份同样多」</p>
+      <button class="btn-primary" id="btnStart">开始练习 ✨</button>
+    </div>
+  </div>
+
+  <!-- 今日任务 -->
+  <div class="screen" id="screenMission">
+    <div class="panel" style="margin-top:8px">
+      <div class="panel-title">📋 今日任务 · 约 5 分钟</div>
+      <div class="mission-list" id="missionList"></div>
+    </div>
+    <button class="btn-primary" id="btnToStory" style="align-self:center;margin-top:auto;margin-bottom:12px">出发去公平岛 →</button>
+  </div>
+
+  <!-- 剧情导入 -->
+  <div class="screen" id="screenStory">
+    <div class="panel" style="margin-top:8px;flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div class="story-mascot">🐰</div>
+      <div class="story-bubble" id="storyText">
+        你好，公平分分员！今天公平岛上的小动物们要把零食<strong>公平地</strong>分给大家。记住：平均分就是<strong>每份同样多</strong>！
+      </div>
+    </div>
+    <button class="btn-primary" id="btnBeginLevel" style="align-self:center;margin-bottom:12px">接受任务 🎯</button>
+  </div>
+
+  <!-- 关卡练习 -->
+  <div class="screen" id="screenPlay">
+    <div class="game-top">
+      <span class="title-text" id="levelTitle">第 1 关</span>
+      <div class="level-dots" id="levelDots"></div>
+    </div>
+    <div class="question-panel">
+      <div class="question-row">
+        <button class="btn-icon" id="btnSpeak" title="朗读题目">🔊</button>
+        <div>
+          <div class="question-text" id="questionText"></div>
+          <div class="guide-text" id="guideText"></div>
+        </div>
+      </div>
+    </div>
+    <div class="play-area" id="playArea"></div>
+    <div class="action-bar">
+      <button class="btn-hint" id="btnHint" title="提示">💡</button>
+      <button class="btn-primary" id="btnSubmit">检查公平 ✓</button>
+    </div>
+  </div>
+
+  <!-- 结算页 -->
+  <div class="screen" id="screenSettle">
+    <div class="panel" style="margin-top:8px;text-align:center">
+      <div style="font-size:56px;margin:8px 0">🎉</div>
+      <h2 style="font-size:24px;font-weight:900;color:var(--purple-dark)">练习完成！</h2>
+      <div class="stars-row" id="totalStars"></div>
+      <div class="settle-grid">
+        <div class="settle-stat"><div class="val" id="settleTasks">5</div><div class="lbl">完成任务</div></div>
+        <div class="settle-stat"><div class="val" id="settleStars">0</div><div class="lbl">总星星</div></div>
+        <div class="settle-stat"><div class="val" id="settleEnergy">0</div><div class="lbl">公平能量</div></div>
+      </div>
+      <div class="badges-row" id="badgeRow"></div>
+      <div class="energy-bar-wrap">
+        <div class="energy-label"><span>🏠 修复糖果屋</span><span id="energyPct">0%</span></div>
+        <div class="energy-track"><div class="energy-fill" id="energyFill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <button class="btn-primary" id="btnToReport" style="align-self:center;margin:12px 0">查看学习报告 📊</button>
+  </div>
+
+  <!-- 学习报告 -->
+  <div class="screen" id="screenReport">
+    <div class="panel" style="margin-top:8px">
+      <div class="panel-title">📊 学习报告</div>
+      <p style="font-size:13px;color:var(--text-light);margin-bottom:14px">今日完成 <strong id="reportTasks">5</strong> 个任务</p>
+
+      <div class="report-section">
+        <h4>📈 掌握情况</h4>
+        <div class="skill-bar"><span>认识平均分</span><div class="skill-track"><div class="skill-fill" id="skill1" style="width:0%"></div></div></div>
+        <div class="skill-bar"><span>按份数分</span><div class="skill-track"><div class="skill-fill" id="skill2" style="width:0%"></div></div></div>
+        <div class="skill-bar"><span>按每份数分</span><div class="skill-track"><div class="skill-fill" id="skill3" style="width:0%"></div></div></div>
+        <div class="skill-bar"><span>判断分法</span><div class="skill-track"><div class="skill-fill" id="skill4" style="width:0%"></div></div></div>
+      </div>
+
+      <div class="report-section">
+        <h4>🌟 最棒表现</h4>
+        <div class="highlight-box good" id="reportGood"></div>
+      </div>
+
+      <div class="report-section">
+        <h4>💪 继续努力</h4>
+        <div class="highlight-box todo" id="reportTodo"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;margin:12px 0">
+      <button class="btn-secondary" id="btnReplay">再练一次</button>
+      <button class="btn-primary" id="btnHome">返回首页</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="levelModal">
+  <div class="modal-card">
+    <div class="mascot" id="modalMascot">🐰</div>
+    <h3 id="modalTitle">分得很公平！</h3>
+    <div class="stars-row" id="modalStars">
+      <span class="star-icon">⭐</span>
+      <span class="star-icon">⭐</span>
+      <span class="star-icon">⭐</span>
+    </div>
+    <div class="math-summary" id="modalSummary"></div>
+    <p id="modalMsg"></p>
+    <button class="btn-primary" id="btnNextLevel">下一关 →</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const $ = (s) => document.querySelector(s);
+
+  const MISSIONS = [
+    { name: '认识公平分', desc: '找出每份同样多的分法' },
+    { name: '糖果轮流发', desc: '平均分给固定数量的小伙伴' },
+    { name: '水果装盒', desc: '每几个装一份，看看能装几盒' },
+    { name: '选方法挑战', desc: '先看题目，选对分法' },
+    { name: '公平检查员', desc: '检查并调整，让每份一样多' },
+  ];
+
+  const LEVELS = [
+    {
+      id: 1, key: 'identify', title: '谁是平均分',
+      question: '下面哪一种是<span class="hl">平均分</span>？',
+      guide: '想一想：每份的数量要一样多哦！',
+      type: 'identify',
+      choices: [
+        { label: 'A', groups: [2, 2, 2], fair: true },
+        { label: 'B', groups: [3, 2, 1], fair: false },
+        { label: 'C', groups: [4, 1, 1], fair: false },
+      ],
+      summary: '2、2、2 每份一样多，这就是平均分！',
+      skill: 'skill1', badge: null,
+    },
+    {
+      id: 2, key: 'byParts', title: '糖果轮流发',
+      question: '把 <span class="hl">8 颗糖</span>平均分给 <span class="hl">4 个</span>小朋友，每人几块？',
+      guide: '每个小朋友都要一样多，可以一轮一轮地发。',
+      type: 'distribute',
+      total: 8, parts: 4, item: '🍬', itemName: '糖',
+      receivers: ['🐰 小兔', '🐻 小熊', '🦊 小狐', '🐱 小猫'],
+      summary: '8 个分给 4 个小朋友，就是分成 4 份。每份 2 个。',
+      skill: 'skill2', badge: '轮流小能手',
+    },
+    {
+      id: 3, key: 'byGroup', title: '水果装盒',
+      question: '<span class="hl">12 个橘子</span>，<span class="hl">每 3 个</span>装一盒，能装几盒？',
+      guide: '每 3 个是一份，看看能装满几盒。',
+      type: 'boxing',
+      total: 12, groupSize: 3, item: '🍊', itemName: '橘子',
+      summary: '12 个，每 3 个一份，可以分 4 份。',
+      skill: 'skill3', badge: '装盒达人',
+    },
+    {
+      id: 4, key: 'method', title: '选方法挑战',
+      question: '<span class="hl">15 朵花</span>，<span class="hl">每 5 朵</span>插一瓶，能插几瓶？',
+      guide: '先想一想：题目问的是「每份几个」还是「能分几份」？',
+      type: 'methodSelect',
+      correctMethod: 'group',
+      summary: '题目说「每 5 朵」，每份已经知道了，要看看能装几瓶。',
+      skill: 'skill4', badge: '分法侦探',
+    },
+    {
+      id: 5, key: 'inspect', title: '公平检查员',
+      question: '<span class="hl">12 个饼干</span>分给 <span class="hl">3 个</span>盘子，让它们每份同样多。',
+      guide: '点击饼干可以在盘子之间移动，分完后点「检查公平」。',
+      type: 'inspect',
+      total: 12, parts: 3, item: '🍪', start: [5, 4, 3],
+      summary: '12 个分给 3 份，每份 4 个，每份同样多！',
+      skill: 'skill2', badge: '检查员徽章',
+    },
+  ];
+
+  const state = {
+    screen: 'splash',
+    levelIndex: 0,
+    levelResults: [],
+    errors: 0,
+    hintsUsed: 0,
+    hintUsedThisLevel: false,
+    startTime: null,
+    gameStartTime: null,
+    drag: null,
+    selectedItem: null,
+    analytics: [],
+  };
+
+  function track(event, params = {}) {
+    const payload = { event, ts: Date.now(), ...params };
+    state.analytics.push(payload);
+    console.log('[analytics]', event, params);
+  }
+
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach((el) => el.classList.remove('active'));
+    $(`#screen${name.charAt(0).toUpperCase() + name.slice(1)}`).classList.add('active');
+    state.screen = name;
+  }
+
+  let toastTimer;
+  function toast(msg, type = 'info', duration = 2800) {
+    const el = $('#toast');
+    el.textContent = msg;
+    el.className = `toast show ${type}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+  }
+
+  function speak(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const plain = text.replace(/<[^>]+>/g, '');
+    const u = new SpeechSynthesisUtterance(plain);
+    u.lang = 'zh-CN';
+    u.rate = 0.9;
+    window.speechSynthesis.speak(u);
+  }
+
+  function calcStars(errors, hintUsed) {
+    if (errors === 0 && !hintUsed) return 3;
+    if (errors <= 1 && !hintUsed) return 2;
+    return 1;
+  }
+
+  function renderMissionList() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `
+      <div class="mission-item">
+        <div class="num">${i + 1}</div>
+        <div class="info"><strong>${m.name}</strong><span>${m.desc}</span></div>
+      </div>`).join('');
+  }
+
+  function renderLevelDots() {
+    $('#levelDots').innerHTML = LEVELS.map((_, i) => {
+      let cls = 'level-dot';
+      if (i === state.levelIndex) cls += ' current';
+      else if (i < state.levelIndex) cls += ' done';
+      return `<div class="${cls}">${i + 1}</div>`;
+    }).join('');
+  }
+
+  function getLevel() {
+    return LEVELS[state.levelIndex];
+  }
+
+  function initLevel() {
+    const lv = getLevel();
+    state.errors = 0;
+    state.hintUsedThisLevel = false;
+    state.selectedItem = null;
+    state.levelStartTime = Date.now();
+
+    $('#levelTitle').textContent = `第 ${lv.id} 关 · ${lv.title}`;
+    $('#questionText').innerHTML = lv.question;
+    $('#guideText').textContent = lv.guide;
+    renderLevelDots();
+
+    track('level_start', {
+      level: lv.id, type: lv.type, methodType: lv.correctMethod || lv.type,
+    });
+
+    const area = $('#playArea');
+    area.innerHTML = '';
+
+    switch (lv.type) {
+      case 'identify': renderIdentify(area, lv); break;
+      case 'distribute': renderDistribute(area, lv); break;
+      case 'boxing': renderBoxing(area, lv); break;
+      case 'methodSelect': renderMethodSelect(area, lv); break;
+      case 'inspect': renderInspect(area, lv); break;
+    }
+
+    setTimeout(() => speak($('#questionText').innerText), 300);
+  }
+
+  /* ===== Level 1: Identify ===== */
+  function renderIdentify(area, lv) {
+    area.innerHTML = `<div class="section-label">👀 观察三种分法</div><div class="choice-cards" id="choiceCards"></div>`;
+    const container = $('#choiceCards');
+    lv.choices.forEach((c, idx) => {
+      const piles = c.groups.map((n, i) =>
+        `<div class="group-pile"><div class="count">${n}</div><div class="label">第${i + 1}份</div></div>`
+      ).join('');
+      const card = document.createElement('div');
+      card.className = 'choice-card';
+      card.innerHTML = `<div class="choice-label">${c.label}</div><div class="group-visual">${piles}</div>`;
+      card.addEventListener('click', () => checkIdentify(idx, lv, card));
+      container.appendChild(card);
+    });
+  }
+
+  function checkIdentify(idx, lv, card) {
+    const correct = lv.choices[idx].fair;
+    $$('.choice-card').forEach((c) => c.style.pointerEvents = 'none');
+    if (correct) {
+      card.classList.add('correct');
+      track('answer_submit', { correct: true, answer: lv.choices[idx].label });
+      setTimeout(() => completeLevel(true), 600);
+    } else {
+      card.classList.add('wrong');
+      state.errors++;
+      track('answer_submit', { correct: false, errorType: 'not_fair' });
+      toast('还不公平哦。平均分要让每份同样多。看看哪一组每份数量相同？', 'error');
+      setTimeout(() => {
+        $$('.choice-card').forEach((c) => {
+          c.style.pointerEvents = '';
+          c.classList.remove('wrong');
+        });
+      }, 1500);
+    }
+  }
+
+  /* ===== Level 2: Distribute ===== */
+  let distributeState = { pool: [], receivers: [] };
+
+  function renderDistribute(area, lv) {
+    distributeState = {
+      pool: Array.from({ length: lv.total }, (_, i) => ({ id: i, emoji: lv.item, placed: false })),
+      receivers: lv.receivers.map((name, i) => ({ name, items: [] })),
+      nextReceiver: 0,
+    };
+
+    area.innerHTML = `
+      <div class="distribute-layout">
+        <div class="section-label">🍬 待分的${lv.itemName}（点选后点小朋友，或直接拖拽）</div>
+        <div class="item-pool" id="itemPool"></div>
+        <div class="section-label">👫 小朋友（轮流发：每人先拿 1 个）</div>
+        <div class="receivers" id="receivers"></div>
+      </div>`;
+
+    renderPool();
+    renderReceivers(lv);
+  }
+
+  function renderPool() {
+    const pool = $('#itemPool');
+    pool.innerHTML = '';
+    distributeState.pool.filter((it) => !it.placed).forEach((it) => {
+      const el = document.createElement('div');
+      el.className = 'draggable-item' + (state.selectedItem === it.id ? ' selected' : '');
+      el.textContent = it.emoji;
+      el.dataset.id = it.id;
+      bindDrag(el, () => onItemPick(it.id), (x, y) => onDropReceiver(findReceiverAt(x, y)));
+      pool.appendChild(el);
+    });
+  }
+
+  function renderReceivers(lv) {
+    const container = $('#receivers');
+    container.innerHTML = '';
+    distributeState.receivers.forEach((r, ri) => {
+      const counts = distributeState.receivers.map((x) => x.items.length);
+      const unfair = counts.length > 1 && new Set(counts).size > 1 && distributeState.pool.every((p) => p.placed);
+      const div = document.createElement('div');
+      div.className = 'receiver' + (unfair && r.items.length === Math.max(...counts) ? ' unfair' : '');
+      div.dataset.index = ri;
+      div.innerHTML = `
+        <div class="receiver-head">
+          <span class="avatar">${r.name.split(' ')[0]}</span>
+          <span>${r.name.split(' ')[1] || ''}</span>
+          <span class="badge-count">${r.items.length}</span>
+        </div>
+        <div class="receiver-items">${r.items.map(() => `<span class="mini">${lv.item}</span>`).join('')}</div>`;
+      div.addEventListener('click', () => onDropReceiver(ri));
+      container.appendChild(div);
+    });
+  }
+
+  function onItemPick(id) {
+    state.selectedItem = state.selectedItem === id ? null : id;
+    renderPool();
+  }
+
+  function onDropReceiver(ri) {
+    if (ri == null || state.selectedItem == null) return;
+    const item = distributeState.pool.find((p) => p.id === state.selectedItem && !p.placed);
+    if (!item) return;
+    item.placed = true;
+    distributeState.receivers[ri].items.push(item);
+    state.selectedItem = null;
+    track('item_drag', { target: ri, count: distributeState.receivers[ri].items.length });
+    renderPool();
+    renderReceivers(getLevel());
+  }
+
+  function checkDistribute(lv) {
+    const counts = distributeState.receivers.map((r) => r.items.length);
+    const remaining = distributeState.pool.filter((p) => !p.placed).length;
+    const perPart = lv.total / lv.parts;
+
+    if (remaining > 0) {
+      state.errors++;
+      track('answer_submit', { correct: false, errorType: 'leftover' });
+      toast('有一个还没分到队伍里。分完后要检查：物品都用上了吗？', 'error');
+      $('#itemPool').style.animation = 'shake .4s';
+      return;
+    }
+
+    if (new Set(counts).size !== 1) {
+      state.errors++;
+      track('answer_submit', { correct: false, errorType: 'unequal', counts });
+      const max = Math.max(...counts), min = Math.min(...counts);
+      toast(`还不公平哦。这一份有 ${max} 个，那一份有 ${min} 个。试试一轮一轮地发！`, 'error');
+      renderReceivers(lv);
+      return;
+    }
+
+    if (counts[0] !== perPart) {
+      state.errors++;
+      toast(`每人应该是 ${perPart} 个哦，再数一数！`, 'error');
+      return;
+    }
+
+    track('answer_submit', { correct: true, counts });
+    completeLevel(true);
+  }
+
+  /* ===== Level 3: Boxing ===== */
+  let boxState = { pool: [], boxes: [], activeBox: 0 };
+
+  function renderBoxing(area, lv) {
+    const numBoxes = lv.total / lv.groupSize;
+    boxState = {
+      pool: Array.from({ length: lv.total }, (_, i) => ({ id: i, emoji: lv.item, placed: false })),
+      boxes: Array.from({ length: numBoxes }, () => ({ items: [], sealed: false })),
+      activeBox: 0,
+    };
+
+    area.innerHTML = `
+      <div class="boxing-layout">
+        <div class="section-label">🍊 待装盒的${lv.itemName}</div>
+        <div class="item-pool" id="boxPool"></div>
+        <div class="section-label">📦 礼盒（满 ${lv.groupSize} 个自动封盒）</div>
+        <div class="boxes-row" id="boxesRow"></div>
+      </div>`;
+
+    renderBoxPool(lv);
+    renderBoxes(lv);
+  }
+
+  function renderBoxPool(lv) {
+    const pool = $('#boxPool');
+    pool.innerHTML = '';
+    boxState.pool.filter((p) => !p.placed).forEach((it) => {
+      const el = document.createElement('div');
+      el.className = 'draggable-item';
+      el.textContent = it.emoji;
+      bindDrag(el, () => placeInBox(it.id, lv), null);
+      pool.appendChild(el);
+    });
+  }
+
+  function renderBoxes(lv) {
+    const row = $('#boxesRow');
+    row.innerHTML = '';
+    boxState.boxes.forEach((box, bi) => {
+      const div = document.createElement('div');
+      div.className = 'box-slot' + (box.sealed ? ' sealed' : bi === boxState.activeBox ? ' active' : '');
+      div.innerHTML = `
+        <div class="box-header">
+          <span>第 ${bi + 1} 盒 ${box.sealed ? '✅' : `(${box.items.length}/${lv.groupSize})`}</span>
+          <span class="seal">${box.sealed ? '🎀' : ''}</span>
+        </div>
+        <div class="box-items">${box.items.map(() => `<span class="mini">${lv.item}</span>`).join('')}</div>`;
+      div.addEventListener('click', () => { if (!box.sealed) { boxState.activeBox = bi; renderBoxes(lv); } });
+      row.appendChild(div);
+    });
+  }
+
+  function placeInBox(id, lv) {
+    const item = boxState.pool.find((p) => p.id === id && !p.placed);
+    const box = boxState.boxes[boxState.activeBox];
+    if (!item || box.sealed) return;
+    item.placed = true;
+    box.items.push(item);
+    track('item_drag', { box: boxState.activeBox, count: box.items.length });
+    if (box.items.length >= lv.groupSize) {
+      box.sealed = true;
+      toast(`第 ${boxState.activeBox + 1} 盒装满了！`, 'success', 1500);
+      boxState.activeBox = boxState.boxes.findIndex((b) => !b.sealed);
+      if (boxState.activeBox === -1) boxState.activeBox = boxState.boxes.length - 1;
+    }
+    renderBoxPool(lv);
+    renderBoxes(lv);
+  }
+
+  function checkBoxing(lv) {
+    const remaining = boxState.pool.filter((p) => !p.placed).length;
+    if (remaining > 0) {
+      state.errors++;
+      track('answer_submit', { correct: false, errorType: 'leftover' });
+      toast('还有橘子没装盒呢！分一个，装一个。', 'error');
+      return;
+    }
+    const unsealed = boxState.boxes.some((b) => !b.sealed);
+    if (unsealed) {
+      state.errors++;
+      toast(`每盒要装 ${lv.groupSize} 个才算一份哦！`, 'error');
+      return;
+    }
+    const boxCount = boxState.boxes.length;
+    track('answer_submit', { correct: true, boxes: boxCount });
+    toast(`你每 ${lv.groupSize} 个装一盒，一共装了 ${boxCount} 盒！`, 'success');
+    setTimeout(() => completeLevel(true), 800);
+  }
+
+  /* ===== Level 4: Method Select ===== */
+  function renderMethodSelect(area, lv) {
+    area.innerHTML = `
+      <div class="section-label">🤔 题目在问什么？</div>
+      <div class="method-btns">
+        <button class="method-btn" data-method="parts">
+          <div class="icon">👫</div>
+          <strong>分给几个人</strong>
+          <span>已知份数，求每份几个（轮流发）</span>
+        </button>
+        <button class="method-btn" data-method="group">
+          <div class="icon">📦</div>
+          <strong>每几个一组</strong>
+          <span>已知每份数量，求能分几份（装盒/圈组）</span>
+        </button>
+      </div>`;
+
+    area.querySelectorAll('.method-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const chosen = btn.dataset.method;
+        const correct = chosen === lv.correctMethod;
+        track('method_select', { chosen, correct, expected: lv.correctMethod });
+        area.querySelectorAll('.method-btn').forEach((b) => b.style.pointerEvents = 'none');
+        if (correct) {
+          btn.classList.add('correct');
+          track('answer_submit', { correct: true });
+          toast('你先看清楚了题目问什么，真棒！', 'success');
+          setTimeout(() => completeLevel(true), 700);
+        } else {
+          btn.classList.add('wrong');
+          state.errors++;
+          track('answer_submit', { correct: false, errorType: 'wrong_method' });
+          toast('题目说的是「每 5 朵」，也就是每份已经知道了。我们要看看能插几瓶。', 'error');
+          setTimeout(() => {
+            area.querySelectorAll('.method-btn').forEach((b) => {
+              b.style.pointerEvents = '';
+              b.classList.remove('wrong');
+            });
+          }, 2000);
+        }
+      });
+    });
+  }
+
+  /* ===== Level 5: Inspect ===== */
+  let inspectState = { plates: [], selected: null };
+
+  function renderInspect(area, lv) {
+    inspectState = {
+      plates: lv.start.map((n) =>
+        Array.from({ length: n }, (_, i) => ({ id: `${n}-${i}`, emoji: lv.item }))
+      ),
+      selected: null,
+    };
+    area.innerHTML = `
+      <div class="section-label">🍪 点一块饼干，再点另一个盘子移过去</div>
+      <div class="plates-row" id="platesRow"></div>`;
+    renderPlates(lv);
+  }
+
+  function renderPlates(lv) {
+    const row = $('#platesRow');
+    row.innerHTML = '';
+    const counts = inspectState.plates.map((p) => p.length);
+    const isFair = new Set(counts).size === 1;
+    inspectState.plates.forEach((plate, pi) => {
+      const div = document.createElement('div');
+      div.className = 'plate' + (isFair ? ' fair' : '');
+      if (!isFair && plate.length === Math.max(...counts)) div.classList.add('unfair');
+      div.innerHTML = `
+        <div class="plate-num">${plate.length}</div>
+        <div class="plate-items">${plate.map((it, ii) =>
+          `<span class="mini${inspectState.selected && inspectState.selected.p === pi && inspectState.selected.i === ii ? ' selected' : ''}" data-p="${pi}" data-i="${ii}">${it.emoji}</span>`).join('')}</div>
+        <div style="font-size:11px;color:var(--text-light);margin-top:4px">盘子 ${pi + 1}</div>`;
+      div.addEventListener('click', (e) => {
+        if (e.target.classList.contains('mini')) return;
+        onPlateClick(pi, lv);
+      });
+      row.appendChild(div);
+    });
+
+    row.querySelectorAll('.mini').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        onCookieClick(+el.dataset.p, +el.dataset.i, lv);
+      });
+    });
+  }
+
+  function onCookieClick(pi, ii, lv) {
+    if (inspectState.selected) {
+      moveCookie(inspectState.selected.p, inspectState.selected.i, pi, lv);
+      inspectState.selected = null;
+    } else {
+      inspectState.selected = { p: pi, i: ii };
+    }
+    renderPlates(lv);
+  }
+
+  function onPlateClick(pi, lv) {
+    if (!inspectState.selected) return;
+    moveCookie(inspectState.selected.p, inspectState.selected.i, pi, lv);
+    inspectState.selected = null;
+    renderPlates(lv);
+  }
+
+  function moveCookie(fromPlate, index, toPlate, lv) {
+    if (fromPlate === toPlate) return;
+    const item = inspectState.plates[fromPlate].splice(index, 1)[0];
+    inspectState.plates[toPlate].push(item);
+    track('item_drag', { from: fromPlate, to: toPlate });
+    renderPlates(lv);
+  }
+
+  function checkInspect(lv) {
+    const counts = inspectState.plates.map((p) => p.length);
+    const total = counts.reduce((a, b) => a + b, 0);
+    const perPart = lv.total / lv.parts;
+
+    if (total !== lv.total) {
+      toast('饼干数量不对哦！', 'error');
+      return;
+    }
+
+    if (new Set(counts).size !== 1) {
+      state.errors++;
+      track('answer_submit', { correct: false, errorType: 'unequal', counts });
+      toast(`还不公平：${counts.join('、')}。把多的移到少的盘子里！`, 'error');
+      renderPlates(lv);
+      return;
+    }
+
+    if (counts[0] !== perPart) {
+      toast(`每盘应该是 ${perPart} 个！`, 'error');
+      return;
+    }
+
+    track('answer_submit', { correct: true, counts });
+    track('correction_success', { original: lv.start, final: counts });
+    completeLevel(true);
+  }
+
+  /* ===== Drag helper ===== */
+  function bindDrag(el, onTap, onDrop) {
+    el.addEventListener('click', (e) => { e.stopPropagation(); onTap(); });
+
+    let startX, startY, dragging = false;
+    const onDown = (e) => {
+      if (el.classList.contains('used')) return;
+      dragging = false;
+      const p = getPoint(e);
+      startX = p.x; startY = p.y;
+      if (onDrop) {
+        el.setPointerCapture(e.pointerId);
+        el.addEventListener('pointermove', onMove);
+        el.addEventListener('pointerup', onUp);
+        el.addEventListener('pointercancel', onUp);
+      }
+    };
+    const onMove = (e) => {
+      const p = getPoint(e);
+      if (!dragging && (Math.abs(p.x - startX) > 8 || Math.abs(p.y - startY) > 8)) {
+        dragging = true;
+        el.classList.add('dragging');
+        el.style.left = p.x - 26 + 'px';
+        el.style.top = p.y - 26 + 'px';
+      }
+      if (dragging) {
+        el.style.left = p.x - 26 + 'px';
+        el.style.top = p.y - 26 + 'px';
+      }
+    };
+    const onUp = (e) => {
+      el.releasePointerCapture(e.pointerId);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerup', onUp);
+      el.removeEventListener('pointercancel', onUp);
+      if (dragging && onDrop) {
+        const p = getPoint(e);
+        onDrop(p.x, p.y);
+      }
+      el.classList.remove('dragging');
+      el.style.left = el.style.top = '';
+      dragging = false;
+    };
+    el.addEventListener('pointerdown', onDown);
+  }
+
+  function getPoint(e) {
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function findReceiverAt(x, y) {
+    const els = document.elementsFromPoint(x, y);
+    for (const el of els) {
+      if (el.classList && el.classList.contains('receiver')) return +el.dataset.index;
+    }
+    return null;
+  }
+
+  function $$(sel) { return document.querySelectorAll(sel); }
+
+  /* ===== Hints ===== */
+  function showHint() {
+    const lv = getLevel();
+    state.hintUsedThisLevel = true;
+    state.hintsUsed++;
+    track('hint_used', { level: lv.id, type: lv.type });
+
+    const hints = {
+      identify: '找一找：哪一组里每个数字都一样？',
+      distribute: '轮流发：第1颗给第1个小朋友，第2颗给第2个……',
+      boxing: `先往盒子里放 ${lv.groupSize} 个，满一盒再装下一盒。`,
+      methodSelect: '关键词「每 5 朵」说明每份数量已知，选「每几个一组」。',
+      inspect: '数最多的盘子，点一块饼干移到最少的盘子。',
+    };
+    toast(hints[lv.type] || '仔细读题，想一想每份要一样多。', 'info', 3500);
+  }
+
+  /* ===== Complete Level ===== */
+  function completeLevel(success) {
+    if (!success) return;
+    const lv = getLevel();
+    const stars = calcStars(state.errors, state.hintUsedThisLevel);
+    const elapsed = Date.now() - state.levelStartTime;
+
+    state.levelResults.push({
+      level: lv.id, stars, errors: state.errors,
+      hintUsed: state.hintUsedThisLevel, elapsed, badge: lv.badge,
+      skill: lv.skill,
+    });
+
+    track('level_complete', {
+      level: lv.id, stars, errors: state.errors,
+      hintUsed: state.hintUsedThisLevel, time: elapsed,
+    });
+
+    $('#modalMascot').textContent = ['🐰', '🐻', '🦊', '🐱', '🐼'][state.levelIndex] || '🐰';
+    $('#modalTitle').textContent = stars >= 2 ? '分得很公平！' : '完成啦，继续加油！';
+    $('#modalSummary').textContent = lv.summary;
+    const msgMap = {
+      identify: stars === 3 ? '每份同样多，这就是平均分！' : '继续练习，你会越来越棒！',
+      distribute: `每份 ${lv.total / lv.parts} 个，每份同样多！`,
+      boxing: `每 ${lv.groupSize} 个装一盒，一共 ${lv.total / lv.groupSize} 盒！`,
+      methodSelect: '你先看清楚了题目问什么，真棒！',
+      inspect: '检查完毕，每份都是 4 个，很公平！',
+    };
+    let msg = msgMap[lv.type] || '完成！';
+    if (stars < 3 && state.hintUsedThisLevel) msg += ' 下次试试不用提示拿三星！';
+    else if (stars < 3) msg += ' 再仔细一点可以拿更多星星哦！';
+    $('#modalMsg').textContent = msg;
+
+    $('#modalStars').querySelectorAll('.star-icon').forEach((s, i) => {
+      s.classList.toggle('lit', i < stars);
+    });
+
+    $('#levelModal').classList.add('show');
+  }
+
+  function showSettle() {
+    const totalStars = state.levelResults.reduce((s, r) => s + r.stars, 0);
+    const energy = totalStars * 15;
+    const badges = [...new Set(state.levelResults.filter((r) => r.badge).map((r) => r.badge))];
+
+    $('#settleTasks').textContent = state.levelResults.length;
+    $('#settleStars').textContent = totalStars;
+    $('#settleEnergy').textContent = energy;
+    $('#totalStars').innerHTML = Array.from({ length: 5 }, (_, i) =>
+      `<span style="font-size:28px;opacity:${i < Math.ceil(totalStars / 3) ? 1 : .3}">⭐</span>`
+    ).join('');
+
+    $('#badgeRow').innerHTML = badges.length
+      ? badges.map((b) => `<span class="badge-chip">🏅 ${b}</span>`).join('')
+      : '<span style="font-size:13px;color:var(--text-light)">完成更多任务解锁徽章</span>';
+
+    const pct = Math.min(100, Math.round(energy / 225 * 100));
+    $('#energyPct').textContent = pct + '%';
+    setTimeout(() => { $('#energyFill').style.width = pct + '%'; }, 200);
+
+    track('game_complete', {
+      totalStars, energy, duration: Date.now() - state.gameStartTime,
+      levels: state.levelResults.length,
+    });
+
+    showScreen('settle');
+  }
+
+  function showReport() {
+    const skills = { skill1: 0, skill2: 0, skill3: 0, skill4: 0 };
+    const skillMax = { skill1: 0, skill2: 0, skill3: 0, skill4: 0 };
+
+    LEVELS.forEach((lv) => {
+      if (skills[lv.skill] !== undefined) skillMax[lv.skill]++;
+    });
+
+    state.levelResults.forEach((r) => {
+      const lv = LEVELS[r.level - 1];
+      if (lv && skills[lv.skill] !== undefined) {
+        skills[lv.skill] += r.stars / 3;
+      }
+    });
+
+    ['skill1', 'skill2', 'skill3', 'skill4'].forEach((id) => {
+      const pct = skillMax[id] ? Math.round(skills[id] / skillMax[id] * 100) : 0;
+      $(`#${id}`).style.width = pct + '%';
+    });
+
+    const best = state.levelResults.reduce((a, b) => (a.stars >= b.stars ? a : b), state.levelResults[0]);
+    const worst = state.levelResults.reduce((a, b) => (a.stars <= b.stars ? a : b), state.levelResults[0]);
+    const bestLv = LEVELS[best.level - 1];
+    const worstLv = LEVELS[worst.level - 1];
+
+    const goodMsgs = {
+      identify: '你能一眼看出哪一种是平均分！',
+      distribute: `你能把 ${bestLv.total || 8} 颗糖平均分给 ${bestLv.parts || 4} 个小朋友。`,
+      boxing: `你能把 ${bestLv.total || 12} 个橘子每 ${bestLv.groupSize || 3} 个装一袋。`,
+      methodSelect: '你会根据题目选择正确的分法！',
+      inspect: '你会检查并调整，让每份同样多！',
+    };
+
+    const todoMsgs = {
+      identify: '再想想：分完不等于平均分，关键是每份数量相同。',
+      distribute: '下次试试一轮一轮地发，每人先拿 1 个。',
+      boxing: '装盒时数清楚：满一盒再装下一盒。',
+      methodSelect: '先看题目问的是「每份几个」还是「能分几份」。',
+      inspect: '分完后数一数：每份的数量一样吗？',
+    };
+
+    $('#reportGood').textContent = goodMsgs[bestLv.type] || '你今天完成了所有任务！';
+    $('#reportTodo').textContent = worst.stars < 3
+      ? (todoMsgs[worstLv.type] || '继续练习，你会越来越棒！')
+      : '太棒了！下次挑战不用提示拿满星！';
+
+    showScreen('report');
+  }
+
+  function resetGame() {
+    state.levelIndex = 0;
+    state.levelResults = [];
+    state.hintsUsed = 0;
+    state.analytics = [];
+    state.gameStartTime = Date.now();
+    track('game_start', { grade: 2, topic: '平均分' });
+  }
+
+  /* ===== Event Bindings ===== */
+  $('#btnStart').addEventListener('click', () => {
+    renderMissionList();
+    showScreen('mission');
+  });
+
+  $('#btnToStory').addEventListener('click', () => {
+    resetGame();
+    showScreen('story');
+  });
+
+  $('#btnBeginLevel').addEventListener('click', () => {
+    showScreen('play');
+    initLevel();
+  });
+
+  $('#btnSpeak').addEventListener('click', () => speak($('#questionText').innerText));
+
+  $('#btnHint').addEventListener('click', showHint);
+
+  $('#btnSubmit').addEventListener('click', () => {
+    const lv = getLevel();
+    switch (lv.type) {
+      case 'identify': toast('请先点击一种分法！', 'info'); break;
+      case 'distribute': checkDistribute(lv); break;
+      case 'boxing': checkBoxing(lv); break;
+      case 'methodSelect': toast('请先选择分法类型！', 'info'); break;
+      case 'inspect': checkInspect(lv); break;
+    }
+  });
+
+  $('#btnNextLevel').addEventListener('click', () => {
+    $('#levelModal').classList.remove('show');
+    state.levelIndex++;
+    if (state.levelIndex >= LEVELS.length) {
+      showSettle();
+    } else {
+      initLevel();
+    }
+  });
+
+  $('#btnToReport').addEventListener('click', showReport);
+  $('#btnReplay').addEventListener('click', () => {
+    resetGame();
+    showScreen('story');
+  });
+  $('#btnHome').addEventListener('click', () => showScreen('splash'));
+
+  renderMissionList();
+})();
+</script>
+</body>
+</html>
